@@ -10,7 +10,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -108,14 +112,34 @@ fun CoordinatesScreen(
                 onValueChange = {
                     latitude.value = it
                 },
-                label = { Text("Latitude") }
+                label = { Text("Latitude") },
+                trailingIcon = {
+                    if (latitude.value.isNotEmpty()) {
+                        IconButton(onClick = { latitude.value = "" }) {
+                            Icon(
+                                imageVector = Icons.Default.Clear,
+                                contentDescription = "Clear latitude"
+                            )
+                        }
+                    }
+                }
             )
             OutlinedTextField(
                 value = longitude.value,
                 onValueChange = {
                     longitude.value = it
                 },
-                label = { Text("Longitude") }
+                label = { Text("Longitude") },
+                trailingIcon = {
+                    if (longitude.value.isNotEmpty()) {
+                        IconButton(onClick = { longitude.value = "" }) {
+                            Icon(
+                                imageVector = Icons.Default.Clear,
+                                contentDescription = "Clear longitude"
+                            )
+                        }
+                    }
+                }
             )
         }
         Spacer(modifier = Modifier.weight(1f))
