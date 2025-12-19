@@ -1,4 +1,4 @@
-package com.drew654.mocklocations.ui.theme
+package com.drew654.mocklocations.presentation.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
