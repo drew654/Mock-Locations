@@ -16,6 +16,7 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
+        setProperty("archivesBaseName", "mock-locations")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
