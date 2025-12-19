@@ -49,6 +49,7 @@ fun CoordinatesScreen(
         horizontalAlignment = Alignment.Start,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        Text(text = "Coordinates: ${coordinates.value}")
         OutlinedTextField(
             value = latitude.value,
             onValueChange = {
