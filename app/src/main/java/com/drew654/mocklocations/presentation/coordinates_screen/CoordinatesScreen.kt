@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -42,6 +43,7 @@ fun CoordinatesScreen(
         remember { mutableStateOf(if (coordinates.value == null) "" else coordinates.value?.latitude.toString()) }
     val longitude =
         remember { mutableStateOf(if (coordinates.value == null) "" else coordinates.value?.longitude.toString()) }
+    val isMocking = viewModel.isMocking.collectAsState()
 
     Column(
         modifier = Modifier
@@ -173,6 +175,29 @@ fun CoordinatesScreen(
                 }
             ) {
                 Text("Set Coordinates")
+            }
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.Bottom
+        ) {
+            if (isMocking.value) {
+                OutlinedButton(
+                    onClick = {
+                        viewModel.stopMockLocation()
+                    }
+                ) {
+                    Text("Stop Mock")
+                }
+            } else {
+                Button(
+                    onClick = {
+                        viewModel.startMockLocation()
+                    }
+                ) {
+                    Text("Mock Location")
+                }
             }
         }
     }
