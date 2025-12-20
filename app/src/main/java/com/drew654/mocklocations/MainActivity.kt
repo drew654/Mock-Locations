@@ -52,7 +52,6 @@ class MainActivity : ComponentActivity() {
             val scope = rememberCoroutineScope()
             MockLocationsTheme {
                 ModalNavigationDrawer(
-                    drawerState = drawerState,
                     drawerContent = {
                         ModalDrawerSheet {
                             Column(
@@ -74,9 +73,9 @@ class MainActivity : ComponentActivity() {
                                 )
                                 NavigationDrawerItem(
                                     label = { Text("Map") },
-                                    selected = navController.currentDestination?.route == Screen.MapScreen.route,
+                                    selected = navController.currentDestination?.route == Screen.Map.route,
                                     onClick = {
-                                        navController.navigate(Screen.MapScreen.route)
+                                        navController.navigate(Screen.Map.route)
                                         scope.launch { drawerState.close() }
                                     }
                                 )
@@ -90,7 +89,9 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                         }
-                    }
+                    },
+                    drawerState = drawerState,
+                    gesturesEnabled = drawerState.isOpen
                 ) {
                     Scaffold(
                         modifier = Modifier.fillMaxSize(),
@@ -117,14 +118,14 @@ class MainActivity : ComponentActivity() {
                     ) { innerPadding ->
                         NavHost(
                             navController = navController,
-                            startDestination = Screen.Coordinates.route,
+                            startDestination = Screen.Map.route,
                             modifier = Modifier.padding(innerPadding)
                         ) {
                             composable(Screen.Coordinates.route) {
                                 CoordinatesScreen(viewModel = viewModel)
                             }
-                            composable(Screen.MapScreen.route) {
-                                MapScreen()
+                            composable(Screen.Map.route) {
+                                MapScreen(viewModel = viewModel)
                             }
                         }
                     }
