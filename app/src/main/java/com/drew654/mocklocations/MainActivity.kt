@@ -82,7 +82,7 @@ class MainActivity : ComponentActivity() {
                             MapScreen(viewModel = viewModel)
                         }
                         composable(Screen.Settings.route) {
-                            SettingsScreen()
+                            SettingsScreen(viewModel = viewModel)
                         }
                     }
                 }

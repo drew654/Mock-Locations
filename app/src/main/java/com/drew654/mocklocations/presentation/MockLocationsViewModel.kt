@@ -9,12 +9,15 @@ import android.os.SystemClock
 import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.drew654.mocklocations.domain.SettingsManager
 import com.drew654.mocklocations.domain.model.Coordinates
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class MockLocationsViewModel(application: Application) : AndroidViewModel(application) {
@@ -128,5 +131,19 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     override fun onCleared() {
         super.onCleared()
         stopMockLocation()
+    }
+
+    private val settingsManager = SettingsManager(application)
+
+    val clearPointsOnStop = settingsManager.clearPointsOnStopFlow.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = true
+    )
+
+    fun setClearPointsOnStop(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsManager.setClearPointsOnStop(enabled)
+        }
     }
 }

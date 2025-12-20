@@ -45,6 +45,7 @@ fun MapScreen(
     val coordinates by viewModel.coordinates.collectAsState()
     var hasLocationPermission by remember { mutableStateOf(false) }
     val isMocking by viewModel.isMocking.collectAsState()
+    val clearPointsOnStop by viewModel.clearPointsOnStop.collectAsState()
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
@@ -165,6 +166,9 @@ fun MapScreen(
                     onClick = {
                         if (viewModel.isMocking.value) {
                             viewModel.stopMockLocation()
+                            if (clearPointsOnStop) {
+                                viewModel.setCoordinates(null)
+                            }
                         } else {
                             viewModel.startMockLocation()
                         }
