@@ -144,7 +144,7 @@ fun MapScreen(
             contentAlignment = Alignment.BottomStart
         ) {
             Column(
-                modifier = Modifier.padding(16.dp)
+                modifier = Modifier.padding(12.dp)
             ) {
                 DisableableSmallFloatingActionButton(
                     onClick = {
@@ -161,7 +161,7 @@ fun MapScreen(
                             MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(12.dp))
                 DisableableFloatingActionButton(
                     onClick = {
                         if (viewModel.isMocking.value) {
@@ -187,6 +187,7 @@ fun MapScreen(
                         )
                     }
                 }
+                Spacer(Modifier.height(32.dp))
             }
         }
     }
