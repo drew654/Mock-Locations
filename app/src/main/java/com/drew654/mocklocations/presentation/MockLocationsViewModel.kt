@@ -28,7 +28,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         application.getSystemService(Context.LOCATION_SERVICE) as LocationManager
     private val providerName = LocationManager.GPS_PROVIDER
 
-    fun setCoordinates(coordinates: Coordinates) {
+    fun setCoordinates(coordinates: Coordinates?) {
         _coordinates.value = coordinates
     }
 

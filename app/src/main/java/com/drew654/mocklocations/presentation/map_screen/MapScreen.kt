@@ -4,7 +4,13 @@ import android.Manifest
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -12,9 +18,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
+import com.drew654.mocklocations.R
 import com.drew654.mocklocations.presentation.MockLocationsViewModel
+import com.drew654.mocklocations.presentation.map_screen.components.DisableableFloatingActionButton
+import com.drew654.mocklocations.presentation.map_screen.components.DisableableSmallFloatingActionButton
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -32,6 +44,7 @@ fun MapScreen(
     val context = LocalContext.current
     val coordinates by viewModel.coordinates.collectAsState()
     var hasLocationPermission by remember { mutableStateOf(false) }
+    val isMocking by viewModel.isMocking.collectAsState()
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
@@ -101,7 +114,15 @@ fun MapScreen(
             modifier = Modifier.fillMaxSize(),
             cameraPositionState = cameraPositionState,
             properties = mapProperties,
-            uiSettings = mapUiSettings
+            uiSettings = mapUiSettings,
+            onMapLongClick = { latLng ->
+                viewModel.setCoordinates(
+                    com.drew654.mocklocations.domain.model.Coordinates(
+                        latitude = latLng.latitude,
+                        longitude = latLng.longitude
+                    )
+                )
+            }
         ) {
             if (coordinates != null) {
                 Marker(
@@ -114,6 +135,54 @@ fun MapScreen(
                     title = "Mock Location",
                     snippet = "Lat: ${coordinates!!.latitude}, Lng: ${coordinates!!.longitude}"
                 )
+            }
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxSize(),
+            contentAlignment = Alignment.BottomStart
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                DisableableSmallFloatingActionButton(
+                    onClick = {
+                        viewModel.setCoordinates(null)
+                    },
+                    enabled = coordinates != null && !isMocking
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.baseline_clear_24),
+                        contentDescription = "Clear",
+                        tint = if (coordinates == null)
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        else
+                            MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+                Spacer(Modifier.height(16.dp))
+                DisableableFloatingActionButton(
+                    onClick = {
+                        if (viewModel.isMocking.value) {
+                            viewModel.stopMockLocation()
+                        } else {
+                            viewModel.startMockLocation()
+                        }
+                    },
+                    enabled = coordinates != null
+                ) {
+                    if (isMocking) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.baseline_stop_24),
+                            contentDescription = "Stop"
+                        )
+                    } else {
+                        Icon(
+                            painter = painterResource(id = R.drawable.baseline_play_arrow_24),
+                            contentDescription = "Play"
+                        )
+                    }
+                }
             }
         }
     }
