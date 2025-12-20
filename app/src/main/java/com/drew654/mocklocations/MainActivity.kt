@@ -76,7 +76,11 @@ class MainActivity : ComponentActivity() {
                     NavHost(
                         navController = navController,
                         startDestination = Screen.Map.route,
-                        modifier = Modifier.padding(innerPadding)
+                        modifier = Modifier.padding(innerPadding),
+                        enterTransition = { androidx.compose.animation.EnterTransition.None },
+                        exitTransition = { androidx.compose.animation.ExitTransition.None },
+                        popEnterTransition = { androidx.compose.animation.EnterTransition.None },
+                        popExitTransition = { androidx.compose.animation.ExitTransition.None }
                     ) {
                         composable(Screen.Map.route) {
                             MapScreen(viewModel = viewModel)
