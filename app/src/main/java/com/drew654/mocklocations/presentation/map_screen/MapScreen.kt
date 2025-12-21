@@ -39,6 +39,7 @@ fun MapScreen(
     val points by viewModel.points.collectAsState()
     var hasLocationPermission by remember { mutableStateOf(false) }
     val isMocking by viewModel.isMocking.collectAsState()
+    val isPaused by viewModel.isPaused.collectAsState()
     val clearPointsOnStop by viewModel.clearPointsOnStop.collectAsState()
 
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -144,7 +145,11 @@ fun MapScreen(
                     viewModel.clearPoints()
                 },
                 onPlayClicked = {
-                    viewModel.startMockLocation()
+                    if (isPaused) {
+                        viewModel.togglePause()
+                    } else {
+                        viewModel.startMockLocation()
+                    }
                 },
                 onStopClicked = {
                     viewModel.stopMockLocation()
@@ -155,8 +160,12 @@ fun MapScreen(
                 onPopClicked = {
                     viewModel.popPoint()
                 },
+                onPauseClicked = {
+                    viewModel.togglePause()
+                },
                 points = points,
-                isMocking = isMocking
+                isMocking = isMocking,
+                isPaused = isPaused
             )
         }
     }

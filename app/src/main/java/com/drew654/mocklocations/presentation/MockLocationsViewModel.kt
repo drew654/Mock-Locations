@@ -24,12 +24,18 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     private var mockJob: Job? = null
     private val _isMocking = MutableStateFlow(false)
     val isMocking: StateFlow<Boolean> = _isMocking.asStateFlow()
+    private val _isPaused = MutableStateFlow(false)
+    val isPaused: StateFlow<Boolean> = _isPaused.asStateFlow()
     private val _points = MutableStateFlow<List<LatLng>>(emptyList())
     val points: StateFlow<List<LatLng>> = _points.asStateFlow()
 
     private val locationManager =
         application.getSystemService(Context.LOCATION_SERVICE) as LocationManager
     private val providerName = LocationManager.GPS_PROVIDER
+
+    fun togglePause() {
+        _isPaused.value = !_isPaused.value
+    }
 
     fun pushPoint(point: LatLng) {
         _points.value = _points.value + point
@@ -119,6 +125,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
 
     private fun mockLocationStraightLineRoute(points: List<LatLng>) {
         mockJob?.cancel()
+        _isPaused.value = false
 
         mockJob = viewModelScope.launch {
             try {
@@ -146,6 +153,8 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
                 val speedMetersPerSec = 30.0
                 val updateIntervalMs = 1000L
 
+                var lastBroadcastLocation: Location? = null
+
                 for (i in 0 until points.size - 1) {
                     val start = points[i]
                     val end = points[i + 1]
@@ -163,6 +172,18 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
                     var currentDistance = 0.0
 
                     while (currentDistance < totalDistance) {
+                        if (mockJob?.isActive == false) return@launch
+
+                        if (_isPaused.value) {
+                            lastBroadcastLocation?.let { loc ->
+                                loc.time = System.currentTimeMillis()
+                                loc.elapsedRealtimeNanos = SystemClock.elapsedRealtimeNanos()
+                                locationManager.setTestProviderLocation(providerName, loc)
+                            }
+                            delay(updateIntervalMs)
+                            continue
+                        }
+
                         val fraction = currentDistance / totalDistance
 
                         val nextLat = start.latitude + (end.latitude - start.latitude) * fraction
@@ -181,6 +202,9 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
                             verticalAccuracyMeters = 0.1f
                             speedAccuracyMetersPerSecond = 0.01f
                         }
+
+                        lastBroadcastLocation = location
+
                         locationManager.setTestProviderLocation(providerName, location)
 
                         delay(updateIntervalMs)
@@ -201,9 +225,9 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
-
     fun stopMockLocation() {
         _isMocking.value = false
+        _isPaused.value = false
         mockJob?.cancel()
         mockJob = null
 

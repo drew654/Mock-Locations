@@ -1,16 +1,23 @@
 package com.drew654.mocklocations.presentation.map_screen.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.R
+import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 import com.google.android.gms.maps.model.LatLng
 
 @Composable
@@ -19,8 +26,10 @@ fun ControlButtons(
     onPlayClicked: () -> Unit,
     onStopClicked: () -> Unit,
     onPopClicked: () -> Unit,
+    onPauseClicked: () -> Unit,
     points: List<LatLng>,
-    isMocking: Boolean
+    isMocking: Boolean,
+    isPaused: Boolean
 ) {
     Column(
         modifier = Modifier.padding(12.dp)
@@ -57,28 +66,101 @@ fun ControlButtons(
             )
         }
         Spacer(Modifier.height(12.dp))
-        DisableableFloatingActionButton(
-            onClick = {
-                if (isMocking) {
-                    onStopClicked()
-                } else {
-                    onPlayClicked()
-                }
-            },
-            enabled = points.isNotEmpty()
+        Row(
+            verticalAlignment = Alignment.Bottom
         ) {
-            if (isMocking) {
-                Icon(
-                    painter = painterResource(id = R.drawable.baseline_stop_24),
-                    contentDescription = "Stop"
-                )
-            } else {
-                Icon(
-                    painter = painterResource(id = R.drawable.baseline_play_arrow_24),
-                    contentDescription = "Play"
-                )
+            DisableableFloatingActionButton(
+                onClick = {
+                    if (isMocking && !isPaused) {
+                        onStopClicked()
+                    } else {
+                        onPlayClicked()
+                    }
+                },
+                enabled = points.isNotEmpty()
+            ) {
+                if (isMocking && !isPaused) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.baseline_stop_24),
+                        contentDescription = "Stop"
+                    )
+                } else {
+                    Icon(
+                        painter = painterResource(id = R.drawable.baseline_play_arrow_24),
+                        contentDescription = "Play"
+                    )
+                }
+            }
+            if (isMocking && !isPaused && points.size > 1) {
+                Spacer(Modifier.width(12.dp))
+                DisableableSmallFloatingActionButton(
+                    onClick = {
+                        onPauseClicked()
+                    },
+                    enabled = points.isNotEmpty()
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.baseline_pause_24),
+                        contentDescription = "Pause",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
         Spacer(Modifier.height(32.dp))
+    }
+}
+
+@Preview(
+    name = "Light Mode",
+    showBackground = true
+)
+@Preview(
+    name = "Dark Mode",
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+    showBackground = true
+)
+@Composable
+fun ControlButtonsPreview1() {
+    MockLocationsTheme {
+        Surface {
+            ControlButtons(
+                onClearClicked = {},
+                onPlayClicked = {},
+                onStopClicked = {},
+                onPopClicked = {},
+                onPauseClicked = {},
+                points = emptyList(),
+                isMocking = false,
+                isPaused = false
+            )
+        }
+    }
+}
+
+@Preview(
+    name = "Light Mode",
+    showBackground = true
+)
+@Preview(
+    name = "Dark Mode",
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+    showBackground = true
+)
+@Composable
+fun ControlButtonsPreview2() {
+    MockLocationsTheme {
+        Surface {
+            ControlButtons(
+                onClearClicked = {},
+                onPlayClicked = {},
+                onStopClicked = {},
+                onPopClicked = {},
+                onPauseClicked = {},
+                points = listOf(LatLng(0.0, 0.0), LatLng(0.0, 0.0)),
+                isMocking = true,
+                isPaused = false
+            )
+        }
     }
 }
