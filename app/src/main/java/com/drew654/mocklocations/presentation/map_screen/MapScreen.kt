@@ -127,14 +127,16 @@ fun MapScreen(
                     viewModel.clearPoints()
                 },
                 onPlayClicked = {
-                    if (isMocking) {
-                        viewModel.stopMockLocation()
-                        if (clearPointsOnStop) {
-                            viewModel.clearPoints()
-                        }
-                    } else {
-                        viewModel.startMockLocation()
+                    viewModel.startMockLocation()
+                },
+                onStopClicked = {
+                    viewModel.stopMockLocation()
+                    if (clearPointsOnStop) {
+                        viewModel.clearPoints()
                     }
+                },
+                onPopClicked = {
+                    viewModel.popPoint()
                 },
                 points = points,
                 isMocking = isMocking

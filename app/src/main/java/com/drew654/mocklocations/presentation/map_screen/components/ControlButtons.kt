@@ -17,12 +17,30 @@ import com.google.android.gms.maps.model.LatLng
 fun ControlButtons(
     onClearClicked: () -> Unit,
     onPlayClicked: () -> Unit,
+    onStopClicked: () -> Unit,
+    onPopClicked: () -> Unit,
     points: List<LatLng>,
     isMocking: Boolean
 ) {
     Column(
         modifier = Modifier.padding(12.dp)
     ) {
+        DisableableSmallFloatingActionButton(
+            onClick = {
+                onPopClicked()
+            },
+            enabled = points.isNotEmpty() && !isMocking
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.baseline_backspace_24),
+                contentDescription = "Pop",
+                tint = if (points.isEmpty())
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                else
+                    MaterialTheme.colorScheme.onPrimaryContainer
+            )
+        }
+        Spacer(Modifier.height(4.dp))
         DisableableSmallFloatingActionButton(
             onClick = {
                 onClearClicked()
@@ -41,7 +59,11 @@ fun ControlButtons(
         Spacer(Modifier.height(12.dp))
         DisableableFloatingActionButton(
             onClick = {
-                onPlayClicked()
+                if (isMocking) {
+                    onStopClicked()
+                } else {
+                    onPlayClicked()
+                }
             },
             enabled = points.isNotEmpty()
         ) {
