@@ -28,6 +28,8 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     val isPaused: StateFlow<Boolean> = _isPaused.asStateFlow()
     private val _points = MutableStateFlow<List<LatLng>>(emptyList())
     val points: StateFlow<List<LatLng>> = _points.asStateFlow()
+    val _speedMetersPerSec = MutableStateFlow(30.0)
+    val speedMetersPerSec: StateFlow<Double> = _speedMetersPerSec.asStateFlow()
 
     private val locationManager =
         application.getSystemService(Context.LOCATION_SERVICE) as LocationManager
@@ -47,6 +49,10 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
 
     fun clearPoints() {
         _points.value = emptyList()
+    }
+
+    fun setSpeedMetersPerSec(speed: Double) {
+        _speedMetersPerSec.value = speed
     }
 
     fun startMockLocation() {
@@ -150,9 +156,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
                 _isMocking.value = true
                 Toast.makeText(getApplication(), "Route Mocking Started", Toast.LENGTH_SHORT).show()
 
-                val speedMetersPerSec = 30.0
                 val updateIntervalMs = 1000L
-
                 var lastBroadcastLocation: Location? = null
 
                 for (i in 0 until points.size - 1) {
@@ -168,7 +172,6 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
                     val totalDistance = results[0]
                     val bearing = results[1]
 
-                    val stepDistance = speedMetersPerSec * (updateIntervalMs / 1000.0)
                     var currentDistance = 0.0
 
                     while (currentDistance < totalDistance) {
@@ -184,6 +187,8 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
                             continue
                         }
 
+                        val stepDistance = _speedMetersPerSec.value * (updateIntervalMs / 1000.0)
+
                         val fraction = currentDistance / totalDistance
 
                         val nextLat = start.latitude + (end.latitude - start.latitude) * fraction
@@ -194,7 +199,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
                             longitude = nextLng
                             altitude = 3.0
                             time = System.currentTimeMillis()
-                            speed = speedMetersPerSec.toFloat()
+                            speed = _speedMetersPerSec.value.toFloat()
                             this.bearing = bearing
                             accuracy = 3.0f
                             elapsedRealtimeNanos = SystemClock.elapsedRealtimeNanos()
@@ -204,7 +209,6 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
                         }
 
                         lastBroadcastLocation = location
-
                         locationManager.setTestProviderLocation(providerName, location)
 
                         delay(updateIntervalMs)

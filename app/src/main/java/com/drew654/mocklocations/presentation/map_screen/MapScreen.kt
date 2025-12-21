@@ -45,6 +45,7 @@ fun MapScreen(
     val isMocking by viewModel.isMocking.collectAsState()
     val isPaused by viewModel.isPaused.collectAsState()
     val clearPointsOnStop by viewModel.clearPointsOnStop.collectAsState()
+    val speedMetersPerSec by viewModel.speedMetersPerSec.collectAsState()
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
@@ -170,6 +171,10 @@ fun MapScreen(
                 },
                 onPauseClicked = {
                     viewModel.togglePause()
+                },
+                speedMetersPerSec = speedMetersPerSec,
+                onSpeedChanged = {
+                    viewModel.setSpeedMetersPerSec(it)
                 },
                 points = points,
                 isMocking = isMocking,

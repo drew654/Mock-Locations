@@ -9,8 +9,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -27,13 +32,42 @@ fun ControlButtons(
     onStopClicked: () -> Unit,
     onPopClicked: () -> Unit,
     onPauseClicked: () -> Unit,
+    speedMetersPerSec: Double,
+    onSpeedChanged: (Double) -> Unit,
     points: List<LatLng>,
     isMocking: Boolean,
     isPaused: Boolean
 ) {
+    var speedSliderIsExpanded by remember { mutableStateOf(false) }
+    
     Column(
         modifier = Modifier.padding(12.dp)
     ) {
+        Row {
+            DisableableSmallFloatingActionButton(
+                onClick = {
+                    speedSliderIsExpanded = !speedSliderIsExpanded
+                },
+                enabled = true
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.baseline_speed_24),
+                    contentDescription = "Toggle Speed Slider",
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+            if (speedSliderIsExpanded) {
+                Slider(
+                    value = speedMetersPerSec.toFloat(),
+                    onValueChange = {
+                        onSpeedChanged(it.toDouble())
+                    },
+                    valueRange = 0f..100f,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+        Spacer(Modifier.height(4.dp))
         DisableableSmallFloatingActionButton(
             onClick = {
                 onPopClicked()
@@ -130,6 +164,8 @@ fun ControlButtonsPreview1() {
                 onStopClicked = {},
                 onPopClicked = {},
                 onPauseClicked = {},
+                speedMetersPerSec = 30.0,
+                onSpeedChanged = {},
                 points = emptyList(),
                 isMocking = false,
                 isPaused = false
@@ -157,6 +193,8 @@ fun ControlButtonsPreview2() {
                 onStopClicked = {},
                 onPopClicked = {},
                 onPauseClicked = {},
+                speedMetersPerSec = 30.0,
+                onSpeedChanged = {},
                 points = listOf(LatLng(0.0, 0.0), LatLng(0.0, 0.0)),
                 isMocking = true,
                 isPaused = false
