@@ -118,8 +118,89 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     }
 
     private fun mockLocationStraightLineRoute(points: List<LatLng>) {
+        mockJob?.cancel()
 
+        mockJob = viewModelScope.launch {
+            try {
+                try {
+                    locationManager.removeTestProvider(providerName)
+                } catch (e: Exception) {
+                }
+                locationManager.addTestProvider(
+                    providerName,
+                    false,
+                    false,
+                    false,
+                    false,
+                    true,
+                    true,
+                    true,
+                    ProviderProperties.POWER_USAGE_LOW,
+                    ProviderProperties.ACCURACY_FINE
+                )
+                locationManager.setTestProviderEnabled(providerName, true)
+
+                _isMocking.value = true
+                Toast.makeText(getApplication(), "Route Mocking Started", Toast.LENGTH_SHORT).show()
+
+                val speedMetersPerSec = 30.0
+                val updateIntervalMs = 1000L
+
+                for (i in 0 until points.size - 1) {
+                    val start = points[i]
+                    val end = points[i + 1]
+
+                    val results = FloatArray(3)
+                    Location.distanceBetween(
+                        start.latitude, start.longitude,
+                        end.latitude, end.longitude,
+                        results
+                    )
+                    val totalDistance = results[0]
+                    val bearing = results[1]
+
+                    val stepDistance = speedMetersPerSec * (updateIntervalMs / 1000.0)
+                    var currentDistance = 0.0
+
+                    while (currentDistance < totalDistance) {
+                        val fraction = currentDistance / totalDistance
+
+                        val nextLat = start.latitude + (end.latitude - start.latitude) * fraction
+                        val nextLng = start.longitude + (end.longitude - start.longitude) * fraction
+
+                        val location = Location(providerName).apply {
+                            latitude = nextLat
+                            longitude = nextLng
+                            altitude = 3.0
+                            time = System.currentTimeMillis()
+                            speed = speedMetersPerSec.toFloat()
+                            this.bearing = bearing
+                            accuracy = 3.0f
+                            elapsedRealtimeNanos = SystemClock.elapsedRealtimeNanos()
+                            bearingAccuracyDegrees = 0.1f
+                            verticalAccuracyMeters = 0.1f
+                            speedAccuracyMetersPerSecond = 0.01f
+                        }
+                        locationManager.setTestProviderLocation(providerName, location)
+
+                        delay(updateIntervalMs)
+                        currentDistance += stepDistance
+                    }
+                }
+
+                Toast.makeText(getApplication(), "Route Finished", Toast.LENGTH_SHORT).show()
+                stopMockLocation()
+            } catch (e: SecurityException) {
+                Toast.makeText(getApplication(), "Permission denied.", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                if (e !is kotlinx.coroutines.CancellationException) {
+                    Toast.makeText(getApplication(), "Error: ${e.message}", Toast.LENGTH_SHORT)
+                        .show()
+                }
+            }
+        }
     }
+
 
     fun stopMockLocation() {
         _isMocking.value = false
