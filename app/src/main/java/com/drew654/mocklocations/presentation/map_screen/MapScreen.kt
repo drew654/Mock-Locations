@@ -120,16 +120,16 @@ fun MapScreen(
                 )
             }
         ) {
-            if (coordinates.isNotEmpty()) {
+            coordinates.forEach { point ->
                 Marker(
                     state = MarkerState(
                         position = LatLng(
-                            coordinates.first().latitude,
-                            coordinates.first().longitude
+                            point.latitude,
+                            point.longitude
                         )
                     ),
-                    title = "Mock Location",
-                    snippet = "Lat: ${coordinates.first().latitude}, Lng: ${coordinates.first().longitude}"
+                    title = "Route Point",
+                    snippet = "Lat: ${point.latitude}, Lng: ${point.longitude}"
                 )
             }
         }
