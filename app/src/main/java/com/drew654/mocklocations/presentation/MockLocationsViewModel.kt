@@ -24,27 +24,37 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     private var mockJob: Job? = null
     private val _isMocking = MutableStateFlow(false)
     val isMocking: StateFlow<Boolean> = _isMocking.asStateFlow()
-    private val _coordinates = MutableStateFlow<Coordinates?>(null)
-    val coordinates: StateFlow<Coordinates?> = _coordinates.asStateFlow()
+    private val _coordinates = MutableStateFlow<List<Coordinates>>(emptyList())
+    val coordinates: StateFlow<List<Coordinates>> = _coordinates.asStateFlow()
 
     private val locationManager =
         application.getSystemService(Context.LOCATION_SERVICE) as LocationManager
     private val providerName = LocationManager.GPS_PROVIDER
 
-    fun setCoordinates(coordinates: Coordinates?) {
-        _coordinates.value = coordinates
+    fun pushCoordinates(coordinates: Coordinates) {
+        _coordinates.value = _coordinates.value + coordinates
+    }
+
+    fun popCoordinates() {
+        _coordinates.value = _coordinates.value.dropLast(1)
+    }
+
+    fun clearCoordinates() {
+        _coordinates.value = emptyList()
     }
 
     fun startMockLocation() {
-        if (_coordinates.value == null) {
+        if (_coordinates.value.isEmpty()) {
             Toast.makeText(getApplication(), "Please set coordinates first", Toast.LENGTH_SHORT)
                 .show()
+        } else if (_coordinates.value.size == 1) {
+            mockLocationSinglePoint(_coordinates.value.first())
         } else {
-            mockLocation(_coordinates.value!!)
+            mockLocationStraightLineRoute(_coordinates.value)
         }
     }
 
-    private fun mockLocation(coordinates: Coordinates) {
+    private fun mockLocationSinglePoint(coordinates: Coordinates) {
         mockJob?.cancel()
 
         mockJob = viewModelScope.launch {
@@ -107,6 +117,9 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
+    private fun mockLocationStraightLineRoute(coordinates: List<Coordinates>) {
+
+    }
 
     fun stopMockLocation() {
         _isMocking.value = false

@@ -24,6 +24,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.R
+import com.drew654.mocklocations.domain.model.Coordinates
 import com.drew654.mocklocations.presentation.MockLocationsViewModel
 import com.drew654.mocklocations.presentation.map_screen.components.DisableableFloatingActionButton
 import com.drew654.mocklocations.presentation.map_screen.components.DisableableSmallFloatingActionButton
@@ -81,12 +82,12 @@ fun MapScreen(
     }
 
     val cameraPositionState = rememberCameraPositionState {
-        val zoom = if (coordinates != null) 15f else 1f
+        val zoom = if (coordinates.isNotEmpty()) 15f else 1f
         position = CameraPosition.fromLatLngZoom(LatLng(0.0, 0.0), zoom)
     }
 
     LaunchedEffect(hasLocationPermission) {
-        if (hasLocationPermission && coordinates == null) {
+        if (hasLocationPermission && coordinates.isEmpty()) {
             val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
             try {
                 fusedLocationClient.lastLocation.addOnSuccessListener { location ->
@@ -111,24 +112,24 @@ fun MapScreen(
             properties = mapProperties,
             uiSettings = mapUiSettings,
             onMapLongClick = { latLng ->
-                viewModel.setCoordinates(
-                    com.drew654.mocklocations.domain.model.Coordinates(
+                viewModel.pushCoordinates(
+                    Coordinates(
                         latitude = latLng.latitude,
                         longitude = latLng.longitude
                     )
                 )
             }
         ) {
-            if (coordinates != null) {
+            if (coordinates.isNotEmpty()) {
                 Marker(
                     state = MarkerState(
                         position = LatLng(
-                            coordinates!!.latitude,
-                            coordinates!!.longitude
+                            coordinates.first().latitude,
+                            coordinates.first().longitude
                         )
                     ),
                     title = "Mock Location",
-                    snippet = "Lat: ${coordinates!!.latitude}, Lng: ${coordinates!!.longitude}"
+                    snippet = "Lat: ${coordinates.first().latitude}, Lng: ${coordinates.first().longitude}"
                 )
             }
         }
@@ -142,14 +143,14 @@ fun MapScreen(
             ) {
                 DisableableSmallFloatingActionButton(
                     onClick = {
-                        viewModel.setCoordinates(null)
+                        viewModel.clearCoordinates()
                     },
-                    enabled = coordinates != null && !isMocking
+                    enabled = coordinates.isNotEmpty() && !isMocking
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.baseline_clear_24),
                         contentDescription = "Clear",
-                        tint = if (coordinates == null)
+                        tint = if (coordinates.isEmpty())
                             MaterialTheme.colorScheme.onSurfaceVariant
                         else
                             MaterialTheme.colorScheme.onPrimaryContainer
@@ -161,13 +162,13 @@ fun MapScreen(
                         if (viewModel.isMocking.value) {
                             viewModel.stopMockLocation()
                             if (clearPointsOnStop) {
-                                viewModel.setCoordinates(null)
+                                viewModel.clearCoordinates()
                             }
                         } else {
                             viewModel.startMockLocation()
                         }
                     },
-                    enabled = coordinates != null
+                    enabled = coordinates.isNotEmpty()
                 ) {
                     if (isMocking) {
                         Icon(
