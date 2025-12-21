@@ -4,13 +4,7 @@ import android.Manifest
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -21,12 +15,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
-import com.drew654.mocklocations.R
 import com.drew654.mocklocations.presentation.MockLocationsViewModel
-import com.drew654.mocklocations.presentation.map_screen.components.DisableableFloatingActionButton
-import com.drew654.mocklocations.presentation.map_screen.components.DisableableSmallFloatingActionButton
+import com.drew654.mocklocations.presentation.map_screen.components.ControlButtons
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
@@ -132,52 +122,23 @@ fun MapScreen(
                 .fillMaxSize(),
             contentAlignment = Alignment.BottomStart
         ) {
-            Column(
-                modifier = Modifier.padding(12.dp)
-            ) {
-                DisableableSmallFloatingActionButton(
-                    onClick = {
-                        viewModel.clearPoints()
-                    },
-                    enabled = points.isNotEmpty() && !isMocking
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.baseline_clear_24),
-                        contentDescription = "Clear",
-                        tint = if (points.isEmpty())
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                        else
-                            MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                }
-                Spacer(Modifier.height(12.dp))
-                DisableableFloatingActionButton(
-                    onClick = {
-                        if (viewModel.isMocking.value) {
-                            viewModel.stopMockLocation()
-                            if (clearPointsOnStop) {
-                                viewModel.clearPoints()
-                            }
-                        } else {
-                            viewModel.startMockLocation()
-                        }
-                    },
-                    enabled = points.isNotEmpty()
-                ) {
+            ControlButtons(
+                onClearClicked = {
+                    viewModel.clearPoints()
+                },
+                onPlayClicked = {
                     if (isMocking) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.baseline_stop_24),
-                            contentDescription = "Stop"
-                        )
+                        viewModel.stopMockLocation()
+                        if (clearPointsOnStop) {
+                            viewModel.clearPoints()
+                        }
                     } else {
-                        Icon(
-                            painter = painterResource(id = R.drawable.baseline_play_arrow_24),
-                            contentDescription = "Play"
-                        )
+                        viewModel.startMockLocation()
                     }
-                }
-                Spacer(Modifier.height(32.dp))
-            }
+                },
+                points = points,
+                isMocking = isMocking
+            )
         }
     }
 }
