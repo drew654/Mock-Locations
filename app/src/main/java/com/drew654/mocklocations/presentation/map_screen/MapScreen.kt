@@ -24,7 +24,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.R
-import com.drew654.mocklocations.domain.model.Coordinates
 import com.drew654.mocklocations.presentation.MockLocationsViewModel
 import com.drew654.mocklocations.presentation.map_screen.components.DisableableFloatingActionButton
 import com.drew654.mocklocations.presentation.map_screen.components.DisableableSmallFloatingActionButton
@@ -44,7 +43,7 @@ fun MapScreen(
     viewModel: MockLocationsViewModel
 ) {
     val context = LocalContext.current
-    val coordinates by viewModel.coordinates.collectAsState()
+    val points by viewModel.points.collectAsState()
     var hasLocationPermission by remember { mutableStateOf(false) }
     val isMocking by viewModel.isMocking.collectAsState()
     val clearPointsOnStop by viewModel.clearPointsOnStop.collectAsState()
@@ -82,12 +81,12 @@ fun MapScreen(
     }
 
     val cameraPositionState = rememberCameraPositionState {
-        val zoom = if (coordinates.isNotEmpty()) 15f else 1f
+        val zoom = if (points.isNotEmpty()) 15f else 1f
         position = CameraPosition.fromLatLngZoom(LatLng(0.0, 0.0), zoom)
     }
 
     LaunchedEffect(hasLocationPermission) {
-        if (hasLocationPermission && coordinates.isEmpty()) {
+        if (hasLocationPermission && points.isEmpty()) {
             val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
             try {
                 fusedLocationClient.lastLocation.addOnSuccessListener { location ->
@@ -111,16 +110,11 @@ fun MapScreen(
             cameraPositionState = cameraPositionState,
             properties = mapProperties,
             uiSettings = mapUiSettings,
-            onMapLongClick = { latLng ->
-                viewModel.pushCoordinates(
-                    Coordinates(
-                        latitude = latLng.latitude,
-                        longitude = latLng.longitude
-                    )
-                )
+            onMapLongClick = {
+                viewModel.pushPoint(it)
             }
         ) {
-            coordinates.forEach { point ->
+            points.forEach { point ->
                 Marker(
                     state = MarkerState(
                         position = LatLng(
@@ -143,14 +137,14 @@ fun MapScreen(
             ) {
                 DisableableSmallFloatingActionButton(
                     onClick = {
-                        viewModel.clearCoordinates()
+                        viewModel.clearPoints()
                     },
-                    enabled = coordinates.isNotEmpty() && !isMocking
+                    enabled = points.isNotEmpty() && !isMocking
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.baseline_clear_24),
                         contentDescription = "Clear",
-                        tint = if (coordinates.isEmpty())
+                        tint = if (points.isEmpty())
                             MaterialTheme.colorScheme.onSurfaceVariant
                         else
                             MaterialTheme.colorScheme.onPrimaryContainer
@@ -162,13 +156,13 @@ fun MapScreen(
                         if (viewModel.isMocking.value) {
                             viewModel.stopMockLocation()
                             if (clearPointsOnStop) {
-                                viewModel.clearCoordinates()
+                                viewModel.clearPoints()
                             }
                         } else {
                             viewModel.startMockLocation()
                         }
                     },
-                    enabled = coordinates.isNotEmpty()
+                    enabled = points.isNotEmpty()
                 ) {
                     if (isMocking) {
                         Icon(

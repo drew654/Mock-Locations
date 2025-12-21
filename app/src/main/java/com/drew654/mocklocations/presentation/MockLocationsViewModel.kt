@@ -10,7 +10,7 @@ import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.drew654.mocklocations.domain.SettingsManager
-import com.drew654.mocklocations.domain.model.Coordinates
+import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,37 +24,37 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     private var mockJob: Job? = null
     private val _isMocking = MutableStateFlow(false)
     val isMocking: StateFlow<Boolean> = _isMocking.asStateFlow()
-    private val _coordinates = MutableStateFlow<List<Coordinates>>(emptyList())
-    val coordinates: StateFlow<List<Coordinates>> = _coordinates.asStateFlow()
+    private val _points = MutableStateFlow<List<LatLng>>(emptyList())
+    val points: StateFlow<List<LatLng>> = _points.asStateFlow()
 
     private val locationManager =
         application.getSystemService(Context.LOCATION_SERVICE) as LocationManager
     private val providerName = LocationManager.GPS_PROVIDER
 
-    fun pushCoordinates(coordinates: Coordinates) {
-        _coordinates.value = _coordinates.value + coordinates
+    fun pushPoint(point: LatLng) {
+        _points.value = _points.value + point
     }
 
-    fun popCoordinates() {
-        _coordinates.value = _coordinates.value.dropLast(1)
+    fun popPoint() {
+        _points.value = _points.value.dropLast(1)
     }
 
-    fun clearCoordinates() {
-        _coordinates.value = emptyList()
+    fun clearPoints() {
+        _points.value = emptyList()
     }
 
     fun startMockLocation() {
-        if (_coordinates.value.isEmpty()) {
-            Toast.makeText(getApplication(), "Please set coordinates first", Toast.LENGTH_SHORT)
+        if (_points.value.isEmpty()) {
+            Toast.makeText(getApplication(), "Please a point first", Toast.LENGTH_SHORT)
                 .show()
-        } else if (_coordinates.value.size == 1) {
-            mockLocationSinglePoint(_coordinates.value.first())
+        } else if (_points.value.size == 1) {
+            mockLocationSinglePoint(_points.value.first())
         } else {
-            mockLocationStraightLineRoute(_coordinates.value)
+            mockLocationStraightLineRoute(_points.value)
         }
     }
 
-    private fun mockLocationSinglePoint(coordinates: Coordinates) {
+    private fun mockLocationSinglePoint(point: LatLng) {
         mockJob?.cancel()
 
         mockJob = viewModelScope.launch {
@@ -85,8 +85,8 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
 
                 while (true) {
                     val location = Location(providerName).apply {
-                        latitude = coordinates.latitude
-                        longitude = coordinates.longitude
+                        latitude = point.latitude
+                        longitude = point.longitude
                         altitude = 3.0
                         time = System.currentTimeMillis()
                         speed = 0.01f
@@ -117,7 +117,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
-    private fun mockLocationStraightLineRoute(coordinates: List<Coordinates>) {
+    private fun mockLocationStraightLineRoute(points: List<LatLng>) {
 
     }
 
