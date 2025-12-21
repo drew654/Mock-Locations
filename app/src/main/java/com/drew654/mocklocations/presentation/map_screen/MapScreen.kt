@@ -20,6 +20,7 @@ import com.drew654.mocklocations.presentation.MockLocationsViewModel
 import com.drew654.mocklocations.presentation.map_screen.components.ControlButtons
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
@@ -114,7 +115,7 @@ fun MapScreen(
                 )
             }
 
-            points.forEach { point ->
+            points.forEachIndexed { index, point ->
                 Marker(
                     state = MarkerState(
                         position = LatLng(
@@ -122,8 +123,14 @@ fun MapScreen(
                             point.longitude
                         )
                     ),
-                    title = "Route Point",
-                    snippet = "Lat: ${point.latitude}, Lng: ${point.longitude}"
+                    icon = BitmapDescriptorFactory.defaultMarker(
+                        getMarkerHue(
+                            index,
+                            points.size
+                        )
+                    ),
+                    snippet = "Lat: ${point.latitude}, Lng: ${point.longitude}",
+                    title = "Route Point"
                 )
             }
         }
@@ -152,5 +159,13 @@ fun MapScreen(
                 isMocking = isMocking
             )
         }
+    }
+}
+
+private fun getMarkerHue(index: Int, numPoints: Int): Float {
+    return when (index) {
+        0 -> BitmapDescriptorFactory.HUE_GREEN
+        numPoints - 1 -> BitmapDescriptorFactory.HUE_RED
+        else -> BitmapDescriptorFactory.HUE_YELLOW
     }
 }
