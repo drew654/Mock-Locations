@@ -5,6 +5,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -26,6 +27,7 @@ import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
 
 @Composable
@@ -104,6 +106,14 @@ fun MapScreen(
                 viewModel.pushPoint(it)
             }
         ) {
+            if (points.isNotEmpty()) {
+                Polyline(
+                    points = points.map { LatLng(it.latitude, it.longitude) },
+                    color = MaterialTheme.colorScheme.onBackground,
+                    width = 20f
+                )
+            }
+
             points.forEach { point ->
                 Marker(
                     state = MarkerState(
