@@ -27,6 +27,7 @@ import com.drew654.mocklocations.R
 import com.drew654.mocklocations.presentation.MockLocationsViewModel
 import com.drew654.mocklocations.presentation.map_screen.components.DisableableFloatingActionButton
 import com.drew654.mocklocations.presentation.map_screen.components.DisableableSmallFloatingActionButton
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -79,31 +80,24 @@ fun MapScreen(
         )
     }
 
-    val defaultLat = coordinates?.latitude ?: 0.0
-    val defaultLng = coordinates?.longitude ?: 0.0
-    val location = LatLng(defaultLat, defaultLng)
-
     val cameraPositionState = rememberCameraPositionState {
         val zoom = if (coordinates != null) 15f else 1f
-        position = CameraPosition.fromLatLngZoom(location, zoom)
+        position = CameraPosition.fromLatLngZoom(LatLng(0.0, 0.0), zoom)
     }
 
     LaunchedEffect(hasLocationPermission) {
         if (hasLocationPermission && coordinates == null) {
-            val locationManager =
-                context.getSystemService(android.content.Context.LOCATION_SERVICE) as android.location.LocationManager
+            val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
             try {
-                val lastKnownLocation =
-                    locationManager.getLastKnownLocation(android.location.LocationManager.GPS_PROVIDER)
-                        ?: locationManager.getLastKnownLocation(android.location.LocationManager.NETWORK_PROVIDER)
-
-                if (lastKnownLocation != null) {
-                    cameraPositionState.animate(
-                        CameraUpdateFactory.newLatLngZoom(
-                            LatLng(lastKnownLocation.latitude, lastKnownLocation.longitude),
-                            15f
+                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                    if (location != null) {
+                        cameraPositionState.move(
+                            CameraUpdateFactory.newLatLngZoom(
+                                LatLng(location.latitude, location.longitude),
+                                15f
+                            )
                         )
-                    )
+                    }
                 }
             } catch (e: SecurityException) {
             }
