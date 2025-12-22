@@ -30,10 +30,18 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     val points: StateFlow<List<LatLng>> = _points.asStateFlow()
     val _speedMetersPerSec = MutableStateFlow(30.0)
     val speedMetersPerSec: StateFlow<Double> = _speedMetersPerSec.asStateFlow()
-
     private val locationManager =
         application.getSystemService(Context.LOCATION_SERVICE) as LocationManager
     private val providerName = LocationManager.GPS_PROVIDER
+    private val settingsManager = SettingsManager(application)
+
+    init {
+        viewModelScope.launch {
+            settingsManager.speedMetersPerSecFlow.collect { savedSpeed ->
+                _speedMetersPerSec.value = savedSpeed
+            }
+        }
+    }
 
     fun togglePause() {
         _isPaused.value = !_isPaused.value
@@ -53,6 +61,10 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
 
     fun setSpeedMetersPerSec(speed: Double) {
         _speedMetersPerSec.value = speed
+
+        viewModelScope.launch {
+            settingsManager.setSpeedMetersPerSec(speed)
+        }
     }
 
     fun startMockLocation() {
@@ -254,8 +266,6 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         super.onCleared()
         stopMockLocation()
     }
-
-    private val settingsManager = SettingsManager(application)
 
     val clearPointsOnStop = settingsManager.clearPointsOnStopFlow.stateIn(
         scope = viewModelScope,
