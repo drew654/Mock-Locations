@@ -114,7 +114,9 @@ fun MapScreen(
             properties = mapProperties,
             uiSettings = mapUiSettings,
             onMapLongClick = {
-                viewModel.pushPoint(it)
+                if (!isMocking) {
+                    viewModel.pushPoint(it)
+                }
             }
         ) {
             if (points.isNotEmpty()) {
