@@ -246,6 +246,9 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         _isPaused.value = false
         mockJob?.cancel()
         mockJob = null
+        if (clearPointsOnStop.value) {
+            clearPoints()
+        }
 
         try {
             locationManager.removeTestProvider(providerName)
