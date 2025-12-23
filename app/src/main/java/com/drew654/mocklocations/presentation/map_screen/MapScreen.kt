@@ -140,7 +140,10 @@ fun MapScreen(
                         )
                     ),
                     snippet = "Lat: ${point.latitude}, Lng: ${point.longitude}",
-                    title = "Route Point"
+                    title = "Route Point",
+                    onClick = {
+                        true
+                    }
                 )
             }
         }
