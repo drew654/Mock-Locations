@@ -1,16 +1,19 @@
 package com.drew654.mocklocations.presentation.map_screen.components
 
 import android.content.res.Configuration
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -25,6 +28,7 @@ import com.drew654.mocklocations.R
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 import com.google.android.gms.maps.model.LatLng
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ControlButtons(
     onClearClicked: () -> Unit,
@@ -43,7 +47,9 @@ fun ControlButtons(
     Column(
         modifier = Modifier.padding(12.dp)
     ) {
-        Row {
+        Row(
+            verticalAlignment = Alignment.Bottom
+        ) {
             DisableableSmallFloatingActionButton(
                 onClick = {
                     speedSliderIsExpanded = !speedSliderIsExpanded
@@ -57,14 +63,27 @@ fun ControlButtons(
                 )
             }
             if (speedSliderIsExpanded) {
-                Slider(
-                    value = speedMetersPerSec.toFloat(),
-                    onValueChange = {
-                        onSpeedChanged(it.toDouble())
-                    },
-                    valueRange = 0f..100f,
-                    modifier = Modifier.weight(1f)
-                )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "${speedMetersPerSec.toInt()} m/s",
+                        modifier = Modifier
+                            .background(
+                                MaterialTheme.colorScheme.surfaceVariant,
+                                shape = MaterialTheme.shapes.small
+                            )
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Slider(
+                        value = speedMetersPerSec.toFloat(),
+                        onValueChange = {
+                            onSpeedChanged(it.toDouble())
+                        },
+                        valueRange = 0f..100f
+                    )
+                }
             }
         }
         Spacer(Modifier.height(4.dp))
