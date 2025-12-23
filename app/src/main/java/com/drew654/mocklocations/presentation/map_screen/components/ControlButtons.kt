@@ -39,7 +39,7 @@ fun ControlButtons(
     isPaused: Boolean
 ) {
     var speedSliderIsExpanded by remember { mutableStateOf(false) }
-    
+
     Column(
         modifier = Modifier.padding(12.dp)
     ) {
@@ -105,7 +105,7 @@ fun ControlButtons(
         ) {
             DisableableFloatingActionButton(
                 onClick = {
-                    if (isMocking && !isPaused) {
+                    if (isMocking) {
                         onStopClicked()
                     } else {
                         onPlayClicked()
@@ -113,7 +113,7 @@ fun ControlButtons(
                 },
                 enabled = points.isNotEmpty()
             ) {
-                if (isMocking && !isPaused) {
+                if (isMocking) {
                     Icon(
                         painter = painterResource(id = R.drawable.baseline_stop_24),
                         contentDescription = "Stop"
@@ -125,7 +125,7 @@ fun ControlButtons(
                     )
                 }
             }
-            if (isMocking && !isPaused && points.size > 1) {
+            if (isMocking && points.size > 1) {
                 Spacer(Modifier.width(12.dp))
                 DisableableSmallFloatingActionButton(
                     onClick = {
@@ -134,9 +134,9 @@ fun ControlButtons(
                     enabled = points.isNotEmpty()
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.baseline_pause_24),
-                        contentDescription = "Pause",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        painter = painterResource(id = if (isPaused) R.drawable.baseline_play_arrow_24 else (R.drawable.baseline_pause_24)),
+                        contentDescription = if (isPaused) "Resume" else "Pause",
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
             }
