@@ -22,6 +22,8 @@ import kotlinx.coroutines.launch
 
 class MockLocationsViewModel(application: Application) : AndroidViewModel(application) {
     private var mockJob: Job? = null
+    private val _isShowingPermissionsDialog = MutableStateFlow(false)
+    val isShowingPermissionsDialog = _isShowingPermissionsDialog.asStateFlow()
     private val _isMocking = MutableStateFlow(false)
     val isMocking: StateFlow<Boolean> = _isMocking.asStateFlow()
     private val _isPaused = MutableStateFlow(false)
@@ -41,6 +43,10 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
                 _speedMetersPerSec.value = savedSpeed
             }
         }
+    }
+
+    fun setIsShowingPermissionsDialog(shouldShow: Boolean) {
+        _isShowingPermissionsDialog.value = shouldShow
     }
 
     fun togglePause() {
@@ -67,14 +73,18 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
-    fun startMockLocation() {
-        if (_points.value.isEmpty()) {
-            Toast.makeText(getApplication(), "Please a point first", Toast.LENGTH_SHORT)
-                .show()
-        } else if (_points.value.size == 1) {
-            mockLocationSinglePoint(_points.value.first())
+    fun startMockLocation(context: Context) {
+        if (hasFineLocationPermission(context)) {
+            if (_points.value.isEmpty()) {
+                Toast.makeText(getApplication(), "Please place a point first", Toast.LENGTH_SHORT)
+                    .show()
+            } else if (_points.value.size == 1) {
+                mockLocationSinglePoint(_points.value.first())
+            } else {
+                mockLocationStraightLineRoute(_points.value)
+            }
         } else {
-            mockLocationStraightLineRoute(_points.value)
+            _isShowingPermissionsDialog.value = true
         }
     }
 
@@ -127,11 +137,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
                     delay(1000)
                 }
             } catch (e: SecurityException) {
-                Toast.makeText(
-                    getApplication(),
-                    "Permission denied. Enable 'Select mock location app' in Developer Options.",
-                    Toast.LENGTH_LONG
-                ).show()
+                _isShowingPermissionsDialog.value = true
             } catch (e: Exception) {
                 if (e !is kotlinx.coroutines.CancellationException) {
                     Toast.makeText(getApplication(), "Error: ${e.message}", Toast.LENGTH_SHORT)
@@ -231,7 +237,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
                 Toast.makeText(getApplication(), "Route Finished", Toast.LENGTH_SHORT).show()
                 stopMockLocation()
             } catch (e: SecurityException) {
-                Toast.makeText(getApplication(), "Permission denied.", Toast.LENGTH_SHORT).show()
+                _isShowingPermissionsDialog.value = true
             } catch (e: Exception) {
                 if (e !is kotlinx.coroutines.CancellationException) {
                     Toast.makeText(getApplication(), "Error: ${e.message}", Toast.LENGTH_SHORT)
@@ -246,6 +252,9 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         _isPaused.value = false
         mockJob?.cancel()
         mockJob = null
+        if (clearPointsOnStop.value) {
+            clearPoints()
+        }
 
         try {
             locationManager.removeTestProvider(providerName)
