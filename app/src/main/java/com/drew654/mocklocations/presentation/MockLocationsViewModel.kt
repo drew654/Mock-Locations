@@ -22,6 +22,8 @@ import kotlinx.coroutines.launch
 
 class MockLocationsViewModel(application: Application) : AndroidViewModel(application) {
     private var mockJob: Job? = null
+    private val _isShowingPermissionsDialog = MutableStateFlow(false)
+    val isShowingPermissionsDialog = _isShowingPermissionsDialog.asStateFlow()
     private val _isMocking = MutableStateFlow(false)
     val isMocking: StateFlow<Boolean> = _isMocking.asStateFlow()
     private val _isPaused = MutableStateFlow(false)
@@ -41,6 +43,10 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
                 _speedMetersPerSec.value = savedSpeed
             }
         }
+    }
+
+    fun setIsShowingPermissionsDialog(shouldShow: Boolean) {
+        _isShowingPermissionsDialog.value = shouldShow
     }
 
     fun togglePause() {
@@ -127,11 +133,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
                     delay(1000)
                 }
             } catch (e: SecurityException) {
-                Toast.makeText(
-                    getApplication(),
-                    "Permission denied. Enable 'Select mock location app' in Developer Options.",
-                    Toast.LENGTH_LONG
-                ).show()
+                _isShowingPermissionsDialog.value = true
             } catch (e: Exception) {
                 if (e !is kotlinx.coroutines.CancellationException) {
                     Toast.makeText(getApplication(), "Error: ${e.message}", Toast.LENGTH_SHORT)
