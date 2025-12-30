@@ -73,14 +73,18 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
-    fun startMockLocation() {
-        if (_points.value.isEmpty()) {
-            Toast.makeText(getApplication(), "Please a point first", Toast.LENGTH_SHORT)
-                .show()
-        } else if (_points.value.size == 1) {
-            mockLocationSinglePoint(_points.value.first())
+    fun startMockLocation(context: Context) {
+        if (hasFineLocationPermission(context)) {
+            if (_points.value.isEmpty()) {
+                Toast.makeText(getApplication(), "Please place a point first", Toast.LENGTH_SHORT)
+                    .show()
+            } else if (_points.value.size == 1) {
+                mockLocationSinglePoint(_points.value.first())
+            } else {
+                mockLocationStraightLineRoute(_points.value)
+            }
         } else {
-            mockLocationStraightLineRoute(_points.value)
+            _isShowingPermissionsDialog.value = true
         }
     }
 

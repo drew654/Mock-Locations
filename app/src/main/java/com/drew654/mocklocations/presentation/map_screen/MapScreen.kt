@@ -1,13 +1,11 @@
 package com.drew654.mocklocations.presentation.map_screen
 
-import android.Manifest
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -17,8 +15,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.drew654.mocklocations.R
 import com.drew654.mocklocations.presentation.MockLocationsViewModel
+import com.drew654.mocklocations.presentation.hasFineLocationPermission
 import com.drew654.mocklocations.presentation.map_screen.components.ControlButtons
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -41,27 +43,12 @@ fun MapScreen(
     val context = LocalContext.current
     val systemInDarkTheme = isSystemInDarkTheme()
     val points by viewModel.points.collectAsState()
-    var hasLocationPermission by remember { mutableStateOf(false) }
     val isMocking by viewModel.isMocking.collectAsState()
     val isPaused by viewModel.isPaused.collectAsState()
     val speedMetersPerSec by viewModel.speedMetersPerSec.collectAsState()
-
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        hasLocationPermission = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
-                permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+    var hasLocationPermission by remember {
+        mutableStateOf(hasFineLocationPermission(context))
     }
-
-    LaunchedEffect(Unit) {
-        permissionLauncher.launch(
-            arrayOf(
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            )
-        )
-    }
-
     val mapProperties by remember(hasLocationPermission) {
         mutableStateOf(
             MapProperties(
@@ -73,7 +60,6 @@ fun MapScreen(
             )
         )
     }
-
     val mapUiSettings by remember {
         mutableStateOf(
             MapUiSettings(
@@ -81,10 +67,22 @@ fun MapScreen(
             )
         )
     }
-
     val cameraPositionState = rememberCameraPositionState {
         val zoom = if (points.isNotEmpty()) 15f else 1f
         position = CameraPosition.fromLatLngZoom(LatLng(0.0, 0.0), zoom)
+    }
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                hasLocationPermission = hasFineLocationPermission(context)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
     }
 
     LaunchedEffect(hasLocationPermission) {
@@ -161,7 +159,7 @@ fun MapScreen(
                     if (isPaused) {
                         viewModel.togglePause()
                     } else {
-                        viewModel.startMockLocation()
+                        viewModel.startMockLocation(context)
                     }
                 },
                 onStopClicked = {

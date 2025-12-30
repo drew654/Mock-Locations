@@ -18,6 +18,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -50,7 +51,7 @@ class MainActivity : ComponentActivity() {
             val context = LocalContext.current
             val lifecycleOwner = LocalLifecycleOwner.current
             val isShowingPermissionsDialog by viewModel.isShowingPermissionsDialog.collectAsState()
-            var resumeTrigger by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+            var resumeTrigger by remember { mutableIntStateOf(0) }
 
             DisposableEffect(lifecycleOwner) {
                 val observer = LifecycleEventObserver { _, event ->

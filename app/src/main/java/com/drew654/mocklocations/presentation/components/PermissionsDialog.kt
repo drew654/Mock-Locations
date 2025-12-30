@@ -7,6 +7,8 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import com.drew654.mocklocations.presentation.hasFineLocationPermission
+import com.drew654.mocklocations.presentation.isDeveloperOptionsEnabled
 
 @Composable
 fun PermissionsDialog(
@@ -15,41 +17,60 @@ fun PermissionsDialog(
     context: Context
 ) {
     if (showMockLocationDialog) {
-        val devOptionsEnabled = try {
-            Settings.Global.getInt(
-                context.contentResolver,
-                Settings.Global.DEVELOPMENT_SETTINGS_ENABLED, 0
-            ) != 0
-        } catch (e: Exception) {
-            false
+        val (bodyText, buttonText) = when (true) {
+            !hasFineLocationPermission(context) -> Pair(
+                "To use this app, you must grant 'Fine Location' permission in App Settings.",
+                "Open Location Settings"
+            )
+
+            isDeveloperOptionsEnabled(context) -> Pair(
+                "To use this app, you must select 'Mock Locations' as the Mock Location App in Developer Options.",
+                "Open Developer Options"
+            )
+
+            else -> Pair(
+                "You need to enable Developer Options first. Go to Settings > About Phone and tap 'Build Number' 7 times.",
+                "Open About Phone"
+            )
         }
 
         AlertDialog(
             onDismissRequest = {},
-            title = { Text("Developer Options Required") },
+            title = { Text(if (!hasFineLocationPermission(context)) "Location Permission Required" else "Developer Options Required") },
             text = {
-                Text(
-                    if (devOptionsEnabled)
-                        "To use this app, you must select 'Mock Locations' as the Mock Location App in Developer Options."
-                    else
-                        "You need to enable Developer Options first. Go to Settings > About Phone and tap 'Build Number' 7 times."
-                )
+                Text(bodyText)
             },
             confirmButton = {
                 TextButton(
                     onClick = {
                         try {
-                            if (devOptionsEnabled) {
-                                context.startActivity(Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS))
-                            } else {
-                                context.startActivity(Intent(Settings.ACTION_DEVICE_INFO_SETTINGS))
+                            when (true) {
+                                !hasFineLocationPermission(context) -> {
+                                    context.startActivity(
+                                        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                            data = android.net.Uri.fromParts(
+                                                "package",
+                                                context.packageName,
+                                                null
+                                            )
+                                        }
+                                    )
+                                }
+
+                                isDeveloperOptionsEnabled(context) -> context.startActivity(
+                                    Intent(
+                                        Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS
+                                    )
+                                )
+
+                                else -> context.startActivity(Intent(Settings.ACTION_DEVICE_INFO_SETTINGS))
                             }
                         } catch (e: Exception) {
                             context.startActivity(Intent(Settings.ACTION_SETTINGS))
                         }
                     }
                 ) {
-                    Text(if (devOptionsEnabled) "Open Developer Options" else "Open About Phone")
+                    Text(buttonText)
                 }
             },
             dismissButton = {
