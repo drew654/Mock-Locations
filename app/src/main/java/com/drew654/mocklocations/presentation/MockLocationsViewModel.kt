@@ -233,7 +233,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
                 Toast.makeText(getApplication(), "Route Finished", Toast.LENGTH_SHORT).show()
                 stopMockLocation()
             } catch (e: SecurityException) {
-                Toast.makeText(getApplication(), "Permission denied.", Toast.LENGTH_SHORT).show()
+                _isShowingPermissionsDialog.value = true
             } catch (e: Exception) {
                 if (e !is kotlinx.coroutines.CancellationException) {
                     Toast.makeText(getApplication(), "Error: ${e.message}", Toast.LENGTH_SHORT)

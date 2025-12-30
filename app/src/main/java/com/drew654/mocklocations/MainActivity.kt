@@ -1,7 +1,6 @@
 package com.drew654.mocklocations
 
 import android.app.AppOpsManager
-import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -18,6 +17,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -48,10 +50,12 @@ class MainActivity : ComponentActivity() {
             val context = LocalContext.current
             val lifecycleOwner = LocalLifecycleOwner.current
             val isShowingPermissionsDialog by viewModel.isShowingPermissionsDialog.collectAsState()
+            var resumeTrigger by remember { androidx.compose.runtime.mutableIntStateOf(0) }
 
             DisposableEffect(lifecycleOwner) {
                 val observer = LifecycleEventObserver { _, event ->
-                    if (event == Lifecycle.Event.ON_RESUME) {
+                    if (event == Lifecycle.Event.ON_RESUME || event == Lifecycle.Event.ON_START) {
+                        resumeTrigger++
                         try {
                             val opsManager = context.getSystemService(APP_OPS_SERVICE) as AppOpsManager
                             val mode = opsManager.checkOpNoThrow(
@@ -69,11 +73,13 @@ class MainActivity : ComponentActivity() {
                 onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
             }
 
-            PermissionsDialog(
-                showMockLocationDialog = isShowingPermissionsDialog,
-                setShowMockLocationDialog = { viewModel.setIsShowingPermissionsDialog(it) },
-                context = context
-            )
+            key(resumeTrigger) {
+                PermissionsDialog(
+                    showMockLocationDialog = isShowingPermissionsDialog,
+                    setShowMockLocationDialog = { viewModel.setIsShowingPermissionsDialog(it) },
+                    context = context
+                )
+            }
 
             MockLocationsTheme {
                 Scaffold(
