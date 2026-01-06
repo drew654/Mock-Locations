@@ -195,7 +195,8 @@ fun MapScreen(
         savedRoutes = emptyList(),
         onRouteSaved = {
             println(locationTarget)
-        }
+        },
+        locationTarget = locationTarget
     )
 }
 

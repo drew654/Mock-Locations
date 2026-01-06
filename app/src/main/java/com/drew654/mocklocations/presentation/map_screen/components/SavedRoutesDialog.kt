@@ -1,30 +1,14 @@
 package com.drew654.mocklocations.presentation.map_screen.components
 
 import android.content.res.Configuration
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
@@ -35,88 +19,62 @@ fun SavedRoutesDialog(
     isVisible: Boolean,
     onDismiss: () -> Unit,
     savedRoutes: List<LocationTarget.SavedRoute>,
-    onRouteSaved: (LocationTarget.SavedRoute) -> Unit
+    onRouteSaved: (LocationTarget.SavedRoute) -> Unit,
+    locationTarget: LocationTarget
 ) {
+    var isNamingRoute by remember { mutableStateOf(false) }
+    var routeName by remember { mutableStateOf("") }
+
     if (isVisible) {
         Dialog(
             onDismissRequest = {
                 onDismiss()
+                isNamingRoute = false
+                routeName = ""
             }
         ) {
             Card {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "Saved Routes",
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.padding(16.dp)
+                if (isNamingRoute) {
+                    NamingRouteDialogBody(
+                        routeName = routeName,
+                        onRouteNameChange = { routeName = it },
+                        onBack = {
+                            isNamingRoute = false
+                            routeName = ""
+                        },
+                        onConfirm = {
+                            onRouteSaved(
+                                LocationTarget.SavedRoute(
+                                    name = routeName,
+                                    points = locationTarget.points
+                                )
+                            )
+                            onDismiss()
+                            isNamingRoute = false
+                            routeName = ""
+                        }
                     )
+                } else {
+                    RoutesListDialogBody(
+                        savedRoutes = savedRoutes,
+                        onRouteSaved = {
 
-                    Box(
-                        modifier = Modifier
-                            .height(300.dp)
-                            .fillMaxWidth()
-                    ) {
-                        if (savedRoutes.isEmpty()) {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text("No saved routes found")
-                            }
-                        } else {
-                            LazyColumn {
-                                items(savedRoutes) { route ->
-                                    ListItem(
-                                        headlineContent = { Text(route.name) },
-                                        supportingContent = {
-                                            Text(
-                                                "${route.points.size} points • ${
-                                                    "%.2f".format(
-                                                        route.getDistance() / 1000.0
-                                                    )
-                                                } km"
-                                            )
-                                        },
-                                        modifier = Modifier
-                                            .padding(horizontal = 8.dp, vertical = 4.dp)
-                                            .fillMaxWidth()
-                                            .clip(MaterialTheme.shapes.medium)
-                                            .clickable {
-                                                onRouteSaved(route)
-                                            },
-                                        colors = ListItemDefaults.colors(
-                                            containerColor = MaterialTheme.colorScheme.secondaryContainer
-                                        )
-                                    )
-                                }
-                            }
+                        },
+                        onDismiss = {
+                            onDismiss()
+                            isNamingRoute = false
+                            routeName = ""
+                        },
+                        locationTarget = locationTarget,
+                        onConfirm = {
+                            isNamingRoute = true
                         }
-                    }
-
-                    Row {
-                        Spacer(Modifier.weight(1f))
-                        TextButton(
-                            onClick = { onDismiss() },
-                            modifier = Modifier.padding(8.dp)
-                        ) {
-                            Text(text = "Cancel")
-                        }
-                        TextButton(
-                            onClick = { onDismiss() },
-                            modifier = Modifier.padding(8.dp)
-                        ) {
-                            Text(text = "Save Route")
-                        }
-                    }
+                    )
                 }
             }
         }
     }
 }
-
 
 @Preview(
     name = "Light Mode",
@@ -152,6 +110,12 @@ fun SavedRoutesDialogPreview() {
                     )
                 ),
                 onRouteSaved = {},
+                locationTarget = LocationTarget.Route(
+                    listOf(
+                        LatLng(0.0, 0.0),
+                        LatLng(0.0, 0.1)
+                    )
+                )
             )
         }
     }
