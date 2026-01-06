@@ -14,17 +14,17 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "se
 
 class SettingsManager(private val context: Context) {
     companion object {
-        val CLEAR_POINTS_ON_STOP = booleanPreferencesKey("clear_points_on_stop")
+        val CLEAR_ROUTE_ON_STOP = booleanPreferencesKey("clear_route_on_stop")
         val SPEED_METERS_PER_SEC = doublePreferencesKey("speed_meters_per_sec")
     }
 
-    val clearPointsOnStopFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
-        preferences[CLEAR_POINTS_ON_STOP] ?: true
+    val clearRouteOnStopFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[CLEAR_ROUTE_ON_STOP] ?: true
     }
 
-    suspend fun setClearPointsOnStop(enabled: Boolean) {
+    suspend fun setClearRouteOnStop(enabled: Boolean) {
         context.dataStore.edit { preferences ->
-            preferences[CLEAR_POINTS_ON_STOP] = enabled
+            preferences[CLEAR_ROUTE_ON_STOP] = enabled
         }
     }
 

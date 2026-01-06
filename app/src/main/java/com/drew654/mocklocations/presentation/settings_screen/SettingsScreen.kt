@@ -13,17 +13,17 @@ import com.drew654.mocklocations.presentation.settings_screen.components.SwitchR
 fun SettingsScreen(
     viewModel: MockLocationsViewModel
 ) {
-    val clearPointsOnStop by viewModel.clearPointsOnStop.collectAsState()
+    val clearRouteOnStop by viewModel.clearRouteOnStop.collectAsState()
 
     Box(
         modifier = Modifier
             .fillMaxSize()
     ) {
         SwitchRow(
-            label = "Clear points on stop",
-            checked = clearPointsOnStop,
+            label = "Clear route on stop",
+            checked = clearRouteOnStop,
             onCheckedChange = {
-                viewModel.setClearPointsOnStop(it)
+                viewModel.setClearRouteOnStop(it)
             }
         )
     }
