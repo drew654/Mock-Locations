@@ -19,6 +19,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.drew654.mocklocations.R
+import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.presentation.MockLocationsViewModel
 import com.drew654.mocklocations.presentation.hasFineLocationPermission
 import com.drew654.mocklocations.presentation.map_screen.components.ControlButtons
@@ -42,7 +43,7 @@ fun MapScreen(
 ) {
     val context = LocalContext.current
     val systemInDarkTheme = isSystemInDarkTheme()
-    val points by viewModel.points.collectAsState()
+    val locationTarget by viewModel.locationTarget.collectAsState()
     val isMocking by viewModel.isMocking.collectAsState()
     val isPaused by viewModel.isPaused.collectAsState()
     val speedMetersPerSec by viewModel.speedMetersPerSec.collectAsState()
@@ -68,7 +69,7 @@ fun MapScreen(
         )
     }
     val cameraPositionState = rememberCameraPositionState {
-        val zoom = if (points.isNotEmpty()) 15f else 1f
+        val zoom = if (locationTarget !is LocationTarget.Empty) 15f else 1f
         position = CameraPosition.fromLatLngZoom(LatLng(0.0, 0.0), zoom)
     }
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -86,7 +87,7 @@ fun MapScreen(
     }
 
     LaunchedEffect(hasLocationPermission) {
-        if (hasLocationPermission && points.isEmpty()) {
+        if (hasLocationPermission && locationTarget is LocationTarget.Empty) {
             val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
             try {
                 fusedLocationClient.lastLocation.addOnSuccessListener { location ->
@@ -116,15 +117,15 @@ fun MapScreen(
                 }
             }
         ) {
-            if (points.isNotEmpty()) {
+            if (locationTarget !is LocationTarget.Empty) {
                 Polyline(
-                    points = points.map { LatLng(it.latitude, it.longitude) },
+                    points = locationTarget.points.map { LatLng(it.latitude, it.longitude) },
                     color = MaterialTheme.colorScheme.onBackground,
                     width = 20f
                 )
             }
 
-            points.forEachIndexed { index, point ->
+            locationTarget.points.forEachIndexed { index, point ->
                 Marker(
                     state = MarkerState(
                         position = LatLng(
@@ -135,7 +136,7 @@ fun MapScreen(
                     icon = BitmapDescriptorFactory.defaultMarker(
                         getMarkerHue(
                             index,
-                            points.size
+                            locationTarget.points.size
                         )
                     ),
                     snippet = "Lat: ${point.latitude}, Lng: ${point.longitude}",
@@ -153,7 +154,7 @@ fun MapScreen(
         ) {
             ControlButtons(
                 onClearClicked = {
-                    viewModel.clearPoints()
+                    viewModel.clearLocationTarget()
                 },
                 onPlayClicked = {
                     if (isPaused) {
@@ -175,7 +176,7 @@ fun MapScreen(
                 onSpeedChanged = {
                     viewModel.setSpeedMetersPerSec(it)
                 },
-                points = points,
+                locationTarget = locationTarget,
                 isMocking = isMocking,
                 isPaused = isPaused
             )

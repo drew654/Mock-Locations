@@ -25,6 +25,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.R
+import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 import com.google.android.gms.maps.model.LatLng
 
@@ -38,7 +39,7 @@ fun ControlButtons(
     onPauseClicked: () -> Unit,
     speedMetersPerSec: Double,
     onSpeedChanged: (Double) -> Unit,
-    points: List<LatLng>,
+    locationTarget: LocationTarget,
     isMocking: Boolean,
     isPaused: Boolean
 ) {
@@ -91,12 +92,12 @@ fun ControlButtons(
             onClick = {
                 onPopClicked()
             },
-            enabled = points.isNotEmpty() && !isMocking
+            enabled = locationTarget !is LocationTarget.Empty && !isMocking
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.baseline_backspace_24),
                 contentDescription = "Pop",
-                tint = if (points.isEmpty())
+                tint = if (locationTarget is LocationTarget.Empty)
                     MaterialTheme.colorScheme.onSurfaceVariant
                 else
                     MaterialTheme.colorScheme.onPrimaryContainer
@@ -107,12 +108,12 @@ fun ControlButtons(
             onClick = {
                 onClearClicked()
             },
-            enabled = points.isNotEmpty() && !isMocking
+            enabled = locationTarget !is LocationTarget.Empty && !isMocking
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.baseline_clear_24),
                 contentDescription = "Clear",
-                tint = if (points.isEmpty())
+                tint = if (locationTarget is LocationTarget.Empty)
                     MaterialTheme.colorScheme.onSurfaceVariant
                 else
                     MaterialTheme.colorScheme.onPrimaryContainer
@@ -130,7 +131,7 @@ fun ControlButtons(
                         onPlayClicked()
                     }
                 },
-                enabled = points.isNotEmpty()
+                enabled = locationTarget !is LocationTarget.Empty
             ) {
                 if (isMocking) {
                     Icon(
@@ -144,13 +145,13 @@ fun ControlButtons(
                     )
                 }
             }
-            if (isMocking && points.size > 1) {
+            if (isMocking && locationTarget is LocationTarget.Route) {
                 Spacer(Modifier.width(12.dp))
                 DisableableSmallFloatingActionButton(
                     onClick = {
                         onPauseClicked()
                     },
-                    enabled = points.isNotEmpty()
+                    enabled = true
                 ) {
                     Icon(
                         painter = painterResource(id = if (isPaused) R.drawable.baseline_play_arrow_24 else (R.drawable.baseline_pause_24)),
@@ -185,7 +186,7 @@ fun ControlButtonsPreview1() {
                 onPauseClicked = {},
                 speedMetersPerSec = 30.0,
                 onSpeedChanged = {},
-                points = emptyList(),
+                locationTarget = LocationTarget.Empty,
                 isMocking = false,
                 isPaused = false
             )
@@ -214,7 +215,7 @@ fun ControlButtonsPreview2() {
                 onPauseClicked = {},
                 speedMetersPerSec = 30.0,
                 onSpeedChanged = {},
-                points = listOf(LatLng(0.0, 0.0), LatLng(0.0, 0.0)),
+                locationTarget = LocationTarget.create(listOf(LatLng(0.0, 0.0), LatLng(0.0, 0.0))),
                 isMocking = true,
                 isPaused = false
             )
