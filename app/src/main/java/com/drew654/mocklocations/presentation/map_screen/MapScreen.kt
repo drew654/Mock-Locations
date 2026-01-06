@@ -23,6 +23,7 @@ import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.presentation.MockLocationsViewModel
 import com.drew654.mocklocations.presentation.hasFineLocationPermission
 import com.drew654.mocklocations.presentation.map_screen.components.ControlButtons
+import com.drew654.mocklocations.presentation.map_screen.components.SavedRoutesDialog
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
@@ -73,6 +74,7 @@ fun MapScreen(
         position = CameraPosition.fromLatLngZoom(LatLng(0.0, 0.0), zoom)
     }
     val lifecycleOwner = LocalLifecycleOwner.current
+    var isShowingSavedRoutesDialog by remember { mutableStateOf(false) }
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -176,12 +178,25 @@ fun MapScreen(
                 onSpeedChanged = {
                     viewModel.setSpeedMetersPerSec(it)
                 },
+                onSaveClicked = {
+                    isShowingSavedRoutesDialog = true
+                },
                 locationTarget = locationTarget,
                 isMocking = isMocking,
                 isPaused = isPaused
             )
         }
     }
+    SavedRoutesDialog(
+        isVisible = isShowingSavedRoutesDialog,
+        onDismiss = {
+            isShowingSavedRoutesDialog = false
+        },
+        savedRoutes = emptyList(),
+        onRouteSaved = {
+            println(locationTarget)
+        }
+    )
 }
 
 private fun getMarkerHue(index: Int, numPoints: Int): Float {
