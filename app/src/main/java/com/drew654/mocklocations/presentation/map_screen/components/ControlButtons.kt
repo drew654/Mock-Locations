@@ -37,6 +37,7 @@ fun ControlButtons(
     onStopClicked: () -> Unit,
     onPopClicked: () -> Unit,
     onPauseClicked: () -> Unit,
+    onSaveClicked: () -> Unit,
     speedMetersPerSec: Double,
     onSpeedChanged: (Double) -> Unit,
     locationTarget: LocationTarget,
@@ -48,6 +49,19 @@ fun ControlButtons(
     Column(
         modifier = Modifier.padding(12.dp)
     ) {
+        DisableableSmallFloatingActionButton(
+            onClick = {
+                onSaveClicked()
+            },
+            enabled = true
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.baseline_save_24),
+                contentDescription = "Saved Routes",
+                tint = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+        }
+        Spacer(Modifier.height(4.dp))
         Row(
             verticalAlignment = Alignment.Bottom
         ) {
@@ -186,6 +200,7 @@ fun ControlButtonsPreview1() {
                 onPauseClicked = {},
                 speedMetersPerSec = 30.0,
                 onSpeedChanged = {},
+                onSaveClicked = {},
                 locationTarget = LocationTarget.Empty,
                 isMocking = false,
                 isPaused = false
@@ -215,6 +230,7 @@ fun ControlButtonsPreview2() {
                 onPauseClicked = {},
                 speedMetersPerSec = 30.0,
                 onSpeedChanged = {},
+                onSaveClicked = {},
                 locationTarget = LocationTarget.create(listOf(LatLng(0.0, 0.0), LatLng(0.0, 0.0))),
                 isMocking = true,
                 isPaused = false

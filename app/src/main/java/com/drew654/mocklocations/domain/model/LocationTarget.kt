@@ -40,4 +40,11 @@ sealed interface LocationTarget {
             return totalDistance
         }
     }
+
+    data class SavedRoute(
+        val name: String,
+        override val points: List<LatLng>
+    ) : LocationTarget {
+        fun getDistance(): Double = Route(points).getDistance()
+    }
 }
