@@ -32,10 +32,10 @@ import com.google.android.gms.maps.model.LatLng
 @Composable
 fun RoutesListDialogBody(
     savedRoutes: List<LocationTarget.SavedRoute>,
-    onRouteSaved: (LocationTarget.SavedRoute) -> Unit,
     onDismiss: () -> Unit,
     locationTarget: LocationTarget,
-    onConfirm: () -> Unit
+    onConfirm: () -> Unit,
+    onRouteSelected: (LocationTarget.SavedRoute) -> Unit
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -77,7 +77,7 @@ fun RoutesListDialogBody(
                                 .fillMaxWidth()
                                 .clip(MaterialTheme.shapes.medium)
                                 .clickable {
-                                    onRouteSaved(route)
+                                    onRouteSelected(route)
                                 },
                             colors = ListItemDefaults.colors(
                                 containerColor = MaterialTheme.colorScheme.secondaryContainer
@@ -142,7 +142,6 @@ fun RoutesDialogBodyPreview() {
                             )
                         )
                     ),
-                    onRouteSaved = { },
                     onDismiss = { },
                     locationTarget = LocationTarget.Route(
                         listOf(
@@ -150,7 +149,8 @@ fun RoutesDialogBodyPreview() {
                             LatLng(0.0, 0.1)
                         )
                     ),
-                    onConfirm = { }
+                    onConfirm = { },
+                    onRouteSelected = { }
                 )
             }
         }

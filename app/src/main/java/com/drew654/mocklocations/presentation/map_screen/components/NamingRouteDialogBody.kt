@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.presentation.NoRippleInteractionSource
@@ -60,11 +61,14 @@ fun NamingRouteDialogBody(
             singleLine = true,
             maxLines = 1,
             keyboardOptions = KeyboardOptions.Default.copy(
-                imeAction = ImeAction.Done
+                imeAction = ImeAction.Done,
+                capitalization = KeyboardCapitalization.Sentences
             ),
             keyboardActions = KeyboardActions(
                 onDone = {
-                    onConfirm()
+                    if (routeName.isNotBlank()) {
+                        onConfirm()
+                    }
                 }
             )
         )
@@ -107,9 +111,9 @@ fun NamingRouteDialogBodyPreview() {
             Card {
                 NamingRouteDialogBody(
                     routeName = "Route 1",
-                    onRouteNameChange = {},
-                    onBack = {},
-                    onConfirm = {}
+                    onRouteNameChange = { },
+                    onBack = { },
+                    onConfirm = { }
                 )
             }
         }

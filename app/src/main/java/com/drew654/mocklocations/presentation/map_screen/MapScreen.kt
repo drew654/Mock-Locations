@@ -75,6 +75,7 @@ fun MapScreen(
     }
     val lifecycleOwner = LocalLifecycleOwner.current
     var isShowingSavedRoutesDialog by remember { mutableStateOf(false) }
+    val savedRoutes by viewModel.savedRoutes.collectAsState()
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -192,11 +193,14 @@ fun MapScreen(
         onDismiss = {
             isShowingSavedRoutesDialog = false
         },
-        savedRoutes = emptyList(),
+        savedRoutes = savedRoutes,
         onRouteSaved = {
-            println(locationTarget)
+            viewModel.saveCurrentRoute(it)
         },
-        locationTarget = locationTarget
+        locationTarget = locationTarget,
+        onRouteSelected = {
+            viewModel.loadSavedRoute(it)
+        }
     )
 }
 

@@ -302,4 +302,30 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
             settingsManager.setClearRouteOnStop(enabled)
         }
     }
+
+    val savedRoutes = settingsManager.savedRoutesFlow.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    fun saveCurrentRoute(name: String) {
+        val current = _locationTarget.value
+        if (current.points.isNotEmpty()) {
+            val routeToSave = LocationTarget.SavedRoute(name, current.points)
+            viewModelScope.launch {
+                settingsManager.saveRoute(routeToSave)
+            }
+        }
+    }
+
+    fun loadSavedRoute(route: LocationTarget.SavedRoute) {
+        _locationTarget.value = route
+    }
+
+    fun deleteSavedRoute(route: LocationTarget.SavedRoute) {
+        viewModelScope.launch {
+            settingsManager.deleteRoute(route)
+        }
+    }
 }

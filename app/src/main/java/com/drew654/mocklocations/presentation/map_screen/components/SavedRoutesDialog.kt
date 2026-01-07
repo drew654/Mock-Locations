@@ -14,8 +14,9 @@ fun SavedRoutesDialog(
     isVisible: Boolean,
     onDismiss: () -> Unit,
     savedRoutes: List<LocationTarget.SavedRoute>,
-    onRouteSaved: (LocationTarget.SavedRoute) -> Unit,
-    locationTarget: LocationTarget
+    onRouteSaved: (String) -> Unit,
+    locationTarget: LocationTarget,
+    onRouteSelected: (LocationTarget.SavedRoute) -> Unit
 ) {
     var isNamingRoute by remember { mutableStateOf(false) }
     var routeName by remember { mutableStateOf("") }
@@ -38,12 +39,7 @@ fun SavedRoutesDialog(
                             routeName = ""
                         },
                         onConfirm = {
-                            onRouteSaved(
-                                LocationTarget.SavedRoute(
-                                    name = routeName,
-                                    points = locationTarget.points
-                                )
-                            )
+                            onRouteSaved(routeName)
                             onDismiss()
                             isNamingRoute = false
                             routeName = ""
@@ -52,9 +48,6 @@ fun SavedRoutesDialog(
                 } else {
                     RoutesListDialogBody(
                         savedRoutes = savedRoutes,
-                        onRouteSaved = {
-
-                        },
                         onDismiss = {
                             onDismiss()
                             isNamingRoute = false
@@ -63,6 +56,10 @@ fun SavedRoutesDialog(
                         locationTarget = locationTarget,
                         onConfirm = {
                             isNamingRoute = true
+                        },
+                        onRouteSelected = {
+                            onRouteSelected(it)
+                            onDismiss()
                         }
                     )
                 }
