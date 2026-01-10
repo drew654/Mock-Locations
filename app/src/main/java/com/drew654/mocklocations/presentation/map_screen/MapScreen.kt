@@ -2,7 +2,10 @@ package com.drew654.mocklocations.presentation.map_screen
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -152,7 +155,8 @@ fun MapScreen(
         }
         Box(
             modifier = Modifier
-                .fillMaxSize(),
+                .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.displayCutout),
             contentAlignment = Alignment.BottomStart
         ) {
             ControlButtons(
