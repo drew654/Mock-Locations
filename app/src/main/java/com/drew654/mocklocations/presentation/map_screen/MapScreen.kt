@@ -198,8 +198,11 @@ fun MapScreen(
             viewModel.saveCurrentRoute(it)
         },
         locationTarget = locationTarget,
-        onRouteSelected = {
+        onRouteLoaded = {
             viewModel.loadSavedRoute(it)
+        },
+        onRouteDeleted = {
+            viewModel.deleteSavedRoute(it)
         }
     )
 }

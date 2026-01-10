@@ -16,10 +16,12 @@ fun SavedRoutesDialog(
     savedRoutes: List<LocationTarget.SavedRoute>,
     onRouteSaved: (String) -> Unit,
     locationTarget: LocationTarget,
-    onRouteSelected: (LocationTarget.SavedRoute) -> Unit
+    onRouteLoaded: (LocationTarget.SavedRoute) -> Unit,
+    onRouteDeleted: (LocationTarget.SavedRoute) -> Unit
 ) {
     var isNamingRoute by remember { mutableStateOf(false) }
     var routeName by remember { mutableStateOf("") }
+    var selectedRoutes by remember { mutableStateOf(emptyList<LocationTarget.SavedRoute>()) }
 
     if (isVisible) {
         Dialog(
@@ -43,7 +45,8 @@ fun SavedRoutesDialog(
                             onDismiss()
                             isNamingRoute = false
                             routeName = ""
-                        }
+                        },
+                        savedRoutes = savedRoutes
                     )
                 } else {
                     RoutesListDialogBody(
@@ -57,9 +60,27 @@ fun SavedRoutesDialog(
                         onConfirm = {
                             isNamingRoute = true
                         },
-                        onRouteSelected = {
-                            onRouteSelected(it)
+                        onRouteLoaded = {
+                            onRouteLoaded(it)
                             onDismiss()
+                        },
+                        selectedRoutes = selectedRoutes,
+                        onRouteSelected = {
+                            if (!selectedRoutes.contains(it)) {
+                                selectedRoutes = selectedRoutes + it
+                            }
+                        },
+                        onRouteDeselected = {
+                            selectedRoutes = selectedRoutes - it
+                        },
+                        onClearSelectedRoutes = {
+                            selectedRoutes = emptyList()
+                        },
+                        onDeleteSelectedRoutes = {
+                            selectedRoutes.forEach { route ->
+                                onRouteDeleted(route)
+                            }
+                            selectedRoutes = emptyList()
                         }
                     )
                 }

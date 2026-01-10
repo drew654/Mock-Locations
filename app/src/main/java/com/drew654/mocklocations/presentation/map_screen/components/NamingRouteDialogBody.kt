@@ -23,6 +23,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.presentation.NoRippleInteractionSource
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 
@@ -31,7 +32,8 @@ fun NamingRouteDialogBody(
     routeName: String,
     onRouteNameChange: (String) -> Unit,
     onBack: () -> Unit,
-    onConfirm: () -> Unit
+    onConfirm: () -> Unit,
+    savedRoutes: List<LocationTarget.SavedRoute>
 ) {
     val focusManager = LocalFocusManager.current
 
@@ -87,7 +89,7 @@ fun NamingRouteDialogBody(
                     onConfirm()
                 },
                 modifier = Modifier.padding(8.dp),
-                enabled = routeName.isNotBlank()
+                enabled = routeName.isNotBlank() && savedRoutes.none { it.name == routeName }
             ) {
                 Text(text = "Save Route")
             }
@@ -113,7 +115,8 @@ fun NamingRouteDialogBodyPreview() {
                     routeName = "Route 1",
                     onRouteNameChange = { },
                     onBack = { },
-                    onConfirm = { }
+                    onConfirm = { },
+                    savedRoutes = emptyList()
                 )
             }
         }
