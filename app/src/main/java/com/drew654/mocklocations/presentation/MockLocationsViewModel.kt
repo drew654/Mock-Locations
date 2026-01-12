@@ -30,20 +30,16 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     val isPaused: StateFlow<Boolean> = _isPaused.asStateFlow()
     private val _points = MutableStateFlow<List<LatLng>>(emptyList())
     val points: StateFlow<List<LatLng>> = _points.asStateFlow()
-    val _speedMetersPerSec = MutableStateFlow(30.0)
-    val speedMetersPerSec: StateFlow<Double> = _speedMetersPerSec.asStateFlow()
     private val locationManager =
         application.getSystemService(Context.LOCATION_SERVICE) as LocationManager
     private val providerName = LocationManager.GPS_PROVIDER
     private val settingsManager = SettingsManager(application)
-
-    init {
-        viewModelScope.launch {
-            settingsManager.speedMetersPerSecFlow.collect { savedSpeed ->
-                _speedMetersPerSec.value = savedSpeed
-            }
-        }
-    }
+    val speedMetersPerSec: StateFlow<Double> = settingsManager.speedMetersPerSecFlow
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = 30.0
+        )
 
     fun setIsShowingPermissionsDialog(shouldShow: Boolean) {
         _isShowingPermissionsDialog.value = shouldShow
@@ -66,8 +62,6 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     }
 
     fun setSpeedMetersPerSec(speed: Double) {
-        _speedMetersPerSec.value = speed
-
         viewModelScope.launch {
             settingsManager.setSpeedMetersPerSec(speed)
         }
@@ -205,7 +199,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
                             continue
                         }
 
-                        val stepDistance = _speedMetersPerSec.value * (updateIntervalMs / 1000.0)
+                        val stepDistance = speedMetersPerSec.value * (updateIntervalMs / 1000.0)
 
                         val fraction = currentDistance / totalDistance
 
@@ -217,7 +211,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
                             longitude = nextLng
                             altitude = 3.0
                             time = System.currentTimeMillis()
-                            speed = _speedMetersPerSec.value.toFloat()
+                            speed = speedMetersPerSec.value.toFloat()
                             this.bearing = bearing
                             accuracy = 3.0f
                             elapsedRealtimeNanos = SystemClock.elapsedRealtimeNanos()
