@@ -34,12 +34,16 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         application.getSystemService(Context.LOCATION_SERVICE) as LocationManager
     private val providerName = LocationManager.GPS_PROVIDER
     private val settingsManager = SettingsManager(application)
-    val speedMetersPerSec: StateFlow<Double> = settingsManager.speedMetersPerSecFlow
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = 30.0
-        )
+    private val _speedMetersPerSec = MutableStateFlow(30.0)
+    val speedMetersPerSec: StateFlow<Double> = _speedMetersPerSec.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            settingsManager.speedMetersPerSecFlow.collect {
+                _speedMetersPerSec.value = it
+            }
+        }
+    }
 
     fun setIsShowingPermissionsDialog(shouldShow: Boolean) {
         _isShowingPermissionsDialog.value = shouldShow
@@ -62,9 +66,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     }
 
     fun setSpeedMetersPerSec(speed: Double) {
-        viewModelScope.launch {
-            settingsManager.setSpeedMetersPerSec(speed)
-        }
+        _speedMetersPerSec.value = speed
     }
 
     fun startMockLocation(context: Context) {
@@ -279,6 +281,12 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     fun setClearPointsOnStop(enabled: Boolean) {
         viewModelScope.launch {
             settingsManager.setClearPointsOnStop(enabled)
+        }
+    }
+
+    fun saveSpeedMetersPerSec(speed: Double) {
+        viewModelScope.launch {
+            settingsManager.setSpeedMetersPerSec(speed)
         }
     }
 }

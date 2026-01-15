@@ -38,6 +38,7 @@ fun ControlButtons(
     onPauseClicked: () -> Unit,
     speedMetersPerSec: Double,
     onSpeedChanged: (Double) -> Unit,
+    onSpeedChangeFinished: (Double) -> Unit,
     points: List<LatLng>,
     isMocking: Boolean,
     isPaused: Boolean
@@ -80,6 +81,9 @@ fun ControlButtons(
                         value = speedMetersPerSec.toFloat(),
                         onValueChange = {
                             onSpeedChanged(it.toDouble())
+                        },
+                        onValueChangeFinished = {
+                            onSpeedChangeFinished(speedMetersPerSec)
                         },
                         valueRange = 0f..100f
                     )
@@ -185,6 +189,7 @@ fun ControlButtonsPreview1() {
                 onPauseClicked = {},
                 speedMetersPerSec = 30.0,
                 onSpeedChanged = {},
+                onSpeedChangeFinished = {},
                 points = emptyList(),
                 isMocking = false,
                 isPaused = false
@@ -214,6 +219,7 @@ fun ControlButtonsPreview2() {
                 onPauseClicked = {},
                 speedMetersPerSec = 30.0,
                 onSpeedChanged = {},
+                onSpeedChangeFinished = {},
                 points = listOf(LatLng(0.0, 0.0), LatLng(0.0, 0.0)),
                 isMocking = true,
                 isPaused = false
