@@ -62,6 +62,7 @@ fun MapScreen(
         )
     }
     val mapUiSettings = MapUiSettings(
+        compassEnabled = false,
         myLocationButtonEnabled = false,
         zoomControlsEnabled = false
     )

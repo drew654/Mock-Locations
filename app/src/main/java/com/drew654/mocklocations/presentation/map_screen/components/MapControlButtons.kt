@@ -1,11 +1,13 @@
 package com.drew654.mocklocations.presentation.map_screen.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -16,12 +18,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.R
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.CameraPositionState
 import kotlinx.coroutines.launch
@@ -77,7 +81,7 @@ fun MapControlButtons(
             color = MaterialTheme.colorScheme.surfaceContainerHigh,
             tonalElevation = 3.dp,
             shadowElevation = 2.dp,
-            border = androidx.compose.foundation.BorderStroke(
+            border = BorderStroke(
                 width = 0.5.dp,
                 color = MaterialTheme.colorScheme.outlineVariant
             )
@@ -114,6 +118,43 @@ fun MapControlButtons(
                     Icon(
                         painter = painterResource(id = R.drawable.baseline_remove_24),
                         contentDescription = "Zoom Out",
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
+        }
+
+        if (cameraPositionState.position.bearing != 0f) {
+            Surface(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(8.dp),
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                shadowElevation = 2.dp
+            ) {
+                IconButton(
+                    onClick = {
+                        scope.launch {
+                            val currentPos = cameraPositionState.position
+                            cameraPositionState.animate(
+                                CameraUpdateFactory.newCameraPosition(
+                                    CameraPosition.Builder()
+                                        .target(currentPos.target)
+                                        .zoom(currentPos.zoom)
+                                        .bearing(0f)
+                                        .tilt(currentPos.tilt)
+                                        .build()
+                                )
+                            )
+                        }
+                    },
+                    modifier = Modifier.size(42.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.baseline_north_24),
+                        contentDescription = "Align North",
+                        modifier = Modifier.rotate(360f - cameraPositionState.position.bearing),
                         tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
