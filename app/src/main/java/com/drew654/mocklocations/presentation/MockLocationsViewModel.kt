@@ -32,8 +32,6 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     val isPaused: StateFlow<Boolean> = _isPaused.asStateFlow()
     private val _locationTarget = MutableStateFlow<LocationTarget>(LocationTarget.Empty)
     val locationTarget: StateFlow<LocationTarget> = _locationTarget.asStateFlow()
-    val _speedMetersPerSec = MutableStateFlow(30.0)
-    val speedMetersPerSec: StateFlow<Double> = _speedMetersPerSec.asStateFlow()
     private val locationManager =
         application.getSystemService(Context.LOCATION_SERVICE) as LocationManager
     private val providerName = LocationManager.GPS_PROVIDER

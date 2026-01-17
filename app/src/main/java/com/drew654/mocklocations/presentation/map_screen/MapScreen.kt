@@ -186,7 +186,7 @@ fun MapScreen(
                 onSpeedChangeFinished = {
                     viewModel.saveSpeedMetersPerSec(speedMetersPerSec)
                 },
-                points = points,
+                points = locationTarget.points,
                 onSaveClicked = {
                     isShowingSavedRoutesDialog = true
                 },
