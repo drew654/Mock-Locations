@@ -175,6 +175,9 @@ fun MapScreen(
                 onSpeedChanged = {
                     viewModel.setSpeedMetersPerSec(it)
                 },
+                onSpeedChangeFinished = {
+                    viewModel.saveSpeedMetersPerSec(speedMetersPerSec)
+                },
                 points = points,
                 isMocking = isMocking,
                 isPaused = isPaused
