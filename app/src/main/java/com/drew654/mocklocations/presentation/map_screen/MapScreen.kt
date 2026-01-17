@@ -21,7 +21,8 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.drew654.mocklocations.R
 import com.drew654.mocklocations.presentation.MockLocationsViewModel
 import com.drew654.mocklocations.presentation.hasFineLocationPermission
-import com.drew654.mocklocations.presentation.map_screen.components.ControlButtons
+import com.drew654.mocklocations.presentation.map_screen.components.MockLocationControlButton
+import com.drew654.mocklocations.presentation.map_screen.components.MapControlButtons
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
@@ -60,13 +61,10 @@ fun MapScreen(
             )
         )
     }
-    val mapUiSettings by remember {
-        mutableStateOf(
-            MapUiSettings(
-                myLocationButtonEnabled = true
-            )
-        )
-    }
+    val mapUiSettings = MapUiSettings(
+        myLocationButtonEnabled = false,
+        zoomControlsEnabled = false
+    )
     val cameraPositionState = rememberCameraPositionState {
         val zoom = if (points.isNotEmpty()) 15f else 1f
         position = CameraPosition.fromLatLngZoom(LatLng(0.0, 0.0), zoom)
@@ -151,7 +149,7 @@ fun MapScreen(
                 .fillMaxSize(),
             contentAlignment = Alignment.BottomStart
         ) {
-            ControlButtons(
+            MockLocationControlButton(
                 onClearClicked = {
                     viewModel.clearPoints()
                 },
@@ -183,6 +181,9 @@ fun MapScreen(
                 isPaused = isPaused
             )
         }
+        MapControlButtons(
+            cameraPositionState = cameraPositionState
+        )
     }
 }
 

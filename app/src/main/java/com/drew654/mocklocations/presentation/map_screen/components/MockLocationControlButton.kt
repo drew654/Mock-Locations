@@ -32,7 +32,7 @@ import com.google.android.gms.maps.model.LatLng
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ControlButtons(
+fun MockLocationControlButton(
     onClearClicked: () -> Unit,
     onPlayClicked: () -> Unit,
     onStopClicked: () -> Unit,
@@ -187,7 +187,7 @@ fun ControlButtons(
 fun ControlButtonsPreview1() {
     MockLocationsTheme {
         Surface {
-            ControlButtons(
+            MockLocationControlButton(
                 onClearClicked = {},
                 onPlayClicked = {},
                 onStopClicked = {},
@@ -217,7 +217,7 @@ fun ControlButtonsPreview1() {
 fun ControlButtonsPreview2() {
     MockLocationsTheme {
         Surface {
-            ControlButtons(
+            MockLocationControlButton(
                 onClearClicked = {},
                 onPlayClicked = {},
                 onStopClicked = {},
