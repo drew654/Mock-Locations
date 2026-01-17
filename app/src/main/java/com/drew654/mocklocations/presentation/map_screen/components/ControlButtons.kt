@@ -5,9 +5,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -38,6 +40,7 @@ fun ControlButtons(
     onPauseClicked: () -> Unit,
     speedMetersPerSec: Double,
     onSpeedChanged: (Double) -> Unit,
+    onSpeedChangeFinished: (Double) -> Unit,
     points: List<LatLng>,
     isMocking: Boolean,
     isPaused: Boolean
@@ -80,6 +83,13 @@ fun ControlButtons(
                         value = speedMetersPerSec.toFloat(),
                         onValueChange = {
                             onSpeedChanged(it.toDouble())
+                        },
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp)
+                            .widthIn(max = 300.dp)
+                            .fillMaxWidth(),
+                        onValueChangeFinished = {
+                            onSpeedChangeFinished(speedMetersPerSec)
                         },
                         valueRange = 0f..100f
                     )
@@ -185,6 +195,7 @@ fun ControlButtonsPreview1() {
                 onPauseClicked = {},
                 speedMetersPerSec = 30.0,
                 onSpeedChanged = {},
+                onSpeedChangeFinished = {},
                 points = emptyList(),
                 isMocking = false,
                 isPaused = false
@@ -214,6 +225,7 @@ fun ControlButtonsPreview2() {
                 onPauseClicked = {},
                 speedMetersPerSec = 30.0,
                 onSpeedChanged = {},
+                onSpeedChangeFinished = {},
                 points = listOf(LatLng(0.0, 0.0), LatLng(0.0, 0.0)),
                 isMocking = true,
                 isPaused = false
