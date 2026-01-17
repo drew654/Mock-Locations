@@ -2,7 +2,10 @@ package com.drew654.mocklocations.presentation.map_screen
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -19,9 +22,11 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.drew654.mocklocations.R
+import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.presentation.MockLocationsViewModel
 import com.drew654.mocklocations.presentation.hasFineLocationPermission
 import com.drew654.mocklocations.presentation.map_screen.components.ControlButtons
+import com.drew654.mocklocations.presentation.map_screen.components.SavedRoutesDialog
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
@@ -42,7 +47,7 @@ fun MapScreen(
 ) {
     val context = LocalContext.current
     val systemInDarkTheme = isSystemInDarkTheme()
-    val points by viewModel.points.collectAsState()
+    val locationTarget by viewModel.locationTarget.collectAsState()
     val isMocking by viewModel.isMocking.collectAsState()
     val isPaused by viewModel.isPaused.collectAsState()
     val speedMetersPerSec by viewModel.speedMetersPerSec.collectAsState()
@@ -68,10 +73,12 @@ fun MapScreen(
         )
     }
     val cameraPositionState = rememberCameraPositionState {
-        val zoom = if (points.isNotEmpty()) 15f else 1f
+        val zoom = if (locationTarget !is LocationTarget.Empty) 15f else 1f
         position = CameraPosition.fromLatLngZoom(LatLng(0.0, 0.0), zoom)
     }
     val lifecycleOwner = LocalLifecycleOwner.current
+    var isShowingSavedRoutesDialog by remember { mutableStateOf(false) }
+    val savedRoutes by viewModel.savedRoutes.collectAsState()
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -86,7 +93,7 @@ fun MapScreen(
     }
 
     LaunchedEffect(hasLocationPermission) {
-        if (hasLocationPermission && points.isEmpty()) {
+        if (hasLocationPermission && locationTarget is LocationTarget.Empty) {
             val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
             try {
                 fusedLocationClient.lastLocation.addOnSuccessListener { location ->
@@ -116,15 +123,15 @@ fun MapScreen(
                 }
             }
         ) {
-            if (points.isNotEmpty()) {
+            if (locationTarget !is LocationTarget.Empty) {
                 Polyline(
-                    points = points.map { LatLng(it.latitude, it.longitude) },
+                    points = locationTarget.points.map { LatLng(it.latitude, it.longitude) },
                     color = MaterialTheme.colorScheme.onBackground,
                     width = 20f
                 )
             }
 
-            points.forEachIndexed { index, point ->
+            locationTarget.points.forEachIndexed { index, point ->
                 Marker(
                     state = MarkerState(
                         position = LatLng(
@@ -135,7 +142,7 @@ fun MapScreen(
                     icon = BitmapDescriptorFactory.defaultMarker(
                         getMarkerHue(
                             index,
-                            points.size
+                            locationTarget.points.size
                         )
                     ),
                     snippet = "Lat: ${point.latitude}, Lng: ${point.longitude}",
@@ -148,12 +155,13 @@ fun MapScreen(
         }
         Box(
             modifier = Modifier
-                .fillMaxSize(),
+                .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.displayCutout),
             contentAlignment = Alignment.BottomStart
         ) {
             ControlButtons(
                 onClearClicked = {
-                    viewModel.clearPoints()
+                    viewModel.clearLocationTarget()
                 },
                 onPlayClicked = {
                     if (isPaused) {
@@ -179,11 +187,32 @@ fun MapScreen(
                     viewModel.saveSpeedMetersPerSec(speedMetersPerSec)
                 },
                 points = points,
+                onSaveClicked = {
+                    isShowingSavedRoutesDialog = true
+                },
+                locationTarget = locationTarget,
                 isMocking = isMocking,
                 isPaused = isPaused
             )
         }
     }
+    SavedRoutesDialog(
+        isVisible = isShowingSavedRoutesDialog,
+        onDismiss = {
+            isShowingSavedRoutesDialog = false
+        },
+        savedRoutes = savedRoutes,
+        onRouteSaved = {
+            viewModel.saveCurrentRoute(it)
+        },
+        locationTarget = locationTarget,
+        onRouteLoaded = {
+            viewModel.loadSavedRoute(it)
+        },
+        onRouteDeleted = {
+            viewModel.deleteSavedRoute(it)
+        }
+    )
 }
 
 private fun getMarkerHue(index: Int, numPoints: Int): Float {
