@@ -1,5 +1,6 @@
 package com.drew654.mocklocations.presentation.map_screen.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,8 +22,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.R
+import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
@@ -41,42 +44,81 @@ fun MapControlButtons(
         modifier = Modifier
             .fillMaxSize()
     ) {
-        SmallFloatingActionButton(
-            onClick = {
-                scope.launch {
-                    val fusedLocationClient =
-                        LocationServices.getFusedLocationProviderClient(context)
-                    try {
-                        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-                            if (location != null) {
-                                scope.launch {
-                                    cameraPositionState.animate(
-                                        CameraUpdateFactory.newLatLng(
-                                            LatLng(location.latitude, location.longitude)
-                                        )
-                                    )
-                                }
-                            }
-                        }
-                    } catch (e: SecurityException) {
-                    }
-                }
-            },
+        Column(
             modifier = Modifier
-                .align(Alignment.TopEnd)
+                .align(Alignment.TopStart)
                 .padding(8.dp)
         ) {
-            Icon(
-                painter = painterResource(id = R.drawable.baseline_my_location_24),
-                contentDescription = "My Location",
-                tint = MaterialTheme.colorScheme.onPrimaryContainer
-            )
+            SmallFloatingActionButton(
+                onClick = {
+                    scope.launch {
+                        val fusedLocationClient =
+                            LocationServices.getFusedLocationProviderClient(context)
+                        try {
+                            fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                                if (location != null) {
+                                    scope.launch {
+                                        cameraPositionState.animate(
+                                            CameraUpdateFactory.newLatLng(
+                                                LatLng(location.latitude, location.longitude)
+                                            )
+                                        )
+                                    }
+                                }
+                            }
+                        } catch (e: SecurityException) {
+                        }
+                    }
+                },
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.baseline_my_location_24),
+                    contentDescription = "My Location",
+                    tint = MaterialTheme.colorScheme.onSurface
+                )
+            }
+            if (cameraPositionState.position.bearing != 0f) {
+                Surface(
+                    modifier = Modifier.padding(4.dp),
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    shadowElevation = 2.dp
+                ) {
+                    IconButton(
+                        onClick = {
+                            scope.launch {
+                                val currentPos = cameraPositionState.position
+                                cameraPositionState.animate(
+                                    CameraUpdateFactory.newCameraPosition(
+                                        CameraPosition.Builder()
+                                            .target(currentPos.target)
+                                            .zoom(currentPos.zoom)
+                                            .bearing(0f)
+                                            .tilt(currentPos.tilt)
+                                            .build()
+                                    )
+                                )
+                            }
+                        },
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.baseline_north_24),
+                            contentDescription = "Align North",
+                            modifier = Modifier.rotate(360f - cameraPositionState.position.bearing),
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+            }
         }
 
         Surface(
             modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(8.dp),
+                .align(Alignment.BottomStart)
+                .padding(8.dp)
+                .padding(bottom = 32.dp),
             shape = MaterialTheme.shapes.medium,
             color = MaterialTheme.colorScheme.surfaceContainerHigh,
             tonalElevation = 3.dp,
@@ -87,14 +129,14 @@ fun MapControlButtons(
             )
         ) {
             Column(
-                modifier = Modifier.width(42.dp),
+                modifier = Modifier.width(40.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 IconButton(
                     onClick = {
                         scope.launch { cameraPositionState.animate(CameraUpdateFactory.zoomIn()) }
                     },
-                    modifier = Modifier.size(42.dp)
+                    modifier = Modifier.size(40.dp)
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.baseline_add_24),
@@ -113,7 +155,7 @@ fun MapControlButtons(
                     onClick = {
                         scope.launch { cameraPositionState.animate(CameraUpdateFactory.zoomOut()) }
                     },
-                    modifier = Modifier.size(42.dp)
+                    modifier = Modifier.size(40.dp)
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.baseline_remove_24),
@@ -123,42 +165,25 @@ fun MapControlButtons(
                 }
             }
         }
+    }
+}
 
-        if (cameraPositionState.position.bearing != 0f) {
-            Surface(
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(8.dp),
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                shadowElevation = 2.dp
-            ) {
-                IconButton(
-                    onClick = {
-                        scope.launch {
-                            val currentPos = cameraPositionState.position
-                            cameraPositionState.animate(
-                                CameraUpdateFactory.newCameraPosition(
-                                    CameraPosition.Builder()
-                                        .target(currentPos.target)
-                                        .zoom(currentPos.zoom)
-                                        .bearing(0f)
-                                        .tilt(currentPos.tilt)
-                                        .build()
-                                )
-                            )
-                        }
-                    },
-                    modifier = Modifier.size(42.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.baseline_north_24),
-                        contentDescription = "Align North",
-                        modifier = Modifier.rotate(360f - cameraPositionState.position.bearing),
-                        tint = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            }
+@Preview(
+    name = "Light Mode",
+    showBackground = true
+)
+@Preview(
+    name = "Dark Mode",
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+    showBackground = true
+)
+@Composable
+fun MapControlButtonsPreview() {
+    MockLocationsTheme {
+        Surface {
+            MapControlButtons(
+                cameraPositionState = CameraPositionState()
+            )
         }
     }
 }

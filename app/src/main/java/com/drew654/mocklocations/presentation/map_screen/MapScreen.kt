@@ -12,7 +12,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
@@ -21,7 +20,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.drew654.mocklocations.R
 import com.drew654.mocklocations.presentation.MockLocationsViewModel
 import com.drew654.mocklocations.presentation.hasFineLocationPermission
-import com.drew654.mocklocations.presentation.map_screen.components.MockLocationControlButton
+import com.drew654.mocklocations.presentation.map_screen.components.MockLocationControls
 import com.drew654.mocklocations.presentation.map_screen.components.MapControlButtons
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -145,43 +144,37 @@ fun MapScreen(
                 )
             }
         }
-        Box(
-            modifier = Modifier
-                .fillMaxSize(),
-            contentAlignment = Alignment.BottomStart
-        ) {
-            MockLocationControlButton(
-                onClearClicked = {
-                    viewModel.clearPoints()
-                },
-                onPlayClicked = {
-                    if (isPaused) {
-                        viewModel.togglePause()
-                    } else {
-                        viewModel.startMockLocation(context)
-                    }
-                },
-                onStopClicked = {
-                    viewModel.stopMockLocation()
-                },
-                onPopClicked = {
-                    viewModel.popPoint()
-                },
-                onPauseClicked = {
+        MockLocationControls(
+            onClearClicked = {
+                viewModel.clearPoints()
+            },
+            onPlayClicked = {
+                if (isPaused) {
                     viewModel.togglePause()
-                },
-                speedMetersPerSec = speedMetersPerSec,
-                onSpeedChanged = {
-                    viewModel.setSpeedMetersPerSec(it)
-                },
-                onSpeedChangeFinished = {
-                    viewModel.saveSpeedMetersPerSec(speedMetersPerSec)
-                },
-                points = points,
-                isMocking = isMocking,
-                isPaused = isPaused
-            )
-        }
+                } else {
+                    viewModel.startMockLocation(context)
+                }
+            },
+            onStopClicked = {
+                viewModel.stopMockLocation()
+            },
+            onPopClicked = {
+                viewModel.popPoint()
+            },
+            onPauseClicked = {
+                viewModel.togglePause()
+            },
+            speedMetersPerSec = speedMetersPerSec,
+            onSpeedChanged = {
+                viewModel.setSpeedMetersPerSec(it)
+            },
+            onSpeedChangeFinished = {
+                viewModel.saveSpeedMetersPerSec(speedMetersPerSec)
+            },
+            points = points,
+            isMocking = isMocking,
+            isPaused = isPaused
+        )
         MapControlButtons(
             cameraPositionState = cameraPositionState
         )
