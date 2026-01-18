@@ -4,6 +4,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.only
@@ -197,7 +198,7 @@ fun MapScreen(
                         .fillMaxSize()
                         .windowInsetsPadding(
                             WindowInsets.displayCutout.only(
-                                androidx.compose.foundation.layout.WindowInsetsSides.Horizontal
+                                WindowInsetsSides.Horizontal
                             )
                         )
                 ) {
@@ -222,7 +223,7 @@ fun MapScreen(
                         .fillMaxSize()
                         .windowInsetsPadding(
                             WindowInsets.displayCutout.only(
-                                androidx.compose.foundation.layout.WindowInsetsSides.Horizontal
+                                WindowInsetsSides.Horizontal
                             )
                         )
                 ) {

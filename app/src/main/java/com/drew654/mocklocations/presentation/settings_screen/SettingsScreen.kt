@@ -2,6 +2,7 @@ package com.drew654.mocklocations.presentation.settings_screen
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.only
@@ -36,7 +37,7 @@ fun SettingsScreen(
             .fillMaxSize()
             .windowInsetsPadding(
                 WindowInsets.displayCutout.only(
-                    androidx.compose.foundation.layout.WindowInsetsSides.Horizontal
+                    WindowInsetsSides.Horizontal
                 )
             ),
         topBar = {
@@ -58,7 +59,6 @@ fun SettingsScreen(
             )
         }
     ) { innerPadding ->
-
         Box(
             modifier = Modifier
                 .fillMaxSize()

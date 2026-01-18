@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -44,7 +45,7 @@ fun MockLocationControls(
             .fillMaxSize()
             .windowInsetsPadding(
                 WindowInsets.displayCutout.only(
-                    androidx.compose.foundation.layout.WindowInsetsSides.Horizontal
+                    WindowInsetsSides.Horizontal
                 )
             ),
         contentAlignment = Alignment.BottomEnd
@@ -96,13 +97,12 @@ fun MockLocationControls(
                         enabled = true
                     ) {
                         Icon(
-                            painter = painterResource(id = if (isPaused) R.drawable.baseline_play_arrow_24 else (R.drawable.baseline_pause_24)),
+                            painter = painterResource(id = if (isPaused) R.drawable.baseline_play_arrow_24 else R.drawable.baseline_pause_24),
                             contentDescription = if (isPaused) "Resume" else "Pause",
                             tint = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                     }
                     Spacer(Modifier.width(12.dp))
-
                 }
                 DisableableFloatingActionButton(
                     onClick = {
