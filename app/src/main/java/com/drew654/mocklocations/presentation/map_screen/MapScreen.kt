@@ -207,7 +207,7 @@ fun MapScreen(
                         },
                         modifier = Modifier
                             .align(Alignment.TopEnd)
-                            .padding(8.dp),
+                            .padding(12.dp),
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
                     ) {
                         Icon(

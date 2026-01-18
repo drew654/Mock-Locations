@@ -53,7 +53,6 @@ fun MockLocationControls(
             modifier = Modifier.padding(12.dp),
             horizontalAlignment = Alignment.End
         ) {
-            Spacer(Modifier.height(4.dp))
             DisableableSmallFloatingActionButton(
                 onClick = {
                     onPopClicked()

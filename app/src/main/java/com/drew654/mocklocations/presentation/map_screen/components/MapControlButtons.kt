@@ -56,7 +56,7 @@ fun MapControlButtons(
         Column(
             modifier = Modifier
                 .align(Alignment.TopStart)
-                .padding(8.dp)
+                .padding(12.dp)
         ) {
             SmallFloatingActionButton(
                 onClick = {
@@ -126,7 +126,7 @@ fun MapControlButtons(
         Surface(
             modifier = Modifier
                 .align(Alignment.BottomStart)
-                .padding(8.dp)
+                .padding(12.dp)
                 .padding(bottom = 32.dp),
             shape = MaterialTheme.shapes.medium,
             color = MaterialTheme.colorScheme.surfaceContainerHigh,
