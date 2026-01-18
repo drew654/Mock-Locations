@@ -2,6 +2,7 @@ package com.drew654.mocklocations.presentation.map_screen
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
@@ -33,6 +34,7 @@ import com.drew654.mocklocations.presentation.MockLocationsViewModel
 import com.drew654.mocklocations.presentation.Screen
 import com.drew654.mocklocations.presentation.hasFineLocationPermission
 import com.drew654.mocklocations.presentation.map_screen.components.ExpandControlsButton
+import com.drew654.mocklocations.presentation.map_screen.components.ExpandedControls
 import com.drew654.mocklocations.presentation.map_screen.components.MapControlButtons
 import com.drew654.mocklocations.presentation.map_screen.components.MockLocationControls
 import com.google.android.gms.location.LocationServices
@@ -118,122 +120,131 @@ fun MapScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        GoogleMap(
-            modifier = Modifier.fillMaxSize(),
-            cameraPositionState = cameraPositionState,
-            properties = mapProperties,
-            uiSettings = mapUiSettings,
-            onMapLongClick = {
-                if (!isMocking) {
-                    viewModel.pushPoint(it)
-                }
-            }
-        ) {
-            if (points.isNotEmpty()) {
-                Polyline(
-                    points = points.map { LatLng(it.latitude, it.longitude) },
-                    color = MaterialTheme.colorScheme.onBackground,
-                    width = 20f
-                )
-            }
-
-            points.forEachIndexed { index, point ->
-                Marker(
-                    state = MarkerState(
-                        position = LatLng(
-                            point.latitude,
-                            point.longitude
-                        )
-                    ),
-                    icon = BitmapDescriptorFactory.defaultMarker(
-                        getMarkerHue(
-                            index,
-                            points.size
-                        )
-                    ),
-                    snippet = "Lat: ${point.latitude}, Lng: ${point.longitude}",
-                    title = "Route Point",
-                    onClick = {
-                        true
-                    }
-                )
-            }
-        }
-        MockLocationControls(
-            onClearClicked = {
-                viewModel.clearPoints()
-            },
-            onPlayClicked = {
-                if (isPaused) {
-                    viewModel.togglePause()
-                } else {
-                    viewModel.startMockLocation(context)
-                }
-            },
-            onStopClicked = {
-                viewModel.stopMockLocation()
-            },
-            onPopClicked = {
-                viewModel.popPoint()
-            },
-            onPauseClicked = {
-                viewModel.togglePause()
-            },
-            speedMetersPerSec = speedMetersPerSec,
-            onSpeedChanged = {
-                viewModel.setSpeedMetersPerSec(it)
-            },
-            onSpeedChangeFinished = {
-                viewModel.saveSpeedMetersPerSec(speedMetersPerSec)
-            },
-            points = points,
-            isMocking = isMocking,
-            isPaused = isPaused
-        )
-        MapControlButtons(
-            cameraPositionState = cameraPositionState
-        )
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .windowInsetsPadding(
-                    WindowInsets.displayCutout.only(
-                        androidx.compose.foundation.layout.WindowInsetsSides.Horizontal
-                    )
-                )
-        ) {
-            SmallFloatingActionButton(
-                onClick = {
-                    navController.navigate(Screen.Settings.route)
-                },
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(8.dp),
-                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+        Column {
+            Box(
+                modifier = Modifier.weight(1f)
             ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.baseline_settings_24),
-                    contentDescription = "Settings",
-                    tint = MaterialTheme.colorScheme.onSurface
+                GoogleMap(
+                    modifier = Modifier.fillMaxSize(),
+                    cameraPositionState = cameraPositionState,
+                    properties = mapProperties,
+                    uiSettings = mapUiSettings,
+                    onMapLongClick = {
+                        if (!isMocking) {
+                            viewModel.pushPoint(it)
+                        }
+                    }
+                ) {
+                    if (points.isNotEmpty()) {
+                        Polyline(
+                            points = points.map { LatLng(it.latitude, it.longitude) },
+                            color = MaterialTheme.colorScheme.onBackground,
+                            width = 20f
+                        )
+                    }
+
+                    points.forEachIndexed { index, point ->
+                        Marker(
+                            state = MarkerState(
+                                position = LatLng(
+                                    point.latitude,
+                                    point.longitude
+                                )
+                            ),
+                            icon = BitmapDescriptorFactory.defaultMarker(
+                                getMarkerHue(
+                                    index,
+                                    points.size
+                                )
+                            ),
+                            snippet = "Lat: ${point.latitude}, Lng: ${point.longitude}",
+                            title = "Route Point",
+                            onClick = {
+                                true
+                            }
+                        )
+                    }
+                }
+                MockLocationControls(
+                    onClearClicked = {
+                        viewModel.clearPoints()
+                    },
+                    onPlayClicked = {
+                        if (isPaused) {
+                            viewModel.togglePause()
+                        } else {
+                            viewModel.startMockLocation(context)
+                        }
+                    },
+                    onStopClicked = {
+                        viewModel.stopMockLocation()
+                    },
+                    onPopClicked = {
+                        viewModel.popPoint()
+                    },
+                    onPauseClicked = {
+                        viewModel.togglePause()
+                    },
+                    points = points,
+                    isMocking = isMocking,
+                    isPaused = isPaused
                 )
-            }
-        }
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .windowInsetsPadding(
-                    WindowInsets.displayCutout.only(
-                        androidx.compose.foundation.layout.WindowInsetsSides.Horizontal
+                MapControlButtons(
+                    cameraPositionState = cameraPositionState
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .windowInsetsPadding(
+                            WindowInsets.displayCutout.only(
+                                androidx.compose.foundation.layout.WindowInsetsSides.Horizontal
+                            )
+                        )
+                ) {
+                    SmallFloatingActionButton(
+                        onClick = {
+                            navController.navigate(Screen.Settings.route)
+                        },
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(8.dp),
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.baseline_settings_24),
+                            contentDescription = "Settings",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .windowInsetsPadding(
+                            WindowInsets.displayCutout.only(
+                                androidx.compose.foundation.layout.WindowInsetsSides.Horizontal
+                            )
+                        )
+                ) {
+                    ExpandControlsButton(
+                        onClick = {
+                            controlsAreExpanded = !controlsAreExpanded
+                        },
+                        controlsAreExpanded = controlsAreExpanded,
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
                     )
-                )
-        ) {
-            ExpandControlsButton(
-                onClick = {
-                    controlsAreExpanded = !controlsAreExpanded
+                }
+            }
+            ExpandedControls(
+                isExpanded = controlsAreExpanded,
+                speedMetersPerSec = speedMetersPerSec,
+                onSpeedChanged = {
+                    viewModel.setSpeedMetersPerSec(it)
                 },
-                controlsAreExpanded = controlsAreExpanded,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
+                onSpeedChangeFinished = {
+                    viewModel.saveSpeedMetersPerSec(speedMetersPerSec)
+                }
             )
         }
     }
