@@ -2,8 +2,11 @@ package com.drew654.mocklocations.presentation.settings_screen
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -29,7 +32,13 @@ fun SettingsScreen(
     val clearPointsOnStop by viewModel.clearPointsOnStop.collectAsState()
 
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .windowInsetsPadding(
+                WindowInsets.displayCutout.only(
+                    androidx.compose.foundation.layout.WindowInsetsSides.Horizontal
+                )
+            ),
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("Settings") },
