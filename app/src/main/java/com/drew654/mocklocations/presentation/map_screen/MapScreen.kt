@@ -3,7 +3,10 @@ package com.drew654.mocklocations.presentation.map_screen
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -12,16 +15,21 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.navigation.NavController
 import com.drew654.mocklocations.R
 import com.drew654.mocklocations.presentation.MockLocationsViewModel
+import com.drew654.mocklocations.presentation.Screen
 import com.drew654.mocklocations.presentation.hasFineLocationPermission
-import com.drew654.mocklocations.presentation.map_screen.components.MockLocationControls
 import com.drew654.mocklocations.presentation.map_screen.components.MapControlButtons
+import com.drew654.mocklocations.presentation.map_screen.components.MockLocationControls
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
@@ -38,7 +46,8 @@ import com.google.maps.android.compose.rememberCameraPositionState
 
 @Composable
 fun MapScreen(
-    viewModel: MockLocationsViewModel
+    viewModel: MockLocationsViewModel,
+    navController: NavController
 ) {
     val context = LocalContext.current
     val systemInDarkTheme = isSystemInDarkTheme()
@@ -178,6 +187,23 @@ fun MapScreen(
         MapControlButtons(
             cameraPositionState = cameraPositionState
         )
+        Box(modifier = Modifier.fillMaxSize()) {
+            SmallFloatingActionButton(
+                onClick = {
+                    navController.navigate(Screen.Settings.route)
+                },
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(8.dp),
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.baseline_settings_24),
+                    contentDescription = "Settings",
+                    tint = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        }
     }
 }
 
