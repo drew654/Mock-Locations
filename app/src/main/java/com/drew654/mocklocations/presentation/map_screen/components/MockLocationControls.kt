@@ -89,6 +89,22 @@ fun MockLocationControls(
             Row(
                 verticalAlignment = Alignment.Bottom
             ) {
+                if (isMocking && points.size > 1) {
+                    DisableableSmallFloatingActionButton(
+                        onClick = {
+                            onPauseClicked()
+                        },
+                        enabled = true
+                    ) {
+                        Icon(
+                            painter = painterResource(id = if (isPaused) R.drawable.baseline_play_arrow_24 else (R.drawable.baseline_pause_24)),
+                            contentDescription = if (isPaused) "Resume" else "Pause",
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                    Spacer(Modifier.width(12.dp))
+
+                }
                 DisableableFloatingActionButton(
                     onClick = {
                         if (isMocking) {
@@ -108,21 +124,6 @@ fun MockLocationControls(
                         Icon(
                             painter = painterResource(id = R.drawable.baseline_play_arrow_24),
                             contentDescription = "Play"
-                        )
-                    }
-                }
-                if (isMocking && points.size > 1) {
-                    Spacer(Modifier.width(12.dp))
-                    DisableableSmallFloatingActionButton(
-                        onClick = {
-                            onPauseClicked()
-                        },
-                        enabled = points.isNotEmpty()
-                    ) {
-                        Icon(
-                            painter = painterResource(id = if (isPaused) R.drawable.baseline_play_arrow_24 else (R.drawable.baseline_pause_24)),
-                            contentDescription = if (isPaused) "Resume" else "Pause",
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                     }
                 }
