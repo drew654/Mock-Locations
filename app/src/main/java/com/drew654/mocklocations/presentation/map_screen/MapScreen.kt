@@ -32,6 +32,7 @@ import com.drew654.mocklocations.R
 import com.drew654.mocklocations.presentation.MockLocationsViewModel
 import com.drew654.mocklocations.presentation.Screen
 import com.drew654.mocklocations.presentation.hasFineLocationPermission
+import com.drew654.mocklocations.presentation.map_screen.components.ExpandControlsButton
 import com.drew654.mocklocations.presentation.map_screen.components.MapControlButtons
 import com.drew654.mocklocations.presentation.map_screen.components.MockLocationControls
 import com.google.android.gms.location.LocationServices
@@ -83,6 +84,7 @@ fun MapScreen(
         position = CameraPosition.fromLatLngZoom(LatLng(0.0, 0.0), zoom)
     }
     val lifecycleOwner = LocalLifecycleOwner.current
+    var controlsAreExpanded by remember { mutableStateOf(false) }
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -215,6 +217,24 @@ fun MapScreen(
                     tint = MaterialTheme.colorScheme.onSurface
                 )
             }
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .windowInsetsPadding(
+                    WindowInsets.displayCutout.only(
+                        androidx.compose.foundation.layout.WindowInsetsSides.Horizontal
+                    )
+                )
+        ) {
+            ExpandControlsButton(
+                onClick = {
+                    controlsAreExpanded = !controlsAreExpanded
+                },
+                controlsAreExpanded = controlsAreExpanded,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+            )
         }
     }
 }
