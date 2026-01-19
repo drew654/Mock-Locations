@@ -3,16 +3,8 @@ package com.drew654.mocklocations.presentation.map_screen
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.only
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -21,11 +13,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -33,9 +22,7 @@ import androidx.navigation.NavController
 import com.drew654.mocklocations.R
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.presentation.MockLocationsViewModel
-import com.drew654.mocklocations.presentation.Screen
 import com.drew654.mocklocations.presentation.hasFineLocationPermission
-import com.drew654.mocklocations.presentation.map_screen.components.ExpandControlsButton
 import com.drew654.mocklocations.presentation.map_screen.components.ExpandedControls
 import com.drew654.mocklocations.presentation.map_screen.components.MapControlButtons
 import com.drew654.mocklocations.presentation.map_screen.components.MockLocationControls
@@ -203,51 +190,13 @@ fun MapScreen(
                     isPaused = isPaused
                 )
                 MapControlButtons(
-                    cameraPositionState = cameraPositionState
-                )
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .windowInsetsPadding(
-                            WindowInsets.displayCutout.only(
-                                WindowInsetsSides.Horizontal
-                            )
-                        )
-                ) {
-                    SmallFloatingActionButton(
-                        onClick = {
-                            navController.navigate(Screen.Settings.route)
-                        },
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(12.dp),
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.baseline_settings_24),
-                            contentDescription = "Settings",
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
+                    navController = navController,
+                    cameraPositionState = cameraPositionState,
+                    controlsAreExpanded = controlsAreExpanded,
+                    setControlsAreExpanded = {
+                        controlsAreExpanded = it
                     }
-                }
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .windowInsetsPadding(
-                            WindowInsets.displayCutout.only(
-                                WindowInsetsSides.Horizontal
-                            )
-                        )
-                ) {
-                    ExpandControlsButton(
-                        onClick = {
-                            controlsAreExpanded = !controlsAreExpanded
-                        },
-                        controlsAreExpanded = controlsAreExpanded,
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                    )
-                }
+                )
             }
             ExpandedControls(
                 isExpanded = controlsAreExpanded,
