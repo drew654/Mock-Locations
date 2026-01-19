@@ -3,7 +3,6 @@ package com.drew654.mocklocations.presentation.map_screen
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.displayCutout
@@ -36,12 +35,11 @@ import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.presentation.MockLocationsViewModel
 import com.drew654.mocklocations.presentation.Screen
 import com.drew654.mocklocations.presentation.hasFineLocationPermission
-import com.drew654.mocklocations.presentation.map_screen.components.ControlButtons
-import com.drew654.mocklocations.presentation.map_screen.components.SavedRoutesDialog
 import com.drew654.mocklocations.presentation.map_screen.components.ExpandControlsButton
 import com.drew654.mocklocations.presentation.map_screen.components.ExpandedControls
 import com.drew654.mocklocations.presentation.map_screen.components.MapControlButtons
 import com.drew654.mocklocations.presentation.map_screen.components.MockLocationControls
+import com.drew654.mocklocations.presentation.map_screen.components.SavedRoutesDialog
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
@@ -177,59 +175,90 @@ fun MapScreen(
                         )
                     }
                 }
+                MockLocationControls(
+                    onClearClicked = {
+                        viewModel.clearLocationTarget()
+                    },
+                    onPlayClicked = {
+                        if (isPaused) {
+                            viewModel.togglePause()
+                        } else {
+                            viewModel.startMockLocation(context)
+                        }
+                    },
+                    onStopClicked = {
+                        viewModel.stopMockLocation()
+                    },
+                    onPopClicked = {
+                        viewModel.popPoint()
+                    },
+                    onPauseClicked = {
+                        viewModel.togglePause()
+                    },
+                    onSaveClicked = {
+                        isShowingSavedRoutesDialog = true
+                    },
+                    locationTarget = locationTarget,
+                    isMocking = isMocking,
+                    isPaused = isPaused
+                )
+                MapControlButtons(
+                    cameraPositionState = cameraPositionState,
+                )
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .windowInsetsPadding(WindowInsets.displayCutout),
-                    contentAlignment = Alignment.BottomStart
+                        .windowInsetsPadding(
+                            WindowInsets.displayCutout.only(
+                                WindowInsetsSides.Horizontal
+                            )
+                        )
                 ) {
-                    ControlButtons(
-                        onClearClicked = {
-                            viewModel.clearLocationTarget()
+                    SmallFloatingActionButton(
+                        onClick = {
+                            navController.navigate(Screen.Settings.route)
                         },
-                        onPlayClicked = {
-                            if (isPaused) {
-                                viewModel.togglePause()
-                            } else {
-                                viewModel.startMockLocation(context)
-                            }
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(12.dp),
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.baseline_settings_24),
+                            contentDescription = "Settings",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .windowInsetsPadding(
+                            WindowInsets.displayCutout.only(
+                                WindowInsetsSides.Horizontal
+                            )
+                        )
+                ) {
+                    ExpandControlsButton(
+                        onClick = {
+                            controlsAreExpanded = !controlsAreExpanded
                         },
-                        onStopClicked = {
-                            viewModel.stopMockLocation()
-                        },
-                        onPopClicked = {
-                            viewModel.popPoint()
-                        },
-                        onPauseClicked = {
-                            viewModel.togglePause()
-                        },
-                        speedMetersPerSec = speedMetersPerSec,
-                        onSpeedChanged = {
-                            viewModel.setSpeedMetersPerSec(it)
-                        },
-                        onSpeedChangeFinished = {
-                            viewModel.saveSpeedMetersPerSec(speedMetersPerSec)
-                        },
-                        points = locationTarget.points,
-                        onSaveClicked = {
-                            isShowingSavedRoutesDialog = true
-                        },
-                        locationTarget = locationTarget,
-                        isMocking = isMocking,
-                        isPaused = isPaused
+                        controlsAreExpanded = controlsAreExpanded,
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
                     )
                 }
-                ExpandedControls(
-                    isExpanded = controlsAreExpanded,
-                    speedMetersPerSec = speedMetersPerSec,
-                    onSpeedChanged = {
-                        viewModel.setSpeedMetersPerSec(it)
-                    },
-                    onSpeedChangeFinished = {
-                        viewModel.saveSpeedMetersPerSec(speedMetersPerSec)
-                    }
-                )
             }
+            ExpandedControls(
+                isExpanded = controlsAreExpanded,
+                speedMetersPerSec = speedMetersPerSec,
+                onSpeedChanged = {
+                    viewModel.setSpeedMetersPerSec(it)
+                },
+                onSpeedChangeFinished = {
+                    viewModel.saveSpeedMetersPerSec(speedMetersPerSec)
+                }
+            )
         }
     }
     SavedRoutesDialog(

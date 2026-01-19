@@ -25,6 +25,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.R
+import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 import com.google.android.gms.maps.model.LatLng
 
@@ -36,9 +37,10 @@ fun MockLocationControls(
     onStopClicked: () -> Unit,
     onPopClicked: () -> Unit,
     onPauseClicked: () -> Unit,
-    points: List<LatLng>,
+    locationTarget: LocationTarget,
     isMocking: Boolean,
-    isPaused: Boolean
+    isPaused: Boolean,
+    onSaveClicked: () -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -56,14 +58,27 @@ fun MockLocationControls(
         ) {
             DisableableSmallFloatingActionButton(
                 onClick = {
+                    onSaveClicked()
+                },
+                enabled = true
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.baseline_save_24),
+                    contentDescription = "Saved Routes",
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+            Spacer(Modifier.height(4.dp))
+            DisableableSmallFloatingActionButton(
+                onClick = {
                     onPopClicked()
                 },
-                enabled = points.isNotEmpty() && !isMocking
+                enabled = locationTarget !is LocationTarget.Empty && !isMocking
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.baseline_backspace_24),
                     contentDescription = "Pop",
-                    tint = if (points.isEmpty())
+                    tint = if (locationTarget is LocationTarget.Empty)
                         MaterialTheme.colorScheme.onSurfaceVariant
                     else
                         MaterialTheme.colorScheme.onPrimaryContainer
@@ -74,12 +89,12 @@ fun MockLocationControls(
                 onClick = {
                     onClearClicked()
                 },
-                enabled = points.isNotEmpty() && !isMocking
+                enabled = locationTarget !is LocationTarget.Empty && !isMocking
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.baseline_clear_24),
                     contentDescription = "Clear",
-                    tint = if (points.isEmpty())
+                    tint = if (locationTarget is LocationTarget.Empty)
                         MaterialTheme.colorScheme.onSurfaceVariant
                     else
                         MaterialTheme.colorScheme.onPrimaryContainer
@@ -89,7 +104,7 @@ fun MockLocationControls(
             Row(
                 verticalAlignment = Alignment.Bottom
             ) {
-                if (isMocking && points.size > 1) {
+                if (isMocking && locationTarget is LocationTarget.Route) {
                     DisableableSmallFloatingActionButton(
                         onClick = {
                             onPauseClicked()
@@ -112,7 +127,7 @@ fun MockLocationControls(
                             onPlayClicked()
                         }
                     },
-                    enabled = points.isNotEmpty()
+                    enabled = locationTarget !is LocationTarget.Empty
                 ) {
                     if (isMocking) {
                         Icon(
@@ -145,14 +160,15 @@ fun MockLocationControlsPreview1() {
     MockLocationsTheme {
         Surface {
             MockLocationControls(
-                onClearClicked = {},
-                onPlayClicked = {},
-                onStopClicked = {},
-                onPopClicked = {},
-                onPauseClicked = {},
-                points = emptyList(),
+                onClearClicked = { },
+                onPlayClicked = { },
+                onStopClicked = { },
+                onPopClicked = { },
+                onPauseClicked = { },
+                locationTarget = LocationTarget.Empty,
                 isMocking = false,
-                isPaused = false
+                isPaused = false,
+                onSaveClicked = { }
             )
         }
     }
@@ -177,9 +193,10 @@ fun MockLocationControlsPreview2() {
                 onStopClicked = {},
                 onPopClicked = {},
                 onPauseClicked = {},
-                points = listOf(LatLng(0.0, 0.0), LatLng(0.0, 0.0)),
+                locationTarget = LocationTarget.Route(listOf(LatLng(0.0, 0.0), LatLng(0.0, 0.0))),
                 isMocking = true,
-                isPaused = false
+                isPaused = false,
+                onSaveClicked = {}
             )
         }
     }
