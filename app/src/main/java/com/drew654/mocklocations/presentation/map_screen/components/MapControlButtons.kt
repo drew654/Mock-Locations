@@ -1,7 +1,6 @@
 package com.drew654.mocklocations.presentation.map_screen.components
 
 import android.content.res.Configuration
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
@@ -11,10 +10,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -124,57 +121,14 @@ fun MapControlButtons(
             }
         }
 
-        Surface(
+        MapZoomButtons(
+            cameraPositionState = cameraPositionState,
+            scope = scope,
             modifier = Modifier
                 .align(Alignment.BottomStart)
                 .padding(12.dp)
-                .padding(bottom = 32.dp),
-            shape = MaterialTheme.shapes.medium,
-            color = MaterialTheme.colorScheme.surfaceContainerHigh,
-            tonalElevation = 3.dp,
-            shadowElevation = 2.dp,
-            border = BorderStroke(
-                width = 0.5.dp,
-                color = MaterialTheme.colorScheme.outlineVariant
-            )
-        ) {
-            Column(
-                modifier = Modifier.width(40.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                IconButton(
-                    onClick = {
-                        scope.launch { cameraPositionState.animate(CameraUpdateFactory.zoomIn()) }
-                    },
-                    modifier = Modifier.size(40.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.baseline_add_24),
-                        contentDescription = "Zoom In",
-                        tint = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-
-                HorizontalDivider(
-                    modifier = Modifier.width(24.dp),
-                    thickness = 0.5.dp,
-                    color = MaterialTheme.colorScheme.outlineVariant
-                )
-
-                IconButton(
-                    onClick = {
-                        scope.launch { cameraPositionState.animate(CameraUpdateFactory.zoomOut()) }
-                    },
-                    modifier = Modifier.size(40.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.baseline_remove_24),
-                        contentDescription = "Zoom Out",
-                        tint = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            }
-        }
+                .padding(bottom = 32.dp)
+        )
     }
 }
 
