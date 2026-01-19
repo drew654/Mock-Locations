@@ -56,7 +56,7 @@ fun SwitchRowPreview() {
             SwitchRow(
                 label = "Clear route on stop",
                 checked = true,
-                onCheckedChange = {}
+                onCheckedChange = { }
             )
         }
     }

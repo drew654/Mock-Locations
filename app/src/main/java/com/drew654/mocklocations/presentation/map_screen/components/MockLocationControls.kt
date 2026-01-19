@@ -104,7 +104,7 @@ fun MockLocationControls(
             Row(
                 verticalAlignment = Alignment.Bottom
             ) {
-                if (isMocking && locationTarget is LocationTarget.Route) {
+                if (isMocking && (locationTarget is LocationTarget.Route || locationTarget is LocationTarget.SavedRoute)) {
                     DisableableSmallFloatingActionButton(
                         onClick = {
                             onPauseClicked()
@@ -188,15 +188,15 @@ fun MockLocationControlsPreview2() {
     MockLocationsTheme {
         Surface {
             MockLocationControls(
-                onClearClicked = {},
-                onPlayClicked = {},
-                onStopClicked = {},
-                onPopClicked = {},
-                onPauseClicked = {},
+                onClearClicked = { },
+                onPlayClicked = { },
+                onStopClicked = { },
+                onPopClicked = { },
+                onPauseClicked = { },
                 locationTarget = LocationTarget.Route(listOf(LatLng(0.0, 0.0), LatLng(0.0, 0.0))),
                 isMocking = true,
                 isPaused = false,
-                onSaveClicked = {}
+                onSaveClicked = { }
             )
         }
     }

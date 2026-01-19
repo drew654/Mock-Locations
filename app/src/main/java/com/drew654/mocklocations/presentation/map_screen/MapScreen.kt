@@ -203,7 +203,7 @@ fun MapScreen(
                     isPaused = isPaused
                 )
                 MapControlButtons(
-                    cameraPositionState = cameraPositionState,
+                    cameraPositionState = cameraPositionState
                 )
                 Box(
                     modifier = Modifier

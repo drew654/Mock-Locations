@@ -78,13 +78,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     fun startMockLocation(context: Context) {
         if (hasFineLocationPermission(context)) {
             when (_locationTarget.value) {
-                is LocationTarget.Empty -> {
-                    Toast.makeText(
-                        getApplication(),
-                        "Please place a point first",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
+                is LocationTarget.Empty -> null
 
                 is LocationTarget.SinglePoint -> {
                     mockLocationSinglePoint(_locationTarget.value.points.first())
