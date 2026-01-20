@@ -25,7 +25,6 @@ import com.drew654.mocklocations.presentation.MockLocationsViewModel
 import com.drew654.mocklocations.presentation.hasFineLocationPermission
 import com.drew654.mocklocations.presentation.map_screen.components.ExpandedControls
 import com.drew654.mocklocations.presentation.map_screen.components.MapControlButtons
-import com.drew654.mocklocations.presentation.map_screen.components.MockLocationControls
 import com.drew654.mocklocations.presentation.map_screen.components.SavedRoutesDialog
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -162,40 +161,34 @@ fun MapScreen(
                         )
                     }
                 }
-                MockLocationControls(
-                    onClearClicked = {
-                        viewModel.clearLocationTarget()
-                    },
-                    onPlayClicked = {
-                        if (isPaused) {
-                            viewModel.togglePause()
-                        } else {
-                            viewModel.startMockLocation(context)
-                        }
-                    },
-                    onStopClicked = {
-                        viewModel.stopMockLocation()
-                    },
-                    onPopClicked = {
-                        viewModel.popPoint()
-                    },
-                    onPauseClicked = {
-                        viewModel.togglePause()
-                    },
-                    onSaveClicked = {
-                        isShowingSavedRoutesDialog = true
-                    },
-                    locationTarget = locationTarget,
-                    isMocking = isMocking,
-                    isPaused = isPaused
-                )
                 MapControlButtons(
                     navController = navController,
                     cameraPositionState = cameraPositionState,
                     controlsAreExpanded = controlsAreExpanded,
                     setControlsAreExpanded = {
                         controlsAreExpanded = it
-                    }
+                    },
+                    onClear = {
+                        viewModel.clearLocationTarget()
+                    },
+                    onPlay = {
+                        viewModel.startMockLocation(context)
+                    },
+                    onStop = {
+                        viewModel.stopMockLocation()
+                    },
+                    onPop = {
+                        viewModel.popPoint()
+                    },
+                    onPause = {
+                        viewModel.togglePause()
+                    },
+                    onSave = {
+                        isShowingSavedRoutesDialog = true
+                    },
+                    locationTarget = locationTarget,
+                    isMocking = isMocking,
+                    isPaused = isPaused
                 )
             }
             ExpandedControls(
