@@ -26,6 +26,8 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     private var mockJob: Job? = null
     private val _isShowingPermissionsDialog = MutableStateFlow(false)
     val isShowingPermissionsDialog = _isShowingPermissionsDialog.asStateFlow()
+    private val _controlsAreExpanded = MutableStateFlow(false)
+    val controlsAreExpanded: StateFlow<Boolean> = _controlsAreExpanded.asStateFlow()
     private val _isMocking = MutableStateFlow(false)
     val isMocking: StateFlow<Boolean> = _isMocking.asStateFlow()
     private val _isPaused = MutableStateFlow(false)
@@ -49,6 +51,10 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
 
     fun setIsShowingPermissionsDialog(shouldShow: Boolean) {
         _isShowingPermissionsDialog.value = shouldShow
+    }
+
+    fun setControlsAreExpanded(expanded: Boolean) {
+        _controlsAreExpanded.value = expanded
     }
 
     fun togglePause() {

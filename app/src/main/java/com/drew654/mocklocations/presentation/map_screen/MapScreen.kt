@@ -82,7 +82,7 @@ fun MapScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
     var isShowingSavedRoutesDialog by remember { mutableStateOf(false) }
     val savedRoutes by viewModel.savedRoutes.collectAsState()
-    var controlsAreExpanded by remember { mutableStateOf(false) }
+    val controlsAreExpanded by viewModel.controlsAreExpanded.collectAsState()
     val useCrosshairs by viewModel.useCrosshairs.collectAsState()
 
     DisposableEffect(lifecycleOwner) {
@@ -172,7 +172,7 @@ fun MapScreen(
                     cameraPositionState = cameraPositionState,
                     controlsAreExpanded = controlsAreExpanded,
                     setControlsAreExpanded = {
-                        controlsAreExpanded = it
+                        viewModel.setControlsAreExpanded(it)
                     },
                     onClear = {
                         viewModel.clearLocationTarget()
