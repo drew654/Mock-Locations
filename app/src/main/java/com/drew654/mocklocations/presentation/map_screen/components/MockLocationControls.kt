@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -59,6 +60,7 @@ fun MockLocationControls(
                 .verticalScroll(
                     scrollState
                 )
+                .padding(bottom = 12.dp)
         ) {
             DisableableSmallFloatingActionButton(
                 onClick = {
@@ -105,7 +107,6 @@ fun MockLocationControls(
                 )
             }
         }
-        Spacer(Modifier.height(12.dp))
         Row(
             verticalAlignment = Alignment.Bottom
         ) {
