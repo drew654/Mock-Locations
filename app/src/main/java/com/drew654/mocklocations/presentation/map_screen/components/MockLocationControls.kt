@@ -75,13 +75,13 @@ fun MockLocationControls(
             Spacer(Modifier.height(4.dp))
             DisableableSmallFloatingActionButton(
                 onClick = {
-                    onPopClicked()
+                    onClearClicked()
                 },
                 enabled = locationTarget !is LocationTarget.Empty && !isMocking
             ) {
                 Icon(
-                    painter = painterResource(id = R.drawable.baseline_backspace_24),
-                    contentDescription = "Pop",
+                    painter = painterResource(id = R.drawable.baseline_clear_24),
+                    contentDescription = "Clear",
                     tint = if (locationTarget is LocationTarget.Empty)
                         MaterialTheme.colorScheme.onSurfaceVariant
                     else
@@ -91,13 +91,13 @@ fun MockLocationControls(
             Spacer(Modifier.height(4.dp))
             DisableableSmallFloatingActionButton(
                 onClick = {
-                    onClearClicked()
+                    onPopClicked()
                 },
                 enabled = locationTarget !is LocationTarget.Empty && !isMocking
             ) {
                 Icon(
-                    painter = painterResource(id = R.drawable.baseline_clear_24),
-                    contentDescription = "Clear",
+                    painter = painterResource(id = R.drawable.baseline_backspace_24),
+                    contentDescription = "Pop",
                     tint = if (locationTarget is LocationTarget.Empty)
                         MaterialTheme.colorScheme.onSurfaceVariant
                     else
