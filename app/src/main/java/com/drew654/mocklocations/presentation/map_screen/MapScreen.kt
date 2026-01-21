@@ -32,6 +32,7 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MapStyleOptions
+import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
@@ -215,6 +216,7 @@ fun MapScreen(
         locationTarget = locationTarget,
         onRouteLoaded = {
             viewModel.loadSavedRoute(it)
+            focusMapToLocationTarget(it, cameraPositionState)
         },
         onRouteDeleted = {
             viewModel.deleteSavedRoute(it)
@@ -228,4 +230,21 @@ private fun getMarkerHue(index: Int, numPoints: Int): Float {
         numPoints - 1 -> BitmapDescriptorFactory.HUE_RED
         else -> BitmapDescriptorFactory.HUE_YELLOW
     }
+}
+
+private fun focusMapToLocationTarget(locationTarget: LocationTarget, cameraPositionState: CameraPositionState) {
+    if (locationTarget.points.isEmpty()) return
+
+    val boundsBuilder = com.google.android.gms.maps.model.LatLngBounds.Builder()
+    locationTarget.points.forEach { boundsBuilder.include(it) }
+
+    val bounds = boundsBuilder.build()
+
+    val update = if (locationTarget.points.size == 1) {
+        CameraUpdateFactory.newLatLngZoom(locationTarget.points.first(), 15f)
+    } else {
+        CameraUpdateFactory.newLatLngBounds(bounds, 200)
+    }
+
+    cameraPositionState.move(update)
 }
