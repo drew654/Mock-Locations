@@ -36,6 +36,7 @@ fun MockLocationControls(
     isMocking: Boolean,
     isPaused: Boolean,
     onSaveClicked: () -> Unit,
+    onAddCrosshairsPoint: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
@@ -107,6 +108,20 @@ fun MockLocationControls(
         Row(
             verticalAlignment = Alignment.Bottom
         ) {
+            if (!isMocking) {
+                DisableableFloatingActionButton(
+                    onClick = {
+                        onAddCrosshairsPoint()
+                    },
+                    enabled = true
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.baseline_add_location_alt_24),
+                        contentDescription = "Add Point"
+                    )
+                }
+                Spacer(Modifier.width(12.dp))
+            }
             if (isMocking && (locationTarget is LocationTarget.Route || locationTarget is LocationTarget.SavedRoute)) {
                 DisableableSmallFloatingActionButton(
                     onClick = {
@@ -170,7 +185,8 @@ fun MockLocationControlsPreview1() {
                 locationTarget = LocationTarget.Empty,
                 isMocking = false,
                 isPaused = false,
-                onSaveClicked = { }
+                onSaveClicked = { },
+                onAddCrosshairsPoint = { }
             )
         }
     }
@@ -198,7 +214,8 @@ fun MockLocationControlsPreview2() {
                 locationTarget = LocationTarget.Route(listOf(LatLng(0.0, 0.0), LatLng(0.0, 0.0))),
                 isMocking = true,
                 isPaused = false,
-                onSaveClicked = { }
+                onSaveClicked = { },
+                onAddCrosshairsPoint = { }
             )
         }
     }

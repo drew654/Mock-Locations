@@ -193,7 +193,10 @@ fun MapScreen(
                     },
                     locationTarget = locationTarget,
                     isMocking = isMocking,
-                    isPaused = isPaused
+                    isPaused = isPaused,
+                    onAddCrosshairsPoint = {
+                        viewModel.pushPoint(cameraPositionState.position.target)
+                    }
                 )
             }
             ExpandedControls(
