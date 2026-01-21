@@ -37,15 +37,17 @@ fun MapControlButtons(
     cameraPositionState: CameraPositionState,
     controlsAreExpanded: Boolean,
     setControlsAreExpanded: (Boolean) -> Unit,
-    onClear: () -> Unit = { },
-    onPlay: () -> Unit = { },
-    onStop: () -> Unit = { },
-    onPop: () -> Unit = { },
-    onPause: () -> Unit = { },
-    onSave: () -> Unit = { },
+    onClear: () -> Unit,
+    onPlay: () -> Unit,
+    onStop: () -> Unit,
+    onPop: () -> Unit,
+    onPause: () -> Unit,
+    onSave: () -> Unit,
     locationTarget: LocationTarget,
     isMocking: Boolean,
-    isPaused: Boolean
+    isPaused: Boolean,
+    useCrosshairs: Boolean,
+    onAddCrosshairsPoint: () -> Unit
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -136,6 +138,10 @@ fun MapControlButtons(
                 locationTarget = locationTarget,
                 isMocking = isMocking,
                 isPaused = isPaused,
+                useCrosshairs = useCrosshairs,
+                onAddCrosshairsPoint = {
+                    onAddCrosshairsPoint()
+                },
                 modifier = Modifier.padding(bottom = 12.dp, end = 12.dp)
             )
         }
@@ -148,6 +154,13 @@ fun MapControlButtons(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
         )
+
+        if (useCrosshairs) {
+            Crosshairs(
+                modifier = Modifier
+                    .align(Alignment.Center)
+            )
+        }
     }
 }
 
@@ -177,7 +190,9 @@ fun MapControlButtonsPreview() {
                 onSave = { },
                 locationTarget = LocationTarget.Empty,
                 isMocking = false,
-                isPaused = false
+                isPaused = false,
+                useCrosshairs = true,
+                onAddCrosshairsPoint = { }
             )
         }
     }

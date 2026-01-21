@@ -1,6 +1,6 @@
 package com.drew654.mocklocations.presentation.settings_screen
 
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.displayCutout
@@ -30,6 +30,7 @@ fun SettingsScreen(
     viewModel: MockLocationsViewModel,
     navController: NavController
 ) {
+    val useCrosshairs by viewModel.useCrosshairs.collectAsState()
     val clearPointsOnStop by viewModel.clearRouteOnStop.collectAsState()
 
     Scaffold(
@@ -59,11 +60,18 @@ fun SettingsScreen(
             )
         }
     ) { innerPadding ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
+            SwitchRow(
+                label = "Use crosshairs",
+                checked = useCrosshairs,
+                onCheckedChange = {
+                    viewModel.setUseCrosshairs(it)
+                }
+            )
             SwitchRow(
                 label = "Clear route on stop",
                 checked = clearPointsOnStop,
