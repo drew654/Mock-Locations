@@ -55,111 +55,120 @@ fun MapControlButtons(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .windowInsetsPadding(
-                WindowInsets.displayCutout.only(
-                    WindowInsetsSides.Horizontal
-                )
-            )
     ) {
-        Column(
+        Box(
             modifier = Modifier
-                .align(Alignment.TopStart)
+                .fillMaxSize()
+                .windowInsetsPadding(
+                    WindowInsets.displayCutout.only(
+                        WindowInsetsSides.Horizontal
+                    )
+                )
         ) {
             Column(
                 modifier = Modifier
-                    .padding(12.dp)
+                    .align(Alignment.TopStart)
             ) {
-                MyLocationButton(
-                    scope = scope,
-                    context = context,
-                    cameraPositionState = cameraPositionState
-                )
-                if (cameraPositionState.position.bearing != 0f) {
-                    Spacer(Modifier.height(4.dp))
-                    CompassButton(
+                Column(
+                    modifier = Modifier
+                        .padding(12.dp)
+                ) {
+                    MyLocationButton(
                         scope = scope,
+                        context = context,
                         cameraPositionState = cameraPositionState
                     )
+                    if (cameraPositionState.position.bearing != 0f) {
+                        Spacer(Modifier.height(4.dp))
+                        CompassButton(
+                            scope = scope,
+                            cameraPositionState = cameraPositionState
+                        )
+                    }
                 }
-            }
-            Spacer(Modifier.weight(1f))
-            MapZoomButtons(
-                cameraPositionState = cameraPositionState,
-                scope = scope,
-                modifier = Modifier
-                    .padding(12.dp)
-                    .padding(bottom = 32.dp)
-            )
-        }
-
-        Column(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-        ) {
-            SmallFloatingActionButton(
-                onClick = {
-                    navController.navigate(Screen.Settings.route)
-                },
-                modifier = Modifier
-                    .align(Alignment.End)
-                    .padding(top = 12.dp, end = 12.dp),
-                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.baseline_settings_24),
-                    contentDescription = "Settings",
-                    tint = MaterialTheme.colorScheme.onSurface
+                Spacer(Modifier.weight(1f))
+                MapZoomButtons(
+                    cameraPositionState = cameraPositionState,
+                    scope = scope,
+                    modifier = Modifier
+                        .padding(12.dp)
+                        .padding(bottom = 32.dp)
                 )
             }
-            Spacer(Modifier.weight(1f))
-            MockLocationControls(
-                onClearClicked = {
-                    onClear()
-                },
-                onPlayClicked = {
-                    if (isPaused) {
-                        onPause()
-                    } else {
-                        onPlay()
-                    }
-                },
-                onStopClicked = {
-                    onStop()
-                },
-                onPopClicked = {
-                    onPop()
-                },
-                onPauseClicked = {
-                    onPause()
-                },
-                onSaveClicked = {
-                    onSave()
-                },
-                locationTarget = locationTarget,
-                isMocking = isMocking,
-                isPaused = isPaused,
-                useCrosshairs = useCrosshairs,
-                onAddCrosshairsPoint = {
-                    onAddCrosshairsPoint()
-                },
-                modifier = Modifier.padding(bottom = 12.dp, end = 12.dp)
-            )
-        }
 
-        ExpandControlsButton(
-            onClick = {
-                setControlsAreExpanded(!controlsAreExpanded)
-            },
-            controlsAreExpanded = controlsAreExpanded,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-        )
-
-        if (useCrosshairs) {
-            Crosshairs(
+            Column(
                 modifier = Modifier
-                    .align(Alignment.Center)
+                    .align(Alignment.TopEnd)
+            ) {
+                SmallFloatingActionButton(
+                    onClick = {
+                        navController.navigate(Screen.Settings.route)
+                    },
+                    modifier = Modifier
+                        .align(Alignment.End)
+                        .padding(top = 12.dp, end = 12.dp),
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.baseline_settings_24),
+                        contentDescription = "Settings",
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+                Spacer(Modifier.weight(1f))
+                MockLocationControls(
+                    onClearClicked = {
+                        onClear()
+                    },
+                    onPlayClicked = {
+                        if (isPaused) {
+                            onPause()
+                        } else {
+                            onPlay()
+                        }
+                    },
+                    onStopClicked = {
+                        onStop()
+                    },
+                    onPopClicked = {
+                        onPop()
+                    },
+                    onPauseClicked = {
+                        onPause()
+                    },
+                    onSaveClicked = {
+                        onSave()
+                    },
+                    locationTarget = locationTarget,
+                    isMocking = isMocking,
+                    isPaused = isPaused,
+                    useCrosshairs = useCrosshairs,
+                    onAddCrosshairsPoint = {
+                        onAddCrosshairsPoint()
+                    },
+                    modifier = Modifier.padding(bottom = 12.dp, end = 12.dp)
+                )
+            }
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+        ) {
+            ExpandControlsButton(
+                onClick = {
+                    setControlsAreExpanded(!controlsAreExpanded)
+                },
+                controlsAreExpanded = controlsAreExpanded,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
             )
+
+            if (useCrosshairs) {
+                Crosshairs(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                )
+            }
         }
     }
 }
