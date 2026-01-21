@@ -3,16 +3,8 @@ package com.drew654.mocklocations.presentation.map_screen
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.only
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -20,30 +12,29 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import com.drew654.mocklocations.R
+import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.presentation.MockLocationsViewModel
-import com.drew654.mocklocations.presentation.Screen
 import com.drew654.mocklocations.presentation.hasFineLocationPermission
-import com.drew654.mocklocations.presentation.map_screen.components.ExpandControlsButton
 import com.drew654.mocklocations.presentation.map_screen.components.ExpandedControls
 import com.drew654.mocklocations.presentation.map_screen.components.MapControlButtons
-import com.drew654.mocklocations.presentation.map_screen.components.MockLocationControls
+import com.drew654.mocklocations.presentation.map_screen.components.SavedRoutesDialog
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.MapStyleOptions
+import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
@@ -51,6 +42,7 @@ import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
+import kotlinx.coroutines.launch
 
 @Composable
 fun MapScreen(
@@ -59,7 +51,8 @@ fun MapScreen(
 ) {
     val context = LocalContext.current
     val systemInDarkTheme = isSystemInDarkTheme()
-    val points by viewModel.points.collectAsState()
+    val scope = rememberCoroutineScope()
+    val locationTarget by viewModel.locationTarget.collectAsState()
     val isMocking by viewModel.isMocking.collectAsState()
     val isPaused by viewModel.isPaused.collectAsState()
     val speedMetersPerSec by viewModel.speedMetersPerSec.collectAsState()
@@ -83,10 +76,12 @@ fun MapScreen(
         zoomControlsEnabled = false
     )
     val cameraPositionState = rememberCameraPositionState {
-        val zoom = if (points.isNotEmpty()) 15f else 1f
+        val zoom = if (locationTarget !is LocationTarget.Empty) 15f else 1f
         position = CameraPosition.fromLatLngZoom(LatLng(0.0, 0.0), zoom)
     }
     val lifecycleOwner = LocalLifecycleOwner.current
+    var isShowingSavedRoutesDialog by remember { mutableStateOf(false) }
+    val savedRoutes by viewModel.savedRoutes.collectAsState()
     var controlsAreExpanded by remember { mutableStateOf(false) }
 
     DisposableEffect(lifecycleOwner) {
@@ -102,7 +97,7 @@ fun MapScreen(
     }
 
     LaunchedEffect(hasLocationPermission) {
-        if (hasLocationPermission && points.isEmpty()) {
+        if (hasLocationPermission && locationTarget is LocationTarget.Empty) {
             val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
             try {
                 fusedLocationClient.lastLocation.addOnSuccessListener { location ->
@@ -136,15 +131,20 @@ fun MapScreen(
                         }
                     }
                 ) {
-                    if (points.isNotEmpty()) {
+                    if (locationTarget !is LocationTarget.Empty) {
                         Polyline(
-                            points = points.map { LatLng(it.latitude, it.longitude) },
+                            points = locationTarget.points.map {
+                                LatLng(
+                                    it.latitude,
+                                    it.longitude
+                                )
+                            },
                             color = MaterialTheme.colorScheme.onBackground,
                             width = 20f
                         )
                     }
 
-                    points.forEachIndexed { index, point ->
+                    locationTarget.points.forEachIndexed { index, point ->
                         Marker(
                             state = MarkerState(
                                 position = LatLng(
@@ -155,7 +155,7 @@ fun MapScreen(
                             icon = BitmapDescriptorFactory.defaultMarker(
                                 getMarkerHue(
                                     index,
-                                    points.size
+                                    locationTarget.points.size
                                 )
                             ),
                             snippet = "Lat: ${point.latitude}, Lng: ${point.longitude}",
@@ -166,76 +166,35 @@ fun MapScreen(
                         )
                     }
                 }
-                MockLocationControls(
-                    onClearClicked = {
-                        viewModel.clearPoints()
+                MapControlButtons(
+                    navController = navController,
+                    cameraPositionState = cameraPositionState,
+                    controlsAreExpanded = controlsAreExpanded,
+                    setControlsAreExpanded = {
+                        controlsAreExpanded = it
                     },
-                    onPlayClicked = {
-                        if (isPaused) {
-                            viewModel.togglePause()
-                        } else {
-                            viewModel.startMockLocation(context)
-                        }
+                    onClear = {
+                        viewModel.clearLocationTarget()
                     },
-                    onStopClicked = {
+                    onPlay = {
+                        viewModel.startMockLocation(context)
+                    },
+                    onStop = {
                         viewModel.stopMockLocation()
                     },
-                    onPopClicked = {
+                    onPop = {
                         viewModel.popPoint()
                     },
-                    onPauseClicked = {
+                    onPause = {
                         viewModel.togglePause()
                     },
-                    points = points,
+                    onSave = {
+                        isShowingSavedRoutesDialog = true
+                    },
+                    locationTarget = locationTarget,
                     isMocking = isMocking,
                     isPaused = isPaused
                 )
-                MapControlButtons(
-                    cameraPositionState = cameraPositionState
-                )
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .windowInsetsPadding(
-                            WindowInsets.displayCutout.only(
-                                WindowInsetsSides.Horizontal
-                            )
-                        )
-                ) {
-                    SmallFloatingActionButton(
-                        onClick = {
-                            navController.navigate(Screen.Settings.route)
-                        },
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(12.dp),
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.baseline_settings_24),
-                            contentDescription = "Settings",
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                }
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .windowInsetsPadding(
-                            WindowInsets.displayCutout.only(
-                                WindowInsetsSides.Horizontal
-                            )
-                        )
-                ) {
-                    ExpandControlsButton(
-                        onClick = {
-                            controlsAreExpanded = !controlsAreExpanded
-                        },
-                        controlsAreExpanded = controlsAreExpanded,
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                    )
-                }
             }
             ExpandedControls(
                 isExpanded = controlsAreExpanded,
@@ -249,6 +208,26 @@ fun MapScreen(
             )
         }
     }
+    SavedRoutesDialog(
+        isVisible = isShowingSavedRoutesDialog,
+        onDismiss = {
+            isShowingSavedRoutesDialog = false
+        },
+        savedRoutes = savedRoutes,
+        onRouteSaved = {
+            viewModel.saveCurrentRoute(it)
+        },
+        locationTarget = locationTarget,
+        onRouteLoaded = {
+            viewModel.loadSavedRoute(it)
+            scope.launch {
+                focusMapToLocationTarget(it, cameraPositionState)
+            }
+        },
+        onRouteDeleted = {
+            viewModel.deleteSavedRoute(it)
+        }
+    )
 }
 
 private fun getMarkerHue(index: Int, numPoints: Int): Float {
@@ -257,4 +236,21 @@ private fun getMarkerHue(index: Int, numPoints: Int): Float {
         numPoints - 1 -> BitmapDescriptorFactory.HUE_RED
         else -> BitmapDescriptorFactory.HUE_YELLOW
     }
+}
+
+private suspend fun focusMapToLocationTarget(locationTarget: LocationTarget, cameraPositionState: CameraPositionState) {
+    if (locationTarget.points.isEmpty()) return
+
+    val boundsBuilder = LatLngBounds.Builder()
+    locationTarget.points.forEach { boundsBuilder.include(it) }
+
+    val bounds = boundsBuilder.build()
+
+    val update = if (locationTarget.points.size == 1) {
+        CameraUpdateFactory.newLatLngZoom(locationTarget.points.first(), 15f)
+    } else {
+        CameraUpdateFactory.newLatLngBounds(bounds, 200)
+    }
+
+    cameraPositionState.animate(update)
 }

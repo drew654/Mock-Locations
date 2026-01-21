@@ -1,30 +1,26 @@
 package com.drew654.mocklocations.presentation.map_screen.components
 
 import android.content.res.Configuration
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.displayCutout
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.only
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.R
+import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 import com.google.android.gms.maps.model.LatLng
 
@@ -36,34 +32,55 @@ fun MockLocationControls(
     onStopClicked: () -> Unit,
     onPopClicked: () -> Unit,
     onPauseClicked: () -> Unit,
-    points: List<LatLng>,
+    locationTarget: LocationTarget,
     isMocking: Boolean,
-    isPaused: Boolean
+    isPaused: Boolean,
+    onSaveClicked: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .windowInsetsPadding(
-                WindowInsets.displayCutout.only(
-                    WindowInsetsSides.Horizontal
-                )
-            ),
-        contentAlignment = Alignment.BottomEnd
+    val scrollState = rememberScrollState()
+
+    LaunchedEffect(scrollState.maxValue) {
+        if (scrollState.maxValue > 0) {
+            scrollState.scrollTo(scrollState.maxValue)
+        }
+    }
+    
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.End
     ) {
+        Spacer(Modifier.height(8.dp))
         Column(
-            modifier = Modifier.padding(12.dp),
-            horizontalAlignment = Alignment.End
+            modifier = Modifier
+                .weight(1f, fill = false)
+                .verticalScroll(
+                    scrollState
+                )
         ) {
+            DisableableSmallFloatingActionButton(
+                onClick = {
+                    onSaveClicked()
+                },
+                enabled = true
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.baseline_save_24),
+                    contentDescription = "Saved Routes",
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+            Spacer(Modifier.height(4.dp))
             DisableableSmallFloatingActionButton(
                 onClick = {
                     onPopClicked()
                 },
-                enabled = points.isNotEmpty() && !isMocking
+                enabled = locationTarget !is LocationTarget.Empty && !isMocking
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.baseline_backspace_24),
                     contentDescription = "Pop",
-                    tint = if (points.isEmpty())
+                    tint = if (locationTarget is LocationTarget.Empty)
                         MaterialTheme.colorScheme.onSurfaceVariant
                     else
                         MaterialTheme.colorScheme.onPrimaryContainer
@@ -74,57 +91,57 @@ fun MockLocationControls(
                 onClick = {
                     onClearClicked()
                 },
-                enabled = points.isNotEmpty() && !isMocking
+                enabled = locationTarget !is LocationTarget.Empty && !isMocking
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.baseline_clear_24),
                     contentDescription = "Clear",
-                    tint = if (points.isEmpty())
+                    tint = if (locationTarget is LocationTarget.Empty)
                         MaterialTheme.colorScheme.onSurfaceVariant
                     else
                         MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }
-            Spacer(Modifier.height(12.dp))
-            Row(
-                verticalAlignment = Alignment.Bottom
-            ) {
-                if (isMocking && points.size > 1) {
-                    DisableableSmallFloatingActionButton(
-                        onClick = {
-                            onPauseClicked()
-                        },
-                        enabled = true
-                    ) {
-                        Icon(
-                            painter = painterResource(id = if (isPaused) R.drawable.baseline_play_arrow_24 else R.drawable.baseline_pause_24),
-                            contentDescription = if (isPaused) "Resume" else "Pause",
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    }
-                    Spacer(Modifier.width(12.dp))
-                }
-                DisableableFloatingActionButton(
+        }
+        Spacer(Modifier.height(12.dp))
+        Row(
+            verticalAlignment = Alignment.Bottom
+        ) {
+            if (isMocking && (locationTarget is LocationTarget.Route || locationTarget is LocationTarget.SavedRoute)) {
+                DisableableSmallFloatingActionButton(
                     onClick = {
-                        if (isMocking) {
-                            onStopClicked()
-                        } else {
-                            onPlayClicked()
-                        }
+                        onPauseClicked()
                     },
-                    enabled = points.isNotEmpty()
+                    enabled = true
                 ) {
+                    Icon(
+                        painter = painterResource(id = if (isPaused) R.drawable.baseline_play_arrow_24 else R.drawable.baseline_pause_24),
+                        contentDescription = if (isPaused) "Resume" else "Pause",
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+                Spacer(Modifier.width(12.dp))
+            }
+            DisableableFloatingActionButton(
+                onClick = {
                     if (isMocking) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.baseline_stop_24),
-                            contentDescription = "Stop"
-                        )
+                        onStopClicked()
                     } else {
-                        Icon(
-                            painter = painterResource(id = R.drawable.baseline_play_arrow_24),
-                            contentDescription = "Play"
-                        )
+                        onPlayClicked()
                     }
+                },
+                enabled = locationTarget !is LocationTarget.Empty
+            ) {
+                if (isMocking) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.baseline_stop_24),
+                        contentDescription = "Stop"
+                    )
+                } else {
+                    Icon(
+                        painter = painterResource(id = R.drawable.baseline_play_arrow_24),
+                        contentDescription = "Play"
+                    )
                 }
             }
         }
@@ -145,14 +162,15 @@ fun MockLocationControlsPreview1() {
     MockLocationsTheme {
         Surface {
             MockLocationControls(
-                onClearClicked = {},
-                onPlayClicked = {},
-                onStopClicked = {},
-                onPopClicked = {},
-                onPauseClicked = {},
-                points = emptyList(),
+                onClearClicked = { },
+                onPlayClicked = { },
+                onStopClicked = { },
+                onPopClicked = { },
+                onPauseClicked = { },
+                locationTarget = LocationTarget.Empty,
                 isMocking = false,
-                isPaused = false
+                isPaused = false,
+                onSaveClicked = { }
             )
         }
     }
@@ -172,14 +190,15 @@ fun MockLocationControlsPreview2() {
     MockLocationsTheme {
         Surface {
             MockLocationControls(
-                onClearClicked = {},
-                onPlayClicked = {},
-                onStopClicked = {},
-                onPopClicked = {},
-                onPauseClicked = {},
-                points = listOf(LatLng(0.0, 0.0), LatLng(0.0, 0.0)),
+                onClearClicked = { },
+                onPlayClicked = { },
+                onStopClicked = { },
+                onPopClicked = { },
+                onPauseClicked = { },
+                locationTarget = LocationTarget.Route(listOf(LatLng(0.0, 0.0), LatLng(0.0, 0.0))),
                 isMocking = true,
-                isPaused = false
+                isPaused = false,
+                onSaveClicked = { }
             )
         }
     }

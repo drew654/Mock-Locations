@@ -62,7 +62,7 @@ fun ExpandControlsButtonPreview() {
     MockLocationsTheme {
         Surface {
             ExpandControlsButton(
-                onClick = {},
+                onClick = { },
                 controlsAreExpanded = false
             )
         }

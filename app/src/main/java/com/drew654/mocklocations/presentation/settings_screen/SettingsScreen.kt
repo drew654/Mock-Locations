@@ -30,7 +30,7 @@ fun SettingsScreen(
     viewModel: MockLocationsViewModel,
     navController: NavController
 ) {
-    val clearPointsOnStop by viewModel.clearPointsOnStop.collectAsState()
+    val clearPointsOnStop by viewModel.clearRouteOnStop.collectAsState()
 
     Scaffold(
         modifier = Modifier
@@ -65,10 +65,10 @@ fun SettingsScreen(
                 .padding(innerPadding)
         ) {
             SwitchRow(
-                label = "Clear points on stop",
+                label = "Clear route on stop",
                 checked = clearPointsOnStop,
                 onCheckedChange = {
-                    viewModel.setClearPointsOnStop(it)
+                    viewModel.setClearRouteOnStop(it)
                 }
             )
         }

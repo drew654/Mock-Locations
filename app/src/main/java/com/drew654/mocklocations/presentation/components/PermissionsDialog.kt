@@ -35,7 +35,7 @@ fun PermissionsDialog(
         }
 
         AlertDialog(
-            onDismissRequest = {},
+            onDismissRequest = { },
             title = { Text(if (!hasFineLocationPermission(context)) "Location Permission Required" else "Developer Options Required") },
             text = {
                 Text(bodyText)

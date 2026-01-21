@@ -10,6 +10,7 @@ import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.drew654.mocklocations.domain.SettingsManager
+import com.drew654.mocklocations.domain.model.LocationTarget
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -18,6 +19,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class MockLocationsViewModel(application: Application) : AndroidViewModel(application) {
@@ -28,8 +30,8 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     val isMocking: StateFlow<Boolean> = _isMocking.asStateFlow()
     private val _isPaused = MutableStateFlow(false)
     val isPaused: StateFlow<Boolean> = _isPaused.asStateFlow()
-    private val _points = MutableStateFlow<List<LatLng>>(emptyList())
-    val points: StateFlow<List<LatLng>> = _points.asStateFlow()
+    private val _locationTarget = MutableStateFlow<LocationTarget>(LocationTarget.Empty)
+    val locationTarget: StateFlow<LocationTarget> = _locationTarget.asStateFlow()
     private val locationManager =
         application.getSystemService(Context.LOCATION_SERVICE) as LocationManager
     private val providerName = LocationManager.GPS_PROVIDER
@@ -54,15 +56,19 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     }
 
     fun pushPoint(point: LatLng) {
-        _points.value = _points.value + point
+        _locationTarget.update { current ->
+            LocationTarget.create(current.points + point)
+        }
     }
 
     fun popPoint() {
-        _points.value = _points.value.dropLast(1)
+        _locationTarget.update { current ->
+            LocationTarget.create(current.points.dropLast(1))
+        }
     }
 
-    fun clearPoints() {
-        _points.value = emptyList()
+    fun clearLocationTarget() {
+        _locationTarget.value = LocationTarget.Empty
     }
 
     fun setSpeedMetersPerSec(speed: Double) {
@@ -71,13 +77,16 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
 
     fun startMockLocation(context: Context) {
         if (hasFineLocationPermission(context)) {
-            if (_points.value.isEmpty()) {
-                Toast.makeText(getApplication(), "Please place a point first", Toast.LENGTH_SHORT)
-                    .show()
-            } else if (_points.value.size == 1) {
-                mockLocationSinglePoint(_points.value.first())
-            } else {
-                mockLocationStraightLineRoute(_points.value)
+            when (_locationTarget.value) {
+                is LocationTarget.Empty -> null
+
+                is LocationTarget.SinglePoint -> {
+                    mockLocationSinglePoint(_locationTarget.value.points.first())
+                }
+
+                else -> {
+                    mockLocationStraightLineRoute(_locationTarget.value)
+                }
             }
         } else {
             _isShowingPermissionsDialog.value = true
@@ -143,7 +152,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
-    private fun mockLocationStraightLineRoute(points: List<LatLng>) {
+    private fun mockLocationStraightLineRoute(locationTarget: LocationTarget) {
         mockJob?.cancel()
         _isPaused.value = false
 
@@ -173,9 +182,9 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
                 val updateIntervalMs = 1000L
                 var lastBroadcastLocation: Location? = null
 
-                for (i in 0 until points.size - 1) {
-                    val start = points[i]
-                    val end = points[i + 1]
+                for (i in 0 until locationTarget.points.size - 1) {
+                    val start = locationTarget.points[i]
+                    val end = locationTarget.points[i + 1]
 
                     val results = FloatArray(3)
                     Location.distanceBetween(
@@ -248,8 +257,8 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         _isPaused.value = false
         mockJob?.cancel()
         mockJob = null
-        if (clearPointsOnStop.value) {
-            clearPoints()
+        if (clearRouteOnStop.value) {
+            clearLocationTarget()
         }
 
         try {
@@ -272,15 +281,41 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         stopMockLocation()
     }
 
-    val clearPointsOnStop = settingsManager.clearPointsOnStopFlow.stateIn(
+    val clearRouteOnStop = settingsManager.clearRouteOnStopFlow.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = true
     )
 
-    fun setClearPointsOnStop(enabled: Boolean) {
+    fun setClearRouteOnStop(enabled: Boolean) {
         viewModelScope.launch {
-            settingsManager.setClearPointsOnStop(enabled)
+            settingsManager.setClearRouteOnStop(enabled)
+        }
+    }
+
+    val savedRoutes = settingsManager.savedRoutesFlow.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    fun saveCurrentRoute(name: String) {
+        val current = _locationTarget.value
+        if (current.points.isNotEmpty()) {
+            val routeToSave = LocationTarget.SavedRoute(name, current.points)
+            viewModelScope.launch {
+                settingsManager.saveRoute(routeToSave)
+            }
+        }
+    }
+
+    fun loadSavedRoute(route: LocationTarget.SavedRoute) {
+        _locationTarget.value = route
+    }
+
+    fun deleteSavedRoute(route: LocationTarget.SavedRoute) {
+        viewModelScope.launch {
+            settingsManager.deleteRoute(route)
         }
     }
 
