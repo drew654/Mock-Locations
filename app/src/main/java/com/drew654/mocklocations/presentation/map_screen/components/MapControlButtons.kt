@@ -46,6 +46,7 @@ fun MapControlButtons(
     locationTarget: LocationTarget,
     isMocking: Boolean,
     isPaused: Boolean,
+    useCrosshairs: Boolean,
     onAddCrosshairsPoint: () -> Unit
 ) {
     val context = LocalContext.current
@@ -137,6 +138,7 @@ fun MapControlButtons(
                 locationTarget = locationTarget,
                 isMocking = isMocking,
                 isPaused = isPaused,
+                useCrosshairs = useCrosshairs,
                 onAddCrosshairsPoint = {
                     onAddCrosshairsPoint()
                 },
@@ -153,10 +155,12 @@ fun MapControlButtons(
                 .align(Alignment.BottomCenter)
         )
 
-        Crosshairs(
-            modifier = Modifier
-                .align(Alignment.Center)
-        )
+        if (useCrosshairs) {
+            Crosshairs(
+                modifier = Modifier
+                    .align(Alignment.Center)
+            )
+        }
     }
 }
 
@@ -187,6 +191,7 @@ fun MapControlButtonsPreview() {
                 locationTarget = LocationTarget.Empty,
                 isMocking = false,
                 isPaused = false,
+                useCrosshairs = true,
                 onAddCrosshairsPoint = { }
             )
         }

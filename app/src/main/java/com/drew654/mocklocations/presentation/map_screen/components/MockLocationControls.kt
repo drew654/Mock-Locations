@@ -36,6 +36,7 @@ fun MockLocationControls(
     isMocking: Boolean,
     isPaused: Boolean,
     onSaveClicked: () -> Unit,
+    useCrosshairs: Boolean,
     onAddCrosshairsPoint: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -108,7 +109,7 @@ fun MockLocationControls(
         Row(
             verticalAlignment = Alignment.Bottom
         ) {
-            if (!isMocking) {
+            if (!isMocking && useCrosshairs) {
                 DisableableFloatingActionButton(
                     onClick = {
                         onAddCrosshairsPoint()
@@ -186,6 +187,7 @@ fun MockLocationControlsPreview1() {
                 isMocking = false,
                 isPaused = false,
                 onSaveClicked = { },
+                useCrosshairs = true,
                 onAddCrosshairsPoint = { }
             )
         }
@@ -215,6 +217,7 @@ fun MockLocationControlsPreview2() {
                 isMocking = true,
                 isPaused = false,
                 onSaveClicked = { },
+                useCrosshairs = false,
                 onAddCrosshairsPoint = { }
             )
         }
