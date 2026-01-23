@@ -14,6 +14,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
@@ -30,7 +31,6 @@ import com.drew654.mocklocations.presentation.map_screen.components.SavedRoutesD
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
-import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.MapStyleOptions
@@ -75,10 +75,10 @@ fun MapScreen(
         myLocationButtonEnabled = false,
         zoomControlsEnabled = false
     )
-    val cameraPositionState = rememberCameraPositionState {
-        val zoom = if (locationTarget !is LocationTarget.Empty) 15f else 1f
-        position = CameraPosition.fromLatLngZoom(LatLng(0.0, 0.0), zoom)
-    }
+    val savedCameraPosition by viewModel.cameraPosition.collectAsState()
+    var hasRestoredCamera by remember { mutableStateOf(false) }
+    val hasCenteredOnUser by viewModel.hasCenteredOnUser.collectAsState()
+    val cameraPositionState = rememberCameraPositionState()
     val lifecycleOwner = LocalLifecycleOwner.current
     var isShowingSavedRoutesDialog by remember { mutableStateOf(false) }
     val savedRoutes by viewModel.savedRoutes.collectAsState()
@@ -90,6 +90,11 @@ fun MapScreen(
             if (event == Lifecycle.Event.ON_RESUME) {
                 hasLocationPermission = hasFineLocationPermission(context)
             }
+            if (event == Lifecycle.Event.ON_PAUSE) {
+                viewModel.updateCameraPosition(
+                    cameraPositionState.position
+                )
+            }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose {
@@ -97,9 +102,40 @@ fun MapScreen(
         }
     }
 
+    LaunchedEffect(savedCameraPosition) {
+        if (!hasRestoredCamera && savedCameraPosition != null) {
+            cameraPositionState.move(
+                CameraUpdateFactory.newLatLngZoom(
+                    LatLng(
+                        savedCameraPosition!!.latitude,
+                        savedCameraPosition!!.longitude
+                    ),
+                    savedCameraPosition!!.zoom
+                )
+            )
+            hasRestoredCamera = true
+        }
+    }
+
+    LaunchedEffect(cameraPositionState) {
+        snapshotFlow {
+            cameraPositionState.isMoving to cameraPositionState.position
+        }.collect { (isMoving, position) ->
+            if (!isMoving) {
+                viewModel.updateCameraPosition(position)
+            }
+        }
+    }
+
     LaunchedEffect(hasLocationPermission) {
-        if (hasLocationPermission && locationTarget is LocationTarget.Empty) {
-            val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+        if (
+            hasLocationPermission &&
+            locationTarget is LocationTarget.Empty &&
+            !hasCenteredOnUser
+        ) {
+            val fusedLocationClient =
+                LocationServices.getFusedLocationProviderClient(context)
+
             try {
                 fusedLocationClient.lastLocation.addOnSuccessListener { location ->
                     if (location != null) {
@@ -109,10 +145,10 @@ fun MapScreen(
                                 15f
                             )
                         )
+                        viewModel.markCenteredOnUser()
                     }
                 }
-            } catch (e: SecurityException) {
-            }
+            } catch (_: SecurityException) {}
         }
     }
 
@@ -243,7 +279,10 @@ private fun getMarkerHue(index: Int, numPoints: Int): Float {
     }
 }
 
-private suspend fun focusMapToLocationTarget(locationTarget: LocationTarget, cameraPositionState: CameraPositionState) {
+private suspend fun focusMapToLocationTarget(
+    locationTarget: LocationTarget,
+    cameraPositionState: CameraPositionState
+) {
     if (locationTarget.points.isEmpty()) return
 
     val boundsBuilder = LatLngBounds.Builder()

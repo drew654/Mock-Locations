@@ -10,7 +10,9 @@ import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.drew654.mocklocations.domain.SettingsManager
+import com.drew654.mocklocations.domain.model.SavedCameraPosition
 import com.drew654.mocklocations.domain.model.LocationTarget
+import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -26,6 +28,10 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     private var mockJob: Job? = null
     private val _isShowingPermissionsDialog = MutableStateFlow(false)
     val isShowingPermissionsDialog = _isShowingPermissionsDialog.asStateFlow()
+    private val _cameraPosition = MutableStateFlow<SavedCameraPosition?>(null)
+    val cameraPosition = _cameraPosition.asStateFlow()
+    private val _hasCenteredOnUser = MutableStateFlow(false)
+    val hasCenteredOnUser = _hasCenteredOnUser.asStateFlow()
     private val _controlsAreExpanded = MutableStateFlow(false)
     val controlsAreExpanded: StateFlow<Boolean> = _controlsAreExpanded.asStateFlow()
     private val _isMocking = MutableStateFlow(false)
@@ -51,6 +57,18 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
 
     fun setIsShowingPermissionsDialog(shouldShow: Boolean) {
         _isShowingPermissionsDialog.value = shouldShow
+    }
+
+    fun updateCameraPosition(position: CameraPosition) {
+        _cameraPosition.value = SavedCameraPosition(
+            latitude = position.target.latitude,
+            longitude = position.target.longitude,
+            zoom = position.zoom
+        )
+    }
+
+    fun markCenteredOnUser() {
+        _hasCenteredOnUser.value = true
     }
 
     fun setControlsAreExpanded(expanded: Boolean) {
