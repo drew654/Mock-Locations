@@ -1,12 +1,21 @@
 package com.drew654.mocklocations.presentation.map_screen.components
 
 import android.content.res.Configuration
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -39,8 +48,11 @@ fun MockLocationControls(
     onSaveClicked: () -> Unit,
     useCrosshairs: Boolean,
     onAddCrosshairsPoint: () -> Unit,
+    controlsAreExpanded: Boolean,
+    setControlsAreExpanded: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val minWidth = 384.dp
     val scrollState = rememberScrollState()
 
     LaunchedEffect(scrollState.maxValue) {
@@ -48,7 +60,7 @@ fun MockLocationControls(
             scrollState.scrollTo(scrollState.maxValue)
         }
     }
-    
+
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.End
@@ -60,7 +72,12 @@ fun MockLocationControls(
                 .verticalScroll(
                     scrollState
                 )
-                .padding(bottom = 12.dp)
+                .windowInsetsPadding(
+                    WindowInsets.displayCutout.only(
+                        WindowInsetsSides.Horizontal
+                    )
+                )
+                .padding(bottom = 12.dp, end = 12.dp)
         ) {
             DisableableSmallFloatingActionButton(
                 onClick = {
@@ -107,58 +124,151 @@ fun MockLocationControls(
                 )
             }
         }
-        Row(
-            verticalAlignment = Alignment.Bottom
+        BoxWithConstraints(
+            modifier = Modifier.fillMaxWidth()
         ) {
-            if (!isMocking && useCrosshairs) {
-                DisableableFloatingActionButton(
-                    onClick = {
-                        onAddCrosshairsPoint()
-                    },
-                    enabled = true
+            val isNarrow = maxWidth < minWidth
+            if (isNarrow) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.Bottom,
+                    horizontalArrangement = Arrangement.End
                 ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.baseline_add_location_alt_24),
-                        contentDescription = "Add Point"
+                    ExpandControlsButton(
+                        onClick = {
+                            setControlsAreExpanded(!controlsAreExpanded)
+                        },
+                        controlsAreExpanded = controlsAreExpanded
                     )
-                }
-                Spacer(Modifier.width(12.dp))
-            }
-            if (isMocking && (locationTarget is LocationTarget.Route || locationTarget is LocationTarget.SavedRoute)) {
-                DisableableSmallFloatingActionButton(
-                    onClick = {
-                        onPauseClicked()
-                    },
-                    enabled = true
-                ) {
-                    Icon(
-                        painter = painterResource(id = if (isPaused) R.drawable.baseline_play_arrow_24 else R.drawable.baseline_pause_24),
-                        contentDescription = if (isPaused) "Resume" else "Pause",
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                }
-                Spacer(Modifier.width(12.dp))
-            }
-            DisableableFloatingActionButton(
-                onClick = {
-                    if (isMocking) {
-                        onStopClicked()
-                    } else {
-                        onPlayClicked()
+
+                    Box(
+                        modifier = Modifier
+                            .padding(start = 12.dp)
+                            .windowInsetsPadding(
+                                WindowInsets.displayCutout.only(
+                                    WindowInsetsSides.Horizontal
+                                )
+                            ),
+                        contentAlignment = Alignment.BottomEnd
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.Bottom
+                        ) {
+                            if (!isMocking && useCrosshairs) {
+                                DisableableFloatingActionButton(
+                                    onClick = { onAddCrosshairsPoint() },
+                                    enabled = true,
+                                    modifier = Modifier.padding(bottom = 12.dp)
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.baseline_add_location_alt_24),
+                                        contentDescription = "Add Point"
+                                    )
+                                }
+                                Spacer(Modifier.width(12.dp))
+                            }
+
+                            if (isMocking && (locationTarget is LocationTarget.Route || locationTarget is LocationTarget.SavedRoute)) {
+                                DisableableSmallFloatingActionButton(
+                                    onClick = { onPauseClicked() },
+                                    enabled = true,
+                                    modifier = Modifier.padding(bottom = 12.dp)
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = if (isPaused) R.drawable.baseline_play_arrow_24 else R.drawable.baseline_pause_24),
+                                        contentDescription = if (isPaused) "Resume" else "Pause",
+                                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
+                                }
+                                Spacer(Modifier.width(12.dp))
+                            }
+
+                            DisableableFloatingActionButton(
+                                onClick = {
+                                    if (isMocking) onStopClicked() else onPlayClicked()
+                                },
+                                enabled = locationTarget !is LocationTarget.Empty,
+                                modifier = Modifier.padding(bottom = 12.dp, end = 12.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = if (isMocking) R.drawable.baseline_stop_24 else R.drawable.baseline_play_arrow_24),
+                                    contentDescription = if (isMocking) "Stop" else "Play"
+                                )
+                            }
+                        }
                     }
-                },
-                enabled = locationTarget !is LocationTarget.Empty
-            ) {
-                if (isMocking) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.baseline_stop_24),
-                        contentDescription = "Stop"
+                }
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.Bottom
+                ) {
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    ExpandControlsButton(
+                        onClick = {
+                            setControlsAreExpanded(!controlsAreExpanded)
+                        },
+                        controlsAreExpanded = controlsAreExpanded
                     )
-                } else {
-                    Icon(
-                        painter = painterResource(id = R.drawable.baseline_play_arrow_24),
-                        contentDescription = "Play"
-                    )
+
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(start = 12.dp)
+                            .windowInsetsPadding(
+                                WindowInsets.displayCutout.only(
+                                    WindowInsetsSides.Horizontal
+                                )
+                            ),
+                        contentAlignment = Alignment.BottomEnd
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.Bottom
+                        ) {
+                            if (!isMocking && useCrosshairs) {
+                                DisableableFloatingActionButton(
+                                    onClick = { onAddCrosshairsPoint() },
+                                    enabled = true,
+                                    modifier = Modifier.padding(bottom = 12.dp)
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.baseline_add_location_alt_24),
+                                        contentDescription = "Add Point"
+                                    )
+                                }
+                                Spacer(Modifier.width(12.dp))
+                            }
+
+                            if (isMocking && (locationTarget is LocationTarget.Route || locationTarget is LocationTarget.SavedRoute)) {
+                                DisableableSmallFloatingActionButton(
+                                    onClick = { onPauseClicked() },
+                                    enabled = true,
+                                    modifier = Modifier.padding(bottom = 12.dp)
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = if (isPaused) R.drawable.baseline_play_arrow_24 else R.drawable.baseline_pause_24),
+                                        contentDescription = if (isPaused) "Resume" else "Pause",
+                                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
+                                }
+                                Spacer(Modifier.width(12.dp))
+                            }
+
+                            DisableableFloatingActionButton(
+                                onClick = {
+                                    if (isMocking) onStopClicked() else onPlayClicked()
+                                },
+                                enabled = locationTarget !is LocationTarget.Empty,
+                                modifier = Modifier.padding(bottom = 12.dp, end = 12.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = if (isMocking) R.drawable.baseline_stop_24 else R.drawable.baseline_play_arrow_24),
+                                    contentDescription = if (isMocking) "Stop" else "Play"
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -175,7 +285,7 @@ fun MockLocationControls(
     showBackground = true
 )
 @Composable
-fun MockLocationControlsPreview1() {
+private fun MockLocationControlsPreview1() {
     MockLocationsTheme {
         Surface {
             MockLocationControls(
@@ -189,7 +299,9 @@ fun MockLocationControlsPreview1() {
                 isPaused = false,
                 onSaveClicked = { },
                 useCrosshairs = true,
-                onAddCrosshairsPoint = { }
+                onAddCrosshairsPoint = { },
+                controlsAreExpanded = false,
+                setControlsAreExpanded = { }
             )
         }
     }
@@ -205,7 +317,7 @@ fun MockLocationControlsPreview1() {
     showBackground = true
 )
 @Composable
-fun MockLocationControlsPreview2() {
+private fun MockLocationControlsPreview2() {
     MockLocationsTheme {
         Surface {
             MockLocationControls(
@@ -219,7 +331,43 @@ fun MockLocationControlsPreview2() {
                 isPaused = false,
                 onSaveClicked = { },
                 useCrosshairs = false,
-                onAddCrosshairsPoint = { }
+                onAddCrosshairsPoint = { },
+                controlsAreExpanded = false,
+                setControlsAreExpanded = { }
+            )
+        }
+    }
+}
+
+@Preview(
+    name = "Light Mode",
+    showBackground = true,
+    widthDp = 360
+)
+@Preview(
+    name = "Dark Mode",
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+    showBackground = true,
+    widthDp = 360
+)
+@Composable
+private fun MockLocationControlsPreviewNarrow() {
+    MockLocationsTheme {
+        Surface {
+            MockLocationControls(
+                onClearClicked = { },
+                onPlayClicked = { },
+                onStopClicked = { },
+                onPopClicked = { },
+                onPauseClicked = { },
+                locationTarget = LocationTarget.Empty,
+                isMocking = false,
+                isPaused = false,
+                onSaveClicked = { },
+                useCrosshairs = true,
+                onAddCrosshairsPoint = { },
+                controlsAreExpanded = false,
+                setControlsAreExpanded = { }
             )
         }
     }

@@ -5,12 +5,14 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import com.drew654.mocklocations.presentation.NoRippleInteractionSource
 
 @Composable
 fun DisableableFloatingActionButton(
     onClick: () -> Unit,
     enabled: Boolean,
+    modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
     FloatingActionButton(
@@ -23,7 +25,8 @@ fun DisableableFloatingActionButton(
             MaterialTheme.colorScheme.primaryContainer
         else
             MaterialTheme.colorScheme.surfaceVariant,
-        interactionSource = remember(enabled) { if (enabled) MutableInteractionSource() else NoRippleInteractionSource() }
+        interactionSource = remember(enabled) { if (enabled) MutableInteractionSource() else NoRippleInteractionSource() },
+        modifier = modifier
     ) {
         content()
     }

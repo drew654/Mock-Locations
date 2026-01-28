@@ -116,53 +116,53 @@ fun MapControlButtons(
                     )
                 }
                 Spacer(Modifier.weight(1f))
-                MockLocationControls(
-                    onClearClicked = {
-                        onClear()
-                    },
-                    onPlayClicked = {
-                        if (isPaused) {
-                            onPause()
-                        } else {
-                            onPlay()
-                        }
-                    },
-                    onStopClicked = {
-                        onStop()
-                    },
-                    onPopClicked = {
-                        onPop()
-                    },
-                    onPauseClicked = {
-                        onPause()
-                    },
-                    onSaveClicked = {
-                        onSave()
-                    },
-                    locationTarget = locationTarget,
-                    isMocking = isMocking,
-                    isPaused = isPaused,
-                    useCrosshairs = useCrosshairs,
-                    onAddCrosshairsPoint = {
-                        onAddCrosshairsPoint()
-                    },
-                    modifier = Modifier.padding(bottom = 12.dp, end = 12.dp)
-                )
             }
         }
         Box(
             modifier = Modifier
                 .fillMaxSize()
         ) {
-            ExpandControlsButton(
-                onClick = {
-                    setControlsAreExpanded(!controlsAreExpanded)
+            MockLocationControls(
+                onClearClicked = {
+                    onClear()
+                },
+                onPlayClicked = {
+                    if (isPaused) {
+                        onPause()
+                    } else {
+                        onPlay()
+                    }
+                },
+                onStopClicked = {
+                    onStop()
+                },
+                onPopClicked = {
+                    onPop()
+                },
+                onPauseClicked = {
+                    onPause()
+                },
+                onSaveClicked = {
+                    onSave()
+                },
+                locationTarget = locationTarget,
+                isMocking = isMocking,
+                isPaused = isPaused,
+                useCrosshairs = useCrosshairs,
+                onAddCrosshairsPoint = {
+                    onAddCrosshairsPoint()
                 },
                 controlsAreExpanded = controlsAreExpanded,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
+                setControlsAreExpanded = {
+                    setControlsAreExpanded(it)
+                },
+                modifier = Modifier.align(Alignment.BottomEnd)
             )
-
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+        ) {
             if (useCrosshairs) {
                 Crosshairs(
                     modifier = Modifier
