@@ -77,6 +77,7 @@ class MockLocationService : Service() {
 
             ACTION_STOP_MOCKING -> {
                 mockJob?.cancel()
+                tearDownTestProvider()
                 _isMocking.value = false
                 stopSelf()
             }
@@ -120,6 +121,7 @@ class MockLocationService : Service() {
             } catch (e: Exception) {
                 handleError(e)
             } finally {
+                tearDownTestProvider()
                 _isMocking.value = false
             }
         }
@@ -208,6 +210,7 @@ class MockLocationService : Service() {
             } catch (e: Exception) {
                 handleError(e)
             } finally {
+                tearDownTestProvider()
                 _isMocking.value = false
             }
         }
@@ -223,6 +226,14 @@ class MockLocationService : Service() {
             ProviderProperties.POWER_USAGE_LOW, ProviderProperties.ACCURACY_FINE
         )
         locationManager.setTestProviderEnabled(providerName, true)
+    }
+
+    private fun tearDownTestProvider() {
+        try {
+            locationManager.setTestProviderEnabled(providerName, false)
+            locationManager.removeTestProvider(providerName)
+        } catch (e: Exception) {
+        }
     }
 
     private fun handleError(e: Exception) {
