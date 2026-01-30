@@ -9,7 +9,8 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.drew654.mocklocations.domain.model.LocationTarget
-import com.google.gson.Gson
+import com.drew654.mocklocations.domain.model.LocationTargetAdapter
+import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -18,13 +19,27 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "se
 
 class SettingsManager(private val context: Context) {
     companion object {
+        val ACTIVE_ROUTE_JSON = stringPreferencesKey("active_route_json")
         val CLEAR_ROUTE_ON_STOP = booleanPreferencesKey("clear_route_on_stop")
         val SPEED_METERS_PER_SEC = doublePreferencesKey("speed_meters_per_sec")
         val SAVED_ROUTES_JSON = stringPreferencesKey("saved_routes_json")
         val USE_CROSSHAIRS = booleanPreferencesKey("use_crosshairs")
     }
 
-    private val gson = Gson()
+    private val gson = GsonBuilder()
+        .registerTypeAdapter(LocationTarget::class.java, LocationTargetAdapter())
+        .create()
+
+    val activeRouteFlow: Flow<LocationTarget> = context.dataStore.data
+        .map { preferences ->
+            val json = preferences[ACTIVE_ROUTE_JSON] ?: ""
+            if (json.isEmpty()) LocationTarget.Empty
+            else gson.fromJson(json, LocationTarget::class.java)
+        }
+
+    suspend fun setActiveRoute(target: LocationTarget) {
+        context.dataStore.edit { it[ACTIVE_ROUTE_JSON] = gson.toJson(target, LocationTarget::class.java) }
+    }
 
     val clearRouteOnStopFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
         preferences[CLEAR_ROUTE_ON_STOP] ?: true
