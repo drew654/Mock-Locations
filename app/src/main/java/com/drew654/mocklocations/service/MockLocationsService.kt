@@ -35,6 +35,7 @@ class MockLocationService : Service() {
         const val ACTION_START_MOCKING = "ACTION_START_MOCKING"
         const val ACTION_STOP_MOCKING = "ACTION_STOP_MOCKING"
         const val ACTION_TOGGLE_PAUSE = "ACTION_TOGGLE_PAUSE"
+        const val ACTION_ROUTE_FINISHED = "ACTION_ROUTE_FINISHED"
         private val _isMocking = kotlinx.coroutines.flow.MutableStateFlow(false)
         val isMocking = _isMocking.asStateFlow()
         private val _isPaused = kotlinx.coroutines.flow.MutableStateFlow(false)
@@ -200,6 +201,9 @@ class MockLocationService : Service() {
                 }
 
                 Toast.makeText(this@MockLocationService, "Route Finished", Toast.LENGTH_SHORT).show()
+
+                sendBroadcast(Intent(ACTION_ROUTE_FINISHED).setPackage(packageName))
+
                 stopSelf()
             } catch (e: Exception) {
                 handleError(e)

@@ -1,8 +1,11 @@
 package com.drew654.mocklocations.presentation
 
 import android.app.Application
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.drew654.mocklocations.domain.SettingsManager
@@ -43,6 +46,17 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
                 _speedMetersPerSec.value = it
             }
         }
+
+        val filter = IntentFilter(MockLocationService.ACTION_ROUTE_FINISHED)
+        ContextCompat.registerReceiver(application, object : BroadcastReceiver() {
+            override fun onReceive(p0: Context?, p1: Intent?) {
+                viewModelScope.launch {
+                    if (clearRouteOnStop.value) {
+                        clearLocationTarget()
+                    }
+                }
+            }
+        }, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
     }
 
     fun setIsShowingPermissionsDialog(shouldShow: Boolean) {
