@@ -17,8 +17,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -28,27 +28,33 @@ class MockLocationService : Service() {
     private var mockJob: kotlinx.coroutines.Job? = null
     private val locationManager by lazy { getSystemService(LOCATION_SERVICE) as android.location.LocationManager }
     private val providerName = android.location.LocationManager.GPS_PROVIDER
+    @Volatile
+    private var isPaused = false
 
     companion object {
         const val CHANNEL_ID = "mock_location_channel"
         const val NOTIFICATION_ID = 1
         const val ACTION_START_MOCKING = "ACTION_START_MOCKING"
         const val ACTION_STOP_MOCKING = "ACTION_STOP_MOCKING"
-        const val ACTION_TOGGLE_PAUSE = "ACTION_TOGGLE_PAUSE"
         const val ACTION_ROUTE_FINISHED = "ACTION_ROUTE_FINISHED"
-        private val _isMocking = kotlinx.coroutines.flow.MutableStateFlow(false)
-        val isMocking = _isMocking.asStateFlow()
-        private val _isPaused = kotlinx.coroutines.flow.MutableStateFlow(false)
-        val isPaused = _isPaused.asStateFlow()
-
     }
 
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
+
+        serviceScope.launch {
+            settingsManager.isPausedFlow.collect { paused ->
+                isPaused = paused
+            }
+        }
     }
 
     override fun onDestroy() {
+        try {
+            tearDownTestProvider()
+        } catch (e: Exception) {}
+
         super.onDestroy()
         serviceScope.cancel()
     }
@@ -76,14 +82,11 @@ class MockLocationService : Service() {
             }
 
             ACTION_STOP_MOCKING -> {
-                mockJob?.cancel()
-                tearDownTestProvider()
-                _isMocking.value = false
-                stopSelf()
-            }
-
-            ACTION_TOGGLE_PAUSE -> {
-                _isPaused.value = !_isPaused.value
+                serviceScope.launch {
+                    stopMocking()
+                    stopForeground(STOP_FOREGROUND_REMOVE)
+                    stopSelf()
+                }
             }
         }
 
@@ -96,7 +99,7 @@ class MockLocationService : Service() {
         mockJob = serviceScope.launch {
             try {
                 setUpTestProvider()
-                _isMocking.value = true
+                settingsManager.setIsMocking(true)
 
                 Toast.makeText(this@MockLocationService, "Location Mocking Started", Toast.LENGTH_SHORT)
                     .show()
@@ -121,20 +124,21 @@ class MockLocationService : Service() {
             } catch (e: Exception) {
                 handleError(e)
             } finally {
-                tearDownTestProvider()
-                _isMocking.value = false
+                stopMocking()
             }
         }
     }
 
     private fun mockLocationStraightLineRoute(locationTarget: LocationTarget) {
         mockJob?.cancel()
-        _isPaused.value = false
+        serviceScope.launch {
+            settingsManager.setIsPaused(false)
+        }
 
         mockJob = serviceScope.launch {
             try {
                 setUpTestProvider()
-                _isMocking.value = true
+                settingsManager.setIsMocking(true)
 
                 Toast.makeText(this@MockLocationService, "Route Mocking Started", Toast.LENGTH_SHORT).show()
 
@@ -164,7 +168,7 @@ class MockLocationService : Service() {
                     while (currentDistance < totalDistance) {
                         if (mockJob?.isActive == false) return@launch
 
-                        if (_isPaused.value) {
+                        if (isPaused) {
                             lastBroadcastLocation?.let { loc ->
                                 loc.time = System.currentTimeMillis()
                                 loc.elapsedRealtimeNanos = SystemClock.elapsedRealtimeNanos()
@@ -210,8 +214,7 @@ class MockLocationService : Service() {
             } catch (e: Exception) {
                 handleError(e)
             } finally {
-                tearDownTestProvider()
-                _isMocking.value = false
+                stopMocking()
             }
         }
     }
@@ -242,6 +245,16 @@ class MockLocationService : Service() {
                 Toast.makeText(this@MockLocationService, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    private suspend fun stopMocking() {
+        mockJob?.cancelAndJoin()
+        mockJob = null
+
+        tearDownTestProvider()
+
+        settingsManager.setIsMocking(false)
+        settingsManager.setIsPaused(false)
     }
 
     private fun createNotificationChannel() {

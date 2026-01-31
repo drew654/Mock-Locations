@@ -20,6 +20,8 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "se
 class SettingsManager(private val context: Context) {
     companion object {
         val ACTIVE_LOCATION_TARGET_JSON = stringPreferencesKey("active_location_target_json")
+        val IS_MOCKING = booleanPreferencesKey("is_mocking")
+        val IS_PAUSED = booleanPreferencesKey("is_paused")
         val CLEAR_ROUTE_ON_STOP = booleanPreferencesKey("clear_route_on_stop")
         val SPEED_METERS_PER_SEC = doublePreferencesKey("speed_meters_per_sec")
         val SAVED_ROUTES_JSON = stringPreferencesKey("saved_routes_json")
@@ -40,6 +42,33 @@ class SettingsManager(private val context: Context) {
     suspend fun setActiveLocationTarget(target: LocationTarget) {
         context.dataStore.edit {
             it[ACTIVE_LOCATION_TARGET_JSON] = gson.toJson(target, LocationTarget::class.java)
+        }
+    }
+
+    val isMockingFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[IS_MOCKING] ?: false
+    }
+
+    suspend fun setIsMocking(isMocking: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[IS_MOCKING] = isMocking
+        }
+    }
+
+    val isPausedFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[IS_PAUSED] ?: false
+    }
+
+    suspend fun setIsPaused(isPaused: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[IS_PAUSED] = isPaused
+        }
+    }
+
+    suspend fun toggleIsPaused() {
+        context.dataStore.edit { preferences ->
+            val current = preferences[IS_PAUSED] ?: false
+            preferences[IS_PAUSED] = !current
         }
     }
 

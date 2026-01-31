@@ -31,8 +31,6 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     val hasCenteredOnUser = _hasCenteredOnUser.asStateFlow()
     private val _controlsAreExpanded = MutableStateFlow(false)
     val controlsAreExpanded: StateFlow<Boolean> = _controlsAreExpanded.asStateFlow()
-    val isMocking: StateFlow<Boolean> = MockLocationService.isMocking
-    val isPaused: StateFlow<Boolean> = MockLocationService.isPaused
     private val settingsManager = SettingsManager(application)
     private val _speedMetersPerSec = MutableStateFlow(30.0)
     val speedMetersPerSec: StateFlow<Double> = _speedMetersPerSec.asStateFlow()
@@ -43,6 +41,16 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
                 SharingStarted.WhileSubscribed(5_000),
                 LocationTarget.Empty
             )
+    val isMocking = settingsManager.isMockingFlow.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = false
+    )
+    val isPaused = settingsManager.isPausedFlow.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = false
+    )
 
     init {
         viewModelScope.launch {
@@ -84,10 +92,9 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     }
 
     fun togglePause() {
-        val intent = Intent(getApplication(), MockLocationService::class.java).apply {
-            action = MockLocationService.ACTION_TOGGLE_PAUSE
+        viewModelScope.launch {
+            settingsManager.toggleIsPaused()
         }
-        getApplication<Application>().startService(intent)
     }
 
     fun pushPoint(point: LatLng) {
