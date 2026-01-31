@@ -19,7 +19,7 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "se
 
 class SettingsManager(private val context: Context) {
     companion object {
-        val ACTIVE_ROUTE_JSON = stringPreferencesKey("active_route_json")
+        val ACTIVE_LOCATION_TARGET_JSON = stringPreferencesKey("active_location_target_json")
         val CLEAR_ROUTE_ON_STOP = booleanPreferencesKey("clear_route_on_stop")
         val SPEED_METERS_PER_SEC = doublePreferencesKey("speed_meters_per_sec")
         val SAVED_ROUTES_JSON = stringPreferencesKey("saved_routes_json")
@@ -30,15 +30,17 @@ class SettingsManager(private val context: Context) {
         .registerTypeAdapter(LocationTarget::class.java, LocationTargetAdapter())
         .create()
 
-    val activeRouteFlow: Flow<LocationTarget> = context.dataStore.data
+    val activeLocationTargetFlow: Flow<LocationTarget> = context.dataStore.data
         .map { preferences ->
-            val json = preferences[ACTIVE_ROUTE_JSON] ?: ""
+            val json = preferences[ACTIVE_LOCATION_TARGET_JSON] ?: ""
             if (json.isEmpty()) LocationTarget.Empty
             else gson.fromJson(json, LocationTarget::class.java)
         }
 
-    suspend fun setActiveRoute(target: LocationTarget) {
-        context.dataStore.edit { it[ACTIVE_ROUTE_JSON] = gson.toJson(target, LocationTarget::class.java) }
+    suspend fun setActiveLocationTarget(target: LocationTarget) {
+        context.dataStore.edit {
+            it[ACTIVE_LOCATION_TARGET_JSON] = gson.toJson(target, LocationTarget::class.java)
+        }
     }
 
     val clearRouteOnStopFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
@@ -101,7 +103,8 @@ class SettingsManager(private val context: Context) {
             val existingJson = preferences[SAVED_ROUTES_JSON] ?: ""
             if (existingJson.isNotEmpty()) {
                 val type = object : TypeToken<MutableList<LocationTarget.SavedRoute>>() {}.type
-                val currentList = gson.fromJson<MutableList<LocationTarget.SavedRoute>>(existingJson, type)
+                val currentList =
+                    gson.fromJson<MutableList<LocationTarget.SavedRoute>>(existingJson, type)
 
                 currentList.removeAll { it.name == route.name && it.points == route.points }
 

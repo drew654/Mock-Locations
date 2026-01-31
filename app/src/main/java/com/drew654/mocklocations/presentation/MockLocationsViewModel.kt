@@ -20,7 +20,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class MockLocationsViewModel(application: Application) : AndroidViewModel(application) {
@@ -34,11 +33,16 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     val controlsAreExpanded: StateFlow<Boolean> = _controlsAreExpanded.asStateFlow()
     val isMocking: StateFlow<Boolean> = MockLocationService.isMocking
     val isPaused: StateFlow<Boolean> = MockLocationService.isPaused
-    private val _locationTarget = MutableStateFlow<LocationTarget>(LocationTarget.Empty)
-    val locationTarget: StateFlow<LocationTarget> = _locationTarget.asStateFlow()
     private val settingsManager = SettingsManager(application)
     private val _speedMetersPerSec = MutableStateFlow(30.0)
     val speedMetersPerSec: StateFlow<Double> = _speedMetersPerSec.asStateFlow()
+    val activeLocationTarget =
+        settingsManager.activeLocationTargetFlow
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5_000),
+                LocationTarget.Empty
+            )
 
     init {
         viewModelScope.launch {
@@ -87,19 +91,25 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     }
 
     fun pushPoint(point: LatLng) {
-        _locationTarget.update { current ->
-            LocationTarget.create(current.points + point)
+        viewModelScope.launch {
+            val current = activeLocationTarget.value
+            val updated = LocationTarget.create(current.points + point)
+            settingsManager.setActiveLocationTarget(updated)
         }
     }
 
     fun popPoint() {
-        _locationTarget.update { current ->
-            LocationTarget.create(current.points.dropLast(1))
+        viewModelScope.launch {
+            val current = activeLocationTarget.value
+            val updated = LocationTarget.create(current.points.dropLast(1))
+            settingsManager.setActiveLocationTarget(updated)
         }
     }
 
     fun clearLocationTarget() {
-        _locationTarget.value = LocationTarget.Empty
+        viewModelScope.launch {
+            settingsManager.setActiveLocationTarget(LocationTarget.Empty)
+        }
     }
 
     fun setSpeedMetersPerSec(speed: Double) {
@@ -108,11 +118,11 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
 
     fun startMockLocation(context: Context) {
         if (hasFineLocationPermission(context)) {
-            val target = _locationTarget.value
+            val target = activeLocationTarget.value
             if (target is LocationTarget.Empty) return
 
             viewModelScope.launch {
-                settingsManager.setActiveRoute(target)
+                settingsManager.setActiveLocationTarget(target)
 
                 val intent = Intent(getApplication(), MockLocationService::class.java).apply {
                     action = ACTION_START_MOCKING
@@ -154,7 +164,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     )
 
     fun saveCurrentRoute(name: String) {
-        val current = _locationTarget.value
+        val current = activeLocationTarget.value
         if (current.points.isNotEmpty()) {
             val routeToSave = LocationTarget.SavedRoute(name, current.points)
             viewModelScope.launch {
@@ -164,7 +174,9 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     }
 
     fun loadSavedRoute(route: LocationTarget.SavedRoute) {
-        _locationTarget.value = route
+        viewModelScope.launch {
+            settingsManager.setActiveLocationTarget(route)
+        }
     }
 
     fun deleteSavedRoute(route: LocationTarget.SavedRoute) {

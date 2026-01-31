@@ -52,7 +52,7 @@ fun MapScreen(
     val context = LocalContext.current
     val systemInDarkTheme = isSystemInDarkTheme()
     val scope = rememberCoroutineScope()
-    val locationTarget by viewModel.locationTarget.collectAsState()
+    val locationTarget by viewModel.activeLocationTarget.collectAsState()
     val isMocking by viewModel.isMocking.collectAsState()
     val isPaused by viewModel.isPaused.collectAsState()
     val speedMetersPerSec by viewModel.speedMetersPerSec.collectAsState()

@@ -66,7 +66,7 @@ class MockLocationService : Service() {
         when (intent?.action) {
             ACTION_START_MOCKING -> {
                 serviceScope.launch {
-                    val locationTarget = settingsManager.activeRouteFlow.first()
+                    val locationTarget = settingsManager.activeLocationTargetFlow.first()
                     when (locationTarget) {
                         is LocationTarget.Empty -> stopSelf()
                         is LocationTarget.SinglePoint -> mockLocationSinglePoint(locationTarget.point)
