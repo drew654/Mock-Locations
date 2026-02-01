@@ -5,6 +5,7 @@ import android.app.NotificationManager
 import android.app.Service
 import android.content.Intent
 import android.location.Location
+import android.location.LocationManager
 import android.location.provider.ProviderProperties
 import android.os.IBinder
 import android.os.SystemClock
@@ -21,13 +22,14 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlin.getValue
 
 class MockLocationService : Service() {
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private val settingsManager by lazy { SettingsManager(applicationContext) }
     private var mockJob: kotlinx.coroutines.Job? = null
-    private val locationManager by lazy { getSystemService(LOCATION_SERVICE) as android.location.LocationManager }
-    private val providerName = android.location.LocationManager.GPS_PROVIDER
+    private val locationManager by lazy { getSystemService(LOCATION_SERVICE) as LocationManager }
+    private val providerName = LocationManager.GPS_PROVIDER
     @Volatile
     private var isPaused = false
 
@@ -84,8 +86,6 @@ class MockLocationService : Service() {
             ACTION_STOP_MOCKING -> {
                 serviceScope.launch {
                     stopMocking()
-                    stopForeground(STOP_FOREGROUND_REMOVE)
-                    stopSelf()
                 }
             }
         }
@@ -209,8 +209,6 @@ class MockLocationService : Service() {
                 Toast.makeText(this@MockLocationService, "Route Finished", Toast.LENGTH_SHORT).show()
 
                 sendBroadcast(Intent(ACTION_ROUTE_FINISHED).setPackage(packageName))
-
-                stopSelf()
             } catch (e: Exception) {
                 handleError(e)
             } finally {
@@ -255,6 +253,9 @@ class MockLocationService : Service() {
 
         settingsManager.setIsMocking(false)
         settingsManager.setIsPaused(false)
+
+        stopForeground(STOP_FOREGROUND_REMOVE)
+        stopSelf()
     }
 
     private fun createNotificationChannel() {
