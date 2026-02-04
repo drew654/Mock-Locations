@@ -83,7 +83,7 @@ fun MapScreen(
     var isShowingSavedRoutesDialog by remember { mutableStateOf(false) }
     val savedRoutes by viewModel.savedRoutes.collectAsState()
     val controlsAreExpanded by viewModel.controlsAreExpanded.collectAsState()
-    val useCrosshairs by viewModel.useCrosshairs.collectAsState()
+    val isUsingCrosshairs by viewModel.useCrosshairs.collectAsState()
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -210,28 +210,28 @@ fun MapScreen(
                     setControlsAreExpanded = {
                         viewModel.setControlsAreExpanded(it)
                     },
-                    onClear = {
+                    onClearLocationTarget = {
                         viewModel.clearLocationTarget()
                     },
-                    onPlay = {
+                    onStart = {
                         viewModel.startMockLocation(context)
                     },
                     onStop = {
                         viewModel.stopMockLocation()
                     },
-                    onPop = {
+                    onPopPoint = {
                         viewModel.popPoint()
                     },
-                    onPause = {
+                    onTogglePause = {
                         viewModel.togglePause()
                     },
-                    onSave = {
+                    onSaveLocationTarget = {
                         isShowingSavedRoutesDialog = true
                     },
                     locationTarget = locationTarget,
                     isMocking = isMocking,
                     isPaused = isPaused,
-                    useCrosshairs = useCrosshairs,
+                    isUsingCrosshairs = isUsingCrosshairs,
                     onAddCrosshairsPoint = {
                         viewModel.pushPoint(cameraPositionState.position.target)
                     }

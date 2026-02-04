@@ -37,16 +37,16 @@ fun MapControlButtons(
     cameraPositionState: CameraPositionState,
     controlsAreExpanded: Boolean,
     setControlsAreExpanded: (Boolean) -> Unit,
-    onClear: () -> Unit,
-    onPlay: () -> Unit,
+    onClearLocationTarget: () -> Unit,
+    onStart: () -> Unit,
     onStop: () -> Unit,
-    onPop: () -> Unit,
-    onPause: () -> Unit,
-    onSave: () -> Unit,
+    onPopPoint: () -> Unit,
+    onTogglePause: () -> Unit,
+    onSaveLocationTarget: () -> Unit,
     locationTarget: LocationTarget,
     isMocking: Boolean,
     isPaused: Boolean,
-    useCrosshairs: Boolean,
+    isUsingCrosshairs: Boolean,
     onAddCrosshairsPoint: () -> Unit
 ) {
     val context = LocalContext.current
@@ -123,32 +123,32 @@ fun MapControlButtons(
                 .fillMaxSize()
         ) {
             MockLocationControls(
-                onClearClicked = {
-                    onClear()
+                onClearLocationTarget = {
+                    onClearLocationTarget()
                 },
-                onPlayClicked = {
+                onStart = {
                     if (isPaused) {
-                        onPause()
+                        onTogglePause()
                     } else {
-                        onPlay()
+                        onStart()
                     }
                 },
-                onStopClicked = {
+                onStop = {
                     onStop()
                 },
-                onPopClicked = {
-                    onPop()
+                onPopPoint = {
+                    onPopPoint()
                 },
-                onPauseClicked = {
-                    onPause()
+                onTogglePause = {
+                    onTogglePause()
                 },
-                onSaveClicked = {
-                    onSave()
+                onSaveLocationTarget = {
+                    onSaveLocationTarget()
                 },
                 locationTarget = locationTarget,
                 isMocking = isMocking,
                 isPaused = isPaused,
-                useCrosshairs = useCrosshairs,
+                isUsingCrosshairs = isUsingCrosshairs,
                 onAddCrosshairsPoint = {
                     onAddCrosshairsPoint()
                 },
@@ -163,7 +163,7 @@ fun MapControlButtons(
             modifier = Modifier
                 .fillMaxSize()
         ) {
-            if (useCrosshairs) {
+            if (isUsingCrosshairs) {
                 Crosshairs(
                     modifier = Modifier
                         .align(Alignment.Center)
@@ -191,16 +191,16 @@ fun MapControlButtonsPreview() {
                 cameraPositionState = CameraPositionState(),
                 controlsAreExpanded = false,
                 setControlsAreExpanded = { },
-                onClear = { },
-                onPlay = { },
+                onClearLocationTarget = { },
+                onStart = { },
                 onStop = { },
-                onPop = { },
-                onPause = { },
-                onSave = { },
+                onPopPoint = { },
+                onTogglePause = { },
+                onSaveLocationTarget = { },
                 locationTarget = LocationTarget.Empty,
                 isMocking = false,
                 isPaused = false,
-                useCrosshairs = true,
+                isUsingCrosshairs = true,
                 onAddCrosshairsPoint = { }
             )
         }
