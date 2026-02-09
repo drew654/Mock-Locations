@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -56,6 +57,17 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         viewModelScope.launch {
             settingsManager.speedMetersPerSecFlow.collect {
                 _speedMetersPerSec.value = it
+            }
+        }
+
+        viewModelScope.launch {
+            val wasMocking = settingsManager.isMockingFlow.first()
+            if (wasMocking) {
+                Intent(application, MockLocationService::class.java).apply {
+                    action = ACTION_START_MOCKING
+                }.also {
+                    application.startForegroundService(it)
+                }
             }
         }
 
