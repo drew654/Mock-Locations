@@ -158,10 +158,6 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
             action = MockLocationService.ACTION_STOP_MOCKING
         }
         getApplication<Application>().startService(intent)
-
-        if (clearRouteOnStop.value) {
-            clearLocationTarget()
-        }
     }
 
     val clearRouteOnStop = settingsManager.clearRouteOnStopFlow.stateIn(

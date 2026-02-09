@@ -32,6 +32,8 @@ class MockLocationService : Service() {
     private val providerName = LocationManager.GPS_PROVIDER
     @Volatile
     private var isPaused = false
+    @Volatile
+    private var isClearRouteOnStopEnabled = false
 
     companion object {
         const val CHANNEL_ID = "mock_location_channel"
@@ -48,6 +50,12 @@ class MockLocationService : Service() {
         serviceScope.launch {
             settingsManager.isPausedFlow.collect { paused ->
                 isPaused = paused
+            }
+        }
+
+        serviceScope.launch {
+            settingsManager.clearRouteOnStopFlow.collect { enabled ->
+                isClearRouteOnStopEnabled = enabled
             }
         }
     }
@@ -124,7 +132,7 @@ class MockLocationService : Service() {
             } catch (e: Exception) {
                 handleError(e)
             } finally {
-                stopMocking()
+                stopMockingInternal()
             }
         }
     }
@@ -201,18 +209,16 @@ class MockLocationService : Service() {
                         lastBroadcastLocation = location
                         locationManager.setTestProviderLocation(providerName, location)
 
-                        delay(updateIntervalMs)
                         currentDistance += stepDistance
+                        delay(updateIntervalMs)
                     }
                 }
 
                 Toast.makeText(this@MockLocationService, "Route Finished", Toast.LENGTH_SHORT).show()
-
-                sendBroadcast(Intent(ACTION_ROUTE_FINISHED).setPackage(packageName))
             } catch (e: Exception) {
                 handleError(e)
             } finally {
-                stopMocking()
+                stopMockingInternal()
             }
         }
     }
@@ -245,17 +251,23 @@ class MockLocationService : Service() {
         }
     }
 
-    private suspend fun stopMocking() {
-        mockJob?.cancelAndJoin()
-        mockJob = null
-
+    private suspend fun stopMockingInternal() {
         tearDownTestProvider()
-
         settingsManager.setIsMocking(false)
         settingsManager.setIsPaused(false)
 
+        if (isClearRouteOnStopEnabled) {
+            sendBroadcast(Intent(ACTION_ROUTE_FINISHED).setPackage(packageName))
+        }
+
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
+    }
+
+    private suspend fun stopMocking() {
+        mockJob?.cancelAndJoin()
+        mockJob = null
+        stopMockingInternal()
     }
 
     private fun createNotificationChannel() {
