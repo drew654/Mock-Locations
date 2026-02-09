@@ -100,12 +100,12 @@ fun PrimaryMockLocationControls(
                     onClick = {
                         onStart()
                     },
-                    enabled = locationTarget !is LocationTarget.Empty,
+                    enabled = isUsingCrosshairs || locationTarget !is LocationTarget.Empty,
                     modifier = Modifier.padding(bottom = 12.dp, end = 12.dp)
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.baseline_play_arrow_24),
-                        contentDescription = "Play"
+                        contentDescription = "Start"
                     )
                 }
             }

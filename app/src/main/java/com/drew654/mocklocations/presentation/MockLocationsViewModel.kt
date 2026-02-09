@@ -109,12 +109,10 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
-    fun pushPoint(point: LatLng) {
-        viewModelScope.launch {
-            val current = activeLocationTarget.value
-            val updated = LocationTarget.create(current.points + point)
-            settingsManager.setActiveLocationTarget(updated)
-        }
+    suspend fun pushPoint(point: LatLng) {
+        val current = activeLocationTarget.value
+        val updated = LocationTarget.create(current.points + point)
+        settingsManager.setActiveLocationTarget(updated)
     }
 
     fun popPoint() {

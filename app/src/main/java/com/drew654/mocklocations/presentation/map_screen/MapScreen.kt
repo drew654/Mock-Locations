@@ -164,7 +164,9 @@ fun MapScreen(
                     uiSettings = mapUiSettings,
                     onMapLongClick = {
                         if (!isMocking) {
-                            viewModel.pushPoint(it)
+                            scope.launch {
+                                viewModel.pushPoint(it)
+                            }
                         }
                     }
                 ) {
@@ -214,7 +216,12 @@ fun MapScreen(
                         viewModel.clearLocationTarget()
                     },
                     onStart = {
-                        viewModel.startMockLocation(context)
+                        scope.launch {
+                            if (isUsingCrosshairs && locationTarget is LocationTarget.Empty) {
+                                viewModel.pushPoint(cameraPositionState.position.target)
+                            }
+                            viewModel.startMockLocation(context)
+                        }
                     },
                     onStop = {
                         viewModel.stopMockLocation()
@@ -233,7 +240,9 @@ fun MapScreen(
                     isPaused = isPaused,
                     isUsingCrosshairs = isUsingCrosshairs,
                     onAddCrosshairsPoint = {
-                        viewModel.pushPoint(cameraPositionState.position.target)
+                        scope.launch {
+                            viewModel.pushPoint(cameraPositionState.position.target)
+                        }
                     }
                 )
             }
