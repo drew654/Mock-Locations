@@ -2,6 +2,8 @@ package com.drew654.mocklocations.presentation
 
 import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
 import android.provider.Settings
 import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -19,7 +21,7 @@ fun hasFineLocationPermission(context: Context): Boolean {
     return ContextCompat.checkSelfPermission(
         context,
         Manifest.permission.ACCESS_FINE_LOCATION
-    ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+    ) == PackageManager.PERMISSION_GRANTED
 }
 
 fun isDeveloperOptionsEnabled(context: Context): Boolean {
@@ -31,4 +33,12 @@ fun isDeveloperOptionsEnabled(context: Context): Boolean {
     } catch (e: Exception) {
         false
     }
+}
+
+fun hasNotificationPermission(context: Context): Boolean {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return true
+    return ContextCompat.checkSelfPermission(
+        context,
+        Manifest.permission.POST_NOTIFICATIONS
+    ) == PackageManager.PERMISSION_GRANTED
 }

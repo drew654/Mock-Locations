@@ -30,7 +30,7 @@ fun SettingsScreen(
     viewModel: MockLocationsViewModel,
     navController: NavController
 ) {
-    val useCrosshairs by viewModel.useCrosshairs.collectAsState()
+    val useCrosshairs by viewModel.isUsingCrosshairs.collectAsState()
     val clearPointsOnStop by viewModel.clearRouteOnStop.collectAsState()
 
     Scaffold(

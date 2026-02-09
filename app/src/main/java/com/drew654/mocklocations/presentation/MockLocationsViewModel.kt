@@ -52,6 +52,11 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = false
     )
+    val isUsingCrosshairs = settingsManager.useCrosshairsFlow.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = true
+    )
 
     init {
         viewModelScope.launch {
@@ -203,12 +208,6 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
             settingsManager.setSpeedMetersPerSec(speed)
         }
     }
-
-    val useCrosshairs = settingsManager.useCrosshairsFlow.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = true
-    )
 
     fun setUseCrosshairs(enabled: Boolean) {
         viewModelScope.launch {

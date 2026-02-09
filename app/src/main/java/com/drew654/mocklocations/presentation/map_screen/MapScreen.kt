@@ -83,7 +83,7 @@ fun MapScreen(
     var isShowingSavedRoutesDialog by remember { mutableStateOf(false) }
     val savedRoutes by viewModel.savedRoutes.collectAsState()
     val controlsAreExpanded by viewModel.controlsAreExpanded.collectAsState()
-    val isUsingCrosshairs by viewModel.useCrosshairs.collectAsState()
+    val isUsingCrosshairs by viewModel.isUsingCrosshairs.collectAsState()
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->

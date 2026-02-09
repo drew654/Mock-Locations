@@ -1,20 +1,26 @@
 package com.drew654.mocklocations
 
+import android.Manifest
 import android.app.AppOpsManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -28,6 +34,7 @@ import androidx.navigation.compose.rememberNavController
 import com.drew654.mocklocations.presentation.MockLocationsViewModel
 import com.drew654.mocklocations.presentation.Screen
 import com.drew654.mocklocations.presentation.components.PermissionsDialog
+import com.drew654.mocklocations.presentation.hasNotificationPermission
 import com.drew654.mocklocations.presentation.map_screen.MapScreen
 import com.drew654.mocklocations.presentation.settings_screen.SettingsScreen
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
@@ -44,6 +51,16 @@ class MainActivity : ComponentActivity() {
             val lifecycleOwner = LocalLifecycleOwner.current
             val isShowingPermissionsDialog by viewModel.isShowingPermissionsDialog.collectAsState()
             var resumeTrigger by remember { mutableIntStateOf(0) }
+            var hasNotificationPermission by remember { mutableStateOf(hasNotificationPermission(application)) }
+            val notificationPermissionRequest = rememberLauncherForActivityResult(contract = ActivityResultContracts.RequestPermission()) { result ->
+                hasNotificationPermission = result
+            }
+
+            LaunchedEffect(hasNotificationPermission) {
+                if (!hasNotificationPermission && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    notificationPermissionRequest.launch(Manifest.permission.POST_NOTIFICATIONS)
+                }
+            }
 
             DisposableEffect(lifecycleOwner) {
                 val observer = LifecycleEventObserver { _, event ->
