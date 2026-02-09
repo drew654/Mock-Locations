@@ -13,6 +13,7 @@ import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import com.drew654.mocklocations.domain.SettingsManager
 import com.drew654.mocklocations.domain.model.LocationTarget
+import com.drew654.mocklocations.domain.model.RoutePoint
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -21,6 +22,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.getValue
 
@@ -156,62 +158,41 @@ class MockLocationService : Service() {
                 }
 
                 val updateIntervalMs = 1000L
-                var lastBroadcastLocation: Location? = null
 
-                for (i in 0 until locationTarget.points.size - 1) {
-                    val start = locationTarget.points[i]
-                    val end = locationTarget.points[i + 1]
+                val routePoints = buildRoutePoints(locationTarget.points)
+                var index = 0
 
-                    val results = FloatArray(3)
-                    Location.distanceBetween(
-                        start.latitude, start.longitude,
-                        end.latitude, end.longitude,
-                        results
-                    )
-                    val totalDistance = results[0]
-                    val bearing = results[1]
+                val metersPerPoint = 1.0
+                var distanceAccumulator = 0.0
 
-                    var currentDistance = 0.0
-
-                    while (currentDistance < totalDistance) {
-                        if (mockJob?.isActive == false) return@launch
-
-                        if (isPaused) {
-                            lastBroadcastLocation?.let { loc ->
-                                loc.time = System.currentTimeMillis()
-                                loc.elapsedRealtimeNanos = SystemClock.elapsedRealtimeNanos()
-                                locationManager.setTestProviderLocation(providerName, loc)
-                            }
-                            delay(updateIntervalMs)
-                            continue
-                        }
-
-                        val stepDistance = currentSpeed * (updateIntervalMs / 1000.0)
-                        val fraction = currentDistance / totalDistance
-
-                        val nextLat = start.latitude + (end.latitude - start.latitude) * fraction
-                        val nextLng = start.longitude + (end.longitude - start.longitude) * fraction
-
-                        val location = Location(providerName).apply {
-                            latitude = nextLat
-                            longitude = nextLng
-                            altitude = 3.0
-                            time = System.currentTimeMillis()
-                            speed = currentSpeed.toFloat()
-                            this.bearing = bearing
-                            accuracy = 3.0f
-                            elapsedRealtimeNanos = SystemClock.elapsedRealtimeNanos()
-                            bearingAccuracyDegrees = 0.1f
-                            verticalAccuracyMeters = 0.1f
-                            speedAccuracyMetersPerSecond = 0.01f
-                        }
-
-                        lastBroadcastLocation = location
-                        locationManager.setTestProviderLocation(providerName, location)
-
-                        currentDistance += stepDistance
+                while (index < routePoints.size && isActive) {
+                    if (isPaused) {
                         delay(updateIntervalMs)
+                        continue
                     }
+
+                    distanceAccumulator += currentSpeed * (updateIntervalMs / 1000.0)
+
+                    while (distanceAccumulator >= metersPerPoint && index < routePoints.size) {
+                        distanceAccumulator -= metersPerPoint
+                        index++
+                    }
+
+                    val routePoint = routePoints.getOrNull(index) ?: break
+
+                    val location = Location(providerName).apply {
+                        latitude = routePoint.latLng.latitude
+                        longitude = routePoint.latLng.longitude
+                        bearing = routePoint.bearing
+                        speed = currentSpeed.toFloat()
+                        time = System.currentTimeMillis()
+                        elapsedRealtimeNanos = SystemClock.elapsedRealtimeNanos()
+                        accuracy = 3f
+                    }
+
+                    locationManager.setTestProviderLocation(providerName, location)
+
+                    delay(updateIntervalMs)
                 }
 
                 Toast.makeText(this@MockLocationService, "Route Finished", Toast.LENGTH_SHORT).show()
@@ -221,6 +202,45 @@ class MockLocationService : Service() {
                 stopMockingInternal()
             }
         }
+    }
+
+    private fun buildRoutePoints(
+        points: List<LatLng>,
+        stepMeters: Double = 1.0
+    ): List<RoutePoint> {
+        val result = mutableListOf<RoutePoint>()
+
+        for (i in 0 until points.size - 1) {
+            val start = points[i]
+            val end = points[i + 1]
+
+            val results = FloatArray(3)
+            Location.distanceBetween(
+                start.latitude, start.longitude,
+                end.latitude, end.longitude,
+                results
+            )
+
+            val totalDistance = results[0]
+            val bearing = results[1]
+
+            var distance = 0.0
+            while (distance <= totalDistance) {
+                val fraction = distance / totalDistance
+
+                val lat = start.latitude + (end.latitude - start.latitude) * fraction
+                val lng = start.longitude + (end.longitude - start.longitude) * fraction
+
+                result += RoutePoint(
+                    latLng = LatLng(lat, lng),
+                    bearing = bearing
+                )
+
+                distance += stepMeters
+            }
+        }
+
+        return result
     }
 
     private fun setUpTestProvider() {
