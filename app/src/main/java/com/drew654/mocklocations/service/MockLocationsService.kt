@@ -1,0 +1,400 @@
+package com.drew654.mocklocations.service
+
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.Service
+import android.content.Intent
+import android.location.Location
+import android.location.LocationManager
+import android.location.provider.ProviderProperties
+import android.os.IBinder
+import android.os.SystemClock
+import android.widget.Toast
+import androidx.core.app.NotificationCompat
+import com.drew654.mocklocations.domain.SettingsManager
+import com.drew654.mocklocations.domain.model.LocationTarget
+import com.drew654.mocklocations.domain.model.RoutePoint
+import com.google.android.gms.maps.model.LatLng
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlin.getValue
+
+class MockLocationService : Service() {
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private val settingsManager by lazy { SettingsManager(applicationContext) }
+    private var mockJob: kotlinx.coroutines.Job? = null
+    private val locationManager by lazy { getSystemService(LOCATION_SERVICE) as LocationManager }
+    private val providerName = LocationManager.GPS_PROVIDER
+
+    @Volatile
+    private var isPaused = false
+
+    @Volatile
+    private var isClearRouteOnStopEnabled = false
+
+    companion object {
+        const val CHANNEL_ID = "mock_location_channel"
+        const val NOTIFICATION_ID = 1
+        const val ACTION_START_MOCKING = "ACTION_START_MOCKING"
+        const val ACTION_STOP_MOCKING = "ACTION_STOP_MOCKING"
+        const val ACTION_ROUTE_FINISHED = "ACTION_ROUTE_FINISHED"
+        const val ACTION_RESTORE_STRAIGHT_LINE_MOCKING = "ACTION_RESTORE_STRAIGHT_LINE_MOCKING"
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        createNotificationChannel()
+
+        serviceScope.launch {
+            settingsManager.isPausedFlow.collect { paused ->
+                isPaused = paused
+            }
+        }
+
+        serviceScope.launch {
+            settingsManager.clearRouteOnStopFlow.collect { enabled ->
+                isClearRouteOnStopEnabled = enabled
+            }
+        }
+    }
+
+    override fun onDestroy() {
+        try {
+            tearDownTestProvider()
+        } catch (e: Exception) {
+        }
+
+        super.onDestroy()
+        serviceScope.cancel()
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle("Location Mocking Active")
+            .setContentText("Your location is currently being spoofed.")
+            .setSmallIcon(android.R.drawable.ic_menu_mylocation)
+            .setOngoing(true)
+            .build()
+
+        startForeground(NOTIFICATION_ID, notification)
+
+        when (intent?.action) {
+            ACTION_START_MOCKING -> {
+                serviceScope.launch {
+                    val locationTarget = settingsManager.activeLocationTargetFlow.first()
+                    when (locationTarget) {
+                        is LocationTarget.Empty -> stopMocking()
+                        is LocationTarget.SinglePoint -> mockLocationSinglePoint(locationTarget.point)
+                        else -> mockLocationStraightLineRoute(locationTarget)
+                    }
+                }
+            }
+
+            ACTION_STOP_MOCKING -> {
+                serviceScope.launch {
+                    stopMocking()
+                }
+            }
+
+            ACTION_RESTORE_STRAIGHT_LINE_MOCKING -> {
+                serviceScope.launch {
+                    val locationTarget = settingsManager.activeLocationTargetFlow.first()
+                    val restoreMockingPoint = settingsManager.currentMockedLocationFlow.first()
+                    if (locationTarget is LocationTarget.Route || locationTarget is LocationTarget.SavedRoute) {
+                        restoreMockLocationStraightLineRoute(locationTarget, restoreMockingPoint!!)
+                    } else {
+                        stopMocking()
+                    }
+                }
+            }
+        }
+
+        return START_STICKY
+    }
+
+    private fun mockLocationSinglePoint(point: LatLng) {
+        mockJob?.cancel()
+
+        mockJob = serviceScope.launch {
+            try {
+                setUpTestProvider()
+                settingsManager.setIsMocking(true)
+
+                Toast.makeText(
+                    this@MockLocationService,
+                    "Location Mocking Started",
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                while (true) {
+                    val location = Location(providerName).apply {
+                        latitude = point.latitude
+                        longitude = point.longitude
+                        altitude = 3.0
+                        time = System.currentTimeMillis()
+                        speed = 0.01f
+                        bearing = 0.0f
+                        accuracy = 3.0f
+                        elapsedRealtimeNanos = SystemClock.elapsedRealtimeNanos()
+                        bearingAccuracyDegrees = 0.1f
+                        verticalAccuracyMeters = 0.1f
+                        speedAccuracyMetersPerSecond = 0.01f
+                    }
+                    locationManager.setTestProviderLocation(providerName, location)
+                    delay(1000)
+                }
+            } catch (e: Exception) {
+                handleError(e)
+            } finally {
+                stopMockingInternal()
+            }
+        }
+    }
+
+    private fun mockLocationStraightLineRoute(locationTarget: LocationTarget) {
+        serviceScope.launch {
+            settingsManager.setIsPaused(false)
+        }
+
+        val routePoints = buildRoutePoints(locationTarget.points)
+
+        startRouteMocking(
+            routePoints = routePoints,
+            startIndex = 0,
+            startedMessage = "Route Mocking Started"
+        )
+    }
+
+    private fun restoreMockLocationStraightLineRoute(
+        locationTarget: LocationTarget,
+        restorePoint: RoutePoint
+    ) {
+        val routePoints = buildRoutePoints(locationTarget.points)
+        val startIndex = routePoints.closestIndexTo(restorePoint)
+
+        startRouteMocking(
+            routePoints = routePoints,
+            startIndex = startIndex,
+            startedMessage = "Route Mocking Restored"
+        )
+    }
+
+    private fun List<RoutePoint>.closestIndexTo(target: RoutePoint): Int =
+        indexOfFirst {
+            it.latLng == target.latLng
+        }.takeIf { it != -1 }
+            ?: indices.minByOrNull { i ->
+                val rp = this[i]
+                val results = FloatArray(1)
+                Location.distanceBetween(
+                    rp.latLng.latitude,
+                    rp.latLng.longitude,
+                    target.latLng.latitude,
+                    target.latLng.longitude,
+                    results
+                )
+                results[0]
+            } ?: 0
+
+    private fun startRouteMocking(
+        routePoints: List<RoutePoint>,
+        startIndex: Int,
+        startedMessage: String
+    ) {
+        mockJob?.cancel()
+
+        mockJob = serviceScope.launch {
+            try {
+                setUpTestProvider()
+                settingsManager.setIsMocking(true)
+
+                Toast.makeText(
+                    this@MockLocationService,
+                    startedMessage,
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                var currentSpeed = 30.0
+                launch {
+                    settingsManager.speedMetersPerSecFlow.collect { currentSpeed = it }
+                }
+
+                val updateIntervalMs = 1000L
+                val metersPerPoint = 1.0
+
+                var index = startIndex
+                var distanceAccumulator = 0.0
+                var lastBroadcastLocation: Location? = null
+
+                while (index < routePoints.size && isActive) {
+                    if (isPaused) {
+                        lastBroadcastLocation?.let { loc ->
+                            loc.time = System.currentTimeMillis()
+                            loc.elapsedRealtimeNanos = SystemClock.elapsedRealtimeNanos()
+                            locationManager.setTestProviderLocation(providerName, loc)
+                            settingsManager.setCurrentMockedLocation(
+                                RoutePoint(
+                                    LatLng(loc.latitude, loc.longitude),
+                                    loc.bearing
+                                )
+                            )
+                        }
+                        delay(updateIntervalMs)
+                        continue
+                    }
+
+                    distanceAccumulator += currentSpeed * (updateIntervalMs / 1000.0)
+
+                    while (distanceAccumulator >= metersPerPoint && index < routePoints.size) {
+                        distanceAccumulator -= metersPerPoint
+                        index++
+                    }
+
+                    val routePoint = routePoints.getOrNull(index) ?: break
+
+                    val location = Location(providerName).apply {
+                        latitude = routePoint.latLng.latitude
+                        longitude = routePoint.latLng.longitude
+                        bearing = routePoint.bearing
+                        speed = currentSpeed.toFloat()
+                        time = System.currentTimeMillis()
+                        elapsedRealtimeNanos = SystemClock.elapsedRealtimeNanos()
+                        accuracy = 3f
+                    }
+
+                    lastBroadcastLocation = location
+                    locationManager.setTestProviderLocation(providerName, location)
+                    settingsManager.setCurrentMockedLocation(routePoint)
+
+                    delay(updateIntervalMs)
+                }
+
+                Toast.makeText(
+                    this@MockLocationService,
+                    "Route Finished",
+                    Toast.LENGTH_SHORT
+                ).show()
+            } catch (e: Exception) {
+                handleError(e)
+            } finally {
+                stopMockingInternal()
+            }
+        }
+    }
+
+    private fun buildRoutePoints(
+        points: List<LatLng>,
+        stepMeters: Double = 1.0
+    ): List<RoutePoint> {
+        val result = mutableListOf<RoutePoint>()
+
+        for (i in 0 until points.size - 1) {
+            val start = points[i]
+            val end = points[i + 1]
+
+            val results = FloatArray(3)
+            Location.distanceBetween(
+                start.latitude, start.longitude,
+                end.latitude, end.longitude,
+                results
+            )
+
+            val totalDistance = results[0]
+            val bearing = results[1]
+
+            var distance = 0.0
+            while (distance <= totalDistance) {
+                val fraction = distance / totalDistance
+
+                val lat = start.latitude + (end.latitude - start.latitude) * fraction
+                val lng = start.longitude + (end.longitude - start.longitude) * fraction
+
+                result += RoutePoint(
+                    latLng = LatLng(lat, lng),
+                    bearing = bearing
+                )
+
+                distance += stepMeters
+            }
+        }
+
+        return result
+    }
+
+    private fun setUpTestProvider() {
+        try {
+            locationManager.removeTestProvider(providerName)
+        } catch (e: Exception) {
+        }
+
+        locationManager.addTestProvider(
+            providerName, false, false, false, false, true, true, true,
+            ProviderProperties.POWER_USAGE_LOW, ProviderProperties.ACCURACY_FINE
+        )
+        locationManager.setTestProviderEnabled(providerName, true)
+    }
+
+    private fun tearDownTestProvider() {
+        try {
+            locationManager.setTestProviderEnabled(providerName, false)
+            locationManager.removeTestProvider(providerName)
+        } catch (e: Exception) {
+        }
+    }
+
+    private fun handleError(e: Exception) {
+        if (e !is kotlinx.coroutines.CancellationException) {
+            serviceScope.launch(Dispatchers.Main) {
+                Toast.makeText(
+                    this@MockLocationService,
+                    "Error: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
+
+    private suspend fun stopMockingInternal() {
+        tearDownTestProvider()
+        settingsManager.setIsMocking(false)
+        settingsManager.setIsPaused(false)
+        settingsManager.setCurrentMockedLocation(null)
+
+        if (isClearRouteOnStopEnabled) {
+            sendBroadcast(Intent(ACTION_ROUTE_FINISHED).setPackage(packageName))
+        }
+
+        stopForeground(STOP_FOREGROUND_REMOVE)
+        stopSelf()
+    }
+
+    private suspend fun stopMocking() {
+        mockJob?.cancelAndJoin()
+        mockJob = null
+        stopMockingInternal()
+    }
+
+    private fun createNotificationChannel() {
+        val channel = NotificationChannel(
+            CHANNEL_ID,
+            "Mock Location Service",
+            NotificationManager.IMPORTANCE_LOW
+        ).apply {
+            description = "Running location simulation in the background"
+        }
+
+        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.createNotificationChannel(channel)
+    }
+
+    override fun onBind(intent: Intent?): IBinder? {
+        return null
+    }
+}

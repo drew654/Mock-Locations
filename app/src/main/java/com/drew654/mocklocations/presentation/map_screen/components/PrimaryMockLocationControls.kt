@@ -22,16 +22,22 @@ import com.drew654.mocklocations.domain.model.LocationTarget
 
 @Composable
 fun PrimaryMockLocationControls(
-    onPlayClicked: () -> Unit,
-    onStopClicked: () -> Unit,
-    onPauseClicked: () -> Unit,
+    onStart: () -> Unit,
+    onStop: () -> Unit,
+    onTogglePause: () -> Unit,
     isMocking: Boolean,
     isPaused: Boolean,
     locationTarget: LocationTarget,
-    useCrosshairs: Boolean,
+    isUsingCrosshairs: Boolean,
     onAddCrosshairsPoint: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val shouldShowStartButton = !isMocking
+    val shouldShowStopButton = isMocking
+    val shouldShowResumeButton = isMocking && isPaused && (locationTarget is LocationTarget.Route || locationTarget is LocationTarget.SavedRoute)
+    val shouldShowPauseButton = isMocking && !isPaused && (locationTarget is LocationTarget.Route || locationTarget is LocationTarget.SavedRoute)
+    val shouldShowAddPointButton = !isMocking && isUsingCrosshairs
+
     Box(
         modifier = modifier
             .padding(start = 12.dp)
@@ -45,7 +51,7 @@ fun PrimaryMockLocationControls(
         Row(
             verticalAlignment = Alignment.Bottom
         ) {
-            if (!isMocking && useCrosshairs) {
+            if (shouldShowAddPointButton) {
                 DisableableFloatingActionButton(
                     onClick = { onAddCrosshairsPoint() },
                     enabled = true,
@@ -59,32 +65,64 @@ fun PrimaryMockLocationControls(
                 Spacer(Modifier.width(12.dp))
             }
 
-            if (isMocking && (locationTarget is LocationTarget.Route || locationTarget is LocationTarget.SavedRoute)) {
+            if (shouldShowResumeButton) {
                 DisableableSmallFloatingActionButton(
-                    onClick = { onPauseClicked() },
+                    onClick = { onTogglePause() },
                     enabled = true,
                     modifier = Modifier.padding(bottom = 12.dp)
                 ) {
                     Icon(
-                        painter = painterResource(id = if (isPaused) R.drawable.baseline_play_arrow_24 else R.drawable.baseline_pause_24),
-                        contentDescription = if (isPaused) "Resume" else "Pause",
+                        painter = painterResource(id = R.drawable.baseline_play_arrow_24),
+                        contentDescription = "Resume",
                         tint = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
                 Spacer(Modifier.width(12.dp))
             }
 
-            DisableableFloatingActionButton(
-                onClick = {
-                    if (isMocking) onStopClicked() else onPlayClicked()
-                },
-                enabled = locationTarget !is LocationTarget.Empty,
-                modifier = Modifier.padding(bottom = 12.dp, end = 12.dp)
-            ) {
-                Icon(
-                    painter = painterResource(id = if (isMocking) R.drawable.baseline_stop_24 else R.drawable.baseline_play_arrow_24),
-                    contentDescription = if (isMocking) "Stop" else "Play"
-                )
+            if (shouldShowPauseButton) {
+                DisableableSmallFloatingActionButton(
+                    onClick = { onTogglePause() },
+                    enabled = true,
+                    modifier = Modifier.padding(bottom = 12.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.baseline_pause_24),
+                        contentDescription = "Pause",
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+                Spacer(Modifier.width(12.dp))
+            }
+
+            if (shouldShowStartButton) {
+                DisableableFloatingActionButton(
+                    onClick = {
+                        onStart()
+                    },
+                    enabled = isUsingCrosshairs || locationTarget !is LocationTarget.Empty,
+                    modifier = Modifier.padding(bottom = 12.dp, end = 12.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.baseline_play_arrow_24),
+                        contentDescription = "Start"
+                    )
+                }
+            }
+
+            if (shouldShowStopButton) {
+                DisableableFloatingActionButton(
+                    onClick = {
+                        onStop()
+                    },
+                    enabled = true,
+                    modifier = Modifier.padding(bottom = 12.dp, end = 12.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.baseline_stop_24),
+                        contentDescription = "Stop"
+                    )
+                }
             }
         }
     }

@@ -30,7 +30,7 @@ fun SettingsScreen(
     viewModel: MockLocationsViewModel,
     navController: NavController
 ) {
-    val useCrosshairs by viewModel.useCrosshairs.collectAsState()
+    val isUsingCrosshairs by viewModel.isUsingCrosshairs.collectAsState()
     val clearPointsOnStop by viewModel.clearRouteOnStop.collectAsState()
 
     Scaffold(
@@ -67,9 +67,9 @@ fun SettingsScreen(
         ) {
             SwitchRow(
                 label = "Use crosshairs",
-                checked = useCrosshairs,
+                checked = isUsingCrosshairs,
                 onCheckedChange = {
-                    viewModel.setUseCrosshairs(it)
+                    viewModel.setIsUsingCrosshairs(it)
                 }
             )
             SwitchRow(

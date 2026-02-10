@@ -22,9 +22,9 @@ import com.drew654.mocklocations.domain.model.LocationTarget
 
 @Composable
 fun SecondaryMockLocationControls(
-    onClearClicked: () -> Unit,
-    onSaveClicked: () -> Unit,
-    onPopClicked: () -> Unit,
+    onClearLocationTarget: () -> Unit,
+    onSaveLocationTarget: () -> Unit,
+    onPopPoint: () -> Unit,
     locationTarget: LocationTarget,
     isMocking: Boolean,
     scrollState: ScrollState,
@@ -44,7 +44,7 @@ fun SecondaryMockLocationControls(
     ) {
         DisableableSmallFloatingActionButton(
             onClick = {
-                onSaveClicked()
+                onSaveLocationTarget()
             },
             enabled = true
         ) {
@@ -57,7 +57,7 @@ fun SecondaryMockLocationControls(
         Spacer(Modifier.height(4.dp))
         DisableableSmallFloatingActionButton(
             onClick = {
-                onClearClicked()
+                onClearLocationTarget()
             },
             enabled = locationTarget !is LocationTarget.Empty && !isMocking
         ) {
@@ -73,7 +73,7 @@ fun SecondaryMockLocationControls(
         Spacer(Modifier.height(4.dp))
         DisableableSmallFloatingActionButton(
             onClick = {
-                onPopClicked()
+                onPopPoint()
             },
             enabled = locationTarget !is LocationTarget.Empty && !isMocking
         ) {
