@@ -10,6 +10,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.LocationTargetAdapter
+import com.drew654.mocklocations.domain.model.RoutePoint
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.flow.Flow
@@ -22,6 +23,7 @@ class SettingsManager(private val context: Context) {
         val ACTIVE_LOCATION_TARGET_JSON = stringPreferencesKey("active_location_target_json")
         val IS_MOCKING = booleanPreferencesKey("is_mocking")
         val IS_PAUSED = booleanPreferencesKey("is_paused")
+        val CURRENT_MOCKED_LOCATION_JSON = stringPreferencesKey("current_mocked_location_json")
         val CLEAR_ROUTE_ON_STOP = booleanPreferencesKey("clear_route_on_stop")
         val SPEED_METERS_PER_SEC = doublePreferencesKey("speed_meters_per_sec")
         val SAVED_ROUTES_JSON = stringPreferencesKey("saved_routes_json")
@@ -69,6 +71,18 @@ class SettingsManager(private val context: Context) {
         context.dataStore.edit { preferences ->
             val current = preferences[IS_PAUSED] ?: false
             preferences[IS_PAUSED] = !current
+        }
+    }
+
+    val currentMockedLocationFlow: Flow<RoutePoint?> = context.dataStore.data.map { preferences ->
+        val json = preferences[CURRENT_MOCKED_LOCATION_JSON] ?: ""
+        if (json.isEmpty()) null
+        else gson.fromJson(json, RoutePoint::class.java)
+    }
+
+    suspend fun setCurrentMockedLocation(location: RoutePoint?) {
+        context.dataStore.edit { preferences ->
+            preferences[CURRENT_MOCKED_LOCATION_JSON] = gson.toJson(location)
         }
     }
 

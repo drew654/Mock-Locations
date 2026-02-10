@@ -12,6 +12,7 @@ import com.drew654.mocklocations.domain.SettingsManager
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.SavedCameraPosition
 import com.drew654.mocklocations.service.MockLocationService
+import com.drew654.mocklocations.service.MockLocationService.Companion.ACTION_RESTORE_STRAIGHT_LINE_MOCKING
 import com.drew654.mocklocations.service.MockLocationService.Companion.ACTION_START_MOCKING
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -67,9 +68,14 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
 
         viewModelScope.launch {
             val wasMocking = settingsManager.isMockingFlow.first()
+            val activeLocationTarget = settingsManager.activeLocationTargetFlow.first()
             if (wasMocking) {
                 Intent(application, MockLocationService::class.java).apply {
-                    action = ACTION_START_MOCKING
+                    action = if (activeLocationTarget is LocationTarget.Route) {
+                        ACTION_RESTORE_STRAIGHT_LINE_MOCKING
+                    } else {
+                        ACTION_START_MOCKING
+                    }
                 }.also {
                     application.startForegroundService(it)
                 }
