@@ -107,7 +107,7 @@ class MockLocationService : Service() {
                 serviceScope.launch {
                     val locationTarget = settingsManager.activeLocationTargetFlow.first()
                     val restoreMockingPoint = settingsManager.currentMockedLocationFlow.first()
-                    if (locationTarget is LocationTarget.Route) {
+                    if (locationTarget is LocationTarget.Route || locationTarget is LocationTarget.SavedRoute) {
                         restoreMockLocationStraightLineRoute(locationTarget, restoreMockingPoint!!)
                     } else {
                         stopMocking()
@@ -188,8 +188,24 @@ class MockLocationService : Service() {
                 val metersPerPoint = 1.0
                 var distanceAccumulator = 0.0
 
+                var lastBroadcastLocation: Location? = null
+
                 while (index < routePoints.size && isActive) {
                     if (isPaused) {
+                        lastBroadcastLocation?.let { loc ->
+                            loc.time = System.currentTimeMillis()
+                            loc.elapsedRealtimeNanos = SystemClock.elapsedRealtimeNanos()
+                            locationManager.setTestProviderLocation(providerName, loc)
+                            settingsManager.setCurrentMockedLocation(
+                                RoutePoint(
+                                    LatLng(
+                                        loc.latitude,
+                                        loc.longitude
+                                    ),
+                                    loc.bearing
+                                )
+                            )
+                        }
                         delay(updateIntervalMs)
                         continue
                     }
@@ -202,7 +218,6 @@ class MockLocationService : Service() {
                     }
 
                     val routePoint = routePoints.getOrNull(index) ?: break
-                    settingsManager.setCurrentMockedLocation(routePoint)
 
                     val location = Location(providerName).apply {
                         latitude = routePoint.latLng.latitude
@@ -214,7 +229,9 @@ class MockLocationService : Service() {
                         accuracy = 3f
                     }
 
+                    lastBroadcastLocation = location
                     locationManager.setTestProviderLocation(providerName, location)
+                    settingsManager.setCurrentMockedLocation(routePoint)
 
                     delay(updateIntervalMs)
                 }
@@ -237,9 +254,6 @@ class MockLocationService : Service() {
         restorePoint: RoutePoint
     ) {
         mockJob?.cancel()
-        serviceScope.launch {
-            settingsManager.setIsPaused(false)
-        }
 
         mockJob = serviceScope.launch {
             try {
@@ -284,8 +298,24 @@ class MockLocationService : Service() {
                 val metersPerPoint = 1.0
                 var distanceAccumulator = 0.0
 
+                var lastBroadcastLocation: Location? = null
+
                 while (index < routePoints.size && isActive) {
                     if (isPaused) {
+                        lastBroadcastLocation?.let { loc ->
+                            loc.time = System.currentTimeMillis()
+                            loc.elapsedRealtimeNanos = SystemClock.elapsedRealtimeNanos()
+                            locationManager.setTestProviderLocation(providerName, loc)
+                            settingsManager.setCurrentMockedLocation(
+                                RoutePoint(
+                                    LatLng(
+                                        loc.latitude,
+                                        loc.longitude
+                                    ),
+                                    loc.bearing
+                                )
+                            )
+                        }
                         delay(updateIntervalMs)
                         continue
                     }
@@ -310,7 +340,9 @@ class MockLocationService : Service() {
                         accuracy = 3f
                     }
 
+                    lastBroadcastLocation = location
                     locationManager.setTestProviderLocation(providerName, location)
+                    settingsManager.setCurrentMockedLocation(routePoint)
 
                     delay(updateIntervalMs)
                 }

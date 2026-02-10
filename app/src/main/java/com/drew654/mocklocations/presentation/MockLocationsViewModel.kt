@@ -71,11 +71,12 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
             val activeLocationTarget = settingsManager.activeLocationTargetFlow.first()
             if (wasMocking) {
                 Intent(application, MockLocationService::class.java).apply {
-                    action = if (activeLocationTarget is LocationTarget.Route) {
-                        ACTION_RESTORE_STRAIGHT_LINE_MOCKING
-                    } else {
-                        ACTION_START_MOCKING
-                    }
+                    action =
+                        if (activeLocationTarget is LocationTarget.Route || activeLocationTarget is LocationTarget.SavedRoute) {
+                            ACTION_RESTORE_STRAIGHT_LINE_MOCKING
+                        } else {
+                            ACTION_START_MOCKING
+                        }
                 }.also {
                     application.startForegroundService(it)
                 }
