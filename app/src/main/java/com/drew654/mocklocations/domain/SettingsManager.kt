@@ -106,8 +106,8 @@ class SettingsManager(private val context: Context) {
         }
     }
 
-    val savedRoutesFlow: Flow<List<LocationTarget.SavedRoute>> = context.dataStore.data
-        .map { preferences ->
+    val savedRoutesFlow: Flow<List<LocationTarget.SavedRoute>> =
+        context.dataStore.data.map { preferences ->
             val json = preferences[SAVED_ROUTES_JSON] ?: ""
             if (json.isEmpty()) {
                 emptyList()

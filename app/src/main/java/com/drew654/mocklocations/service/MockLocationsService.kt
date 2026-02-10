@@ -159,99 +159,54 @@ class MockLocationService : Service() {
     }
 
     private fun mockLocationStraightLineRoute(locationTarget: LocationTarget) {
-        mockJob?.cancel()
         serviceScope.launch {
             settingsManager.setIsPaused(false)
         }
 
-        mockJob = serviceScope.launch {
-            try {
-                setUpTestProvider()
-                settingsManager.setIsMocking(true)
+        val routePoints = buildRoutePoints(locationTarget.points)
 
-                Toast.makeText(
-                    this@MockLocationService,
-                    "Route Mocking Started",
-                    Toast.LENGTH_SHORT
-                ).show()
-
-                var currentSpeed = 30.0
-                launch {
-                    settingsManager.speedMetersPerSecFlow.collect { currentSpeed = it }
-                }
-
-                val updateIntervalMs = 1000L
-
-                val routePoints = buildRoutePoints(locationTarget.points)
-                var index = 0
-
-                val metersPerPoint = 1.0
-                var distanceAccumulator = 0.0
-
-                var lastBroadcastLocation: Location? = null
-
-                while (index < routePoints.size && isActive) {
-                    if (isPaused) {
-                        lastBroadcastLocation?.let { loc ->
-                            loc.time = System.currentTimeMillis()
-                            loc.elapsedRealtimeNanos = SystemClock.elapsedRealtimeNanos()
-                            locationManager.setTestProviderLocation(providerName, loc)
-                            settingsManager.setCurrentMockedLocation(
-                                RoutePoint(
-                                    LatLng(
-                                        loc.latitude,
-                                        loc.longitude
-                                    ),
-                                    loc.bearing
-                                )
-                            )
-                        }
-                        delay(updateIntervalMs)
-                        continue
-                    }
-
-                    distanceAccumulator += currentSpeed * (updateIntervalMs / 1000.0)
-
-                    while (distanceAccumulator >= metersPerPoint && index < routePoints.size) {
-                        distanceAccumulator -= metersPerPoint
-                        index++
-                    }
-
-                    val routePoint = routePoints.getOrNull(index) ?: break
-
-                    val location = Location(providerName).apply {
-                        latitude = routePoint.latLng.latitude
-                        longitude = routePoint.latLng.longitude
-                        bearing = routePoint.bearing
-                        speed = currentSpeed.toFloat()
-                        time = System.currentTimeMillis()
-                        elapsedRealtimeNanos = SystemClock.elapsedRealtimeNanos()
-                        accuracy = 3f
-                    }
-
-                    lastBroadcastLocation = location
-                    locationManager.setTestProviderLocation(providerName, location)
-                    settingsManager.setCurrentMockedLocation(routePoint)
-
-                    delay(updateIntervalMs)
-                }
-
-                Toast.makeText(
-                    this@MockLocationService,
-                    "Route Finished",
-                    Toast.LENGTH_SHORT
-                ).show()
-            } catch (e: Exception) {
-                handleError(e)
-            } finally {
-                stopMockingInternal()
-            }
-        }
+        startRouteMocking(
+            routePoints = routePoints,
+            startIndex = 0,
+            startedMessage = "Route Mocking Started"
+        )
     }
 
     private fun restoreMockLocationStraightLineRoute(
         locationTarget: LocationTarget,
         restorePoint: RoutePoint
+    ) {
+        val routePoints = buildRoutePoints(locationTarget.points)
+        val startIndex = routePoints.closestIndexTo(restorePoint)
+
+        startRouteMocking(
+            routePoints = routePoints,
+            startIndex = startIndex,
+            startedMessage = "Route Mocking Restored"
+        )
+    }
+
+    private fun List<RoutePoint>.closestIndexTo(target: RoutePoint): Int =
+        indexOfFirst {
+            it.latLng == target.latLng
+        }.takeIf { it != -1 }
+            ?: indices.minByOrNull { i ->
+                val rp = this[i]
+                val results = FloatArray(1)
+                Location.distanceBetween(
+                    rp.latLng.latitude,
+                    rp.latLng.longitude,
+                    target.latLng.latitude,
+                    target.latLng.longitude,
+                    results
+                )
+                results[0]
+            } ?: 0
+
+    private fun startRouteMocking(
+        routePoints: List<RoutePoint>,
+        startIndex: Int,
+        startedMessage: String
     ) {
         mockJob?.cancel()
 
@@ -262,7 +217,7 @@ class MockLocationService : Service() {
 
                 Toast.makeText(
                     this@MockLocationService,
-                    "Route Mocking Restored",
+                    startedMessage,
                     Toast.LENGTH_SHORT
                 ).show()
 
@@ -272,32 +227,10 @@ class MockLocationService : Service() {
                 }
 
                 val updateIntervalMs = 1000L
-
-                val routePoints = buildRoutePoints(locationTarget.points)
-
-                var index = routePoints.indexOfFirst {
-                    it.latLng.latitude == restorePoint.latLng.latitude &&
-                            it.latLng.longitude == restorePoint.latLng.longitude
-                }
-
-                if (index == -1) {
-                    index = routePoints.indices.minByOrNull { i ->
-                        val rp = routePoints[i]
-                        val results = FloatArray(1)
-                        Location.distanceBetween(
-                            rp.latLng.latitude,
-                            rp.latLng.longitude,
-                            restorePoint.latLng.latitude,
-                            restorePoint.latLng.longitude,
-                            results
-                        )
-                        results[0]
-                    } ?: 0
-                }
-
                 val metersPerPoint = 1.0
-                var distanceAccumulator = 0.0
 
+                var index = startIndex
+                var distanceAccumulator = 0.0
                 var lastBroadcastLocation: Location? = null
 
                 while (index < routePoints.size && isActive) {
@@ -308,10 +241,7 @@ class MockLocationService : Service() {
                             locationManager.setTestProviderLocation(providerName, loc)
                             settingsManager.setCurrentMockedLocation(
                                 RoutePoint(
-                                    LatLng(
-                                        loc.latitude,
-                                        loc.longitude
-                                    ),
+                                    LatLng(loc.latitude, loc.longitude),
                                     loc.bearing
                                 )
                             )
@@ -328,7 +258,6 @@ class MockLocationService : Service() {
                     }
 
                     val routePoint = routePoints.getOrNull(index) ?: break
-                    settingsManager.setCurrentMockedLocation(routePoint)
 
                     val location = Location(providerName).apply {
                         latitude = routePoint.latLng.latitude
@@ -359,7 +288,6 @@ class MockLocationService : Service() {
             }
         }
     }
-
 
     private fun buildRoutePoints(
         points: List<LatLng>,
