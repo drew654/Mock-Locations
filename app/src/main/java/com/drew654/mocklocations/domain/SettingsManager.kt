@@ -27,7 +27,7 @@ class SettingsManager(private val context: Context) {
         val CLEAR_ROUTE_ON_STOP = booleanPreferencesKey("clear_route_on_stop")
         val SPEED_METERS_PER_SEC = doublePreferencesKey("speed_meters_per_sec")
         val SAVED_ROUTES_JSON = stringPreferencesKey("saved_routes_json")
-        val USE_CROSSHAIRS = booleanPreferencesKey("use_crosshairs")
+        val IS_USING_CROSSHAIRS = booleanPreferencesKey("is_using_crosshairs")
     }
 
     private val gson = GsonBuilder()
@@ -156,13 +156,13 @@ class SettingsManager(private val context: Context) {
         }
     }
 
-    val useCrosshairsFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
-        preferences[USE_CROSSHAIRS] ?: true
+    val isUsingCrosshairsFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[IS_USING_CROSSHAIRS] ?: true
     }
 
-    suspend fun setUseCrosshairs(enabled: Boolean) {
+    suspend fun setIsUsingCrosshairs(enabled: Boolean) {
         context.dataStore.edit { preferences ->
-            preferences[USE_CROSSHAIRS] = enabled
+            preferences[IS_USING_CROSSHAIRS] = enabled
         }
     }
 }

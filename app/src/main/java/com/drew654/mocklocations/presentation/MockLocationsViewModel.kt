@@ -53,7 +53,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = false
     )
-    val isUsingCrosshairs = settingsManager.useCrosshairsFlow.stateIn(
+    val isUsingCrosshairs = settingsManager.isUsingCrosshairsFlow.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = true
@@ -216,9 +216,9 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
-    fun setUseCrosshairs(enabled: Boolean) {
+    fun setIsUsingCrosshairs(enabled: Boolean) {
         viewModelScope.launch {
-            settingsManager.setUseCrosshairs(enabled)
+            settingsManager.setIsUsingCrosshairs(enabled)
         }
     }
 }
