@@ -8,7 +8,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import com.drew654.mocklocations.domain.model.Permission
-import com.drew654.mocklocations.presentation.hasFineLocationPermission
+import com.drew654.mocklocations.domain.model.isGranted
 
 @Composable
 fun PermissionsDialog(
@@ -34,13 +34,15 @@ fun PermissionsDialog(
                 "You need to enable Developer Options first. Go to About phone > Software information and tap \"Build Number\" 7 times.",
                 "Open About Phone"
             )
+
+            is Permission.PostNotifications -> return
         }
 
         AlertDialog(
             onDismissRequest = {
                 onDismiss()
             },
-            title = { Text(if (!hasFineLocationPermission(context)) "Location Permission Required" else "Developer Options Required") },
+            title = { Text(if (!Permission.FineLocation.isGranted(context)) "Location Permission Required" else "Developer Options Required")},
             text = {
                 Text(bodyText)
             },
@@ -68,6 +70,8 @@ fun PermissionsDialog(
                                 )
 
                                 is Permission.DeveloperOptions -> context.startActivity(Intent(Settings.ACTION_DEVICE_INFO_SETTINGS))
+
+                                is Permission.PostNotifications -> return@TextButton
                             }
                         } catch (_: Exception) {
                             context.startActivity(Intent(Settings.ACTION_SETTINGS))

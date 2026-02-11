@@ -28,12 +28,9 @@ import androidx.navigation.NavController
 import com.drew654.mocklocations.R
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.Permission
+import com.drew654.mocklocations.domain.model.isGranted
 import com.drew654.mocklocations.presentation.MockLocationsViewModel
 import com.drew654.mocklocations.presentation.components.PermissionsDialog
-import com.drew654.mocklocations.presentation.hasFineLocationPermission
-import com.drew654.mocklocations.presentation.hasNotificationPermission
-import com.drew654.mocklocations.presentation.isAppSetAsMockLocationsApp
-import com.drew654.mocklocations.presentation.isDeveloperOptionsEnabled
 import com.drew654.mocklocations.presentation.map_screen.components.ExpandedControls
 import com.drew654.mocklocations.presentation.map_screen.components.MapControlButtons
 import com.drew654.mocklocations.presentation.map_screen.components.SavedRoutesDialog
@@ -66,7 +63,7 @@ fun MapScreen(
     val isPaused by viewModel.isPaused.collectAsState()
     val speedMetersPerSec by viewModel.speedMetersPerSec.collectAsState()
     var hasLocationPermission by remember {
-        mutableStateOf(hasFineLocationPermission(context))
+        mutableStateOf(Permission.FineLocation.isGranted(context))
     }
     var permissionToBeRequested by remember { mutableStateOf<Permission?>(null) }
     var isShowingPermissionDialog by remember { mutableStateOf(false) }
@@ -98,8 +95,8 @@ fun MapScreen(
     val permissionsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { result ->
-        val locationGranted = result[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
-        hasLocationPermission = locationGranted || hasFineLocationPermission(context)
+        val locationGranted = result[Permission.FineLocation.permission] ?: false
+        hasLocationPermission = locationGranted || Permission.FineLocation.isGranted(context)
         if (!hasLocationPermission) {
             permissionToBeRequested = Permission.FineLocation
             isShowingPermissionDialog = true
@@ -116,19 +113,19 @@ fun MapScreen(
             if (event == Lifecycle.Event.ON_RESUME || event == Lifecycle.Event.ON_START) {
                 if (
                     permissionToBeRequested == Permission.MockLocations
-                    && isAppSetAsMockLocationsApp(context)
+                    && Permission.MockLocations.isGranted(context)
                 ) {
                     isShowingPermissionDialog = false
                 }
                 if (
                     permissionToBeRequested == Permission.DeveloperOptions
-                    && isDeveloperOptionsEnabled(context)
+                    && Permission.DeveloperOptions.isGranted(context)
                 ) {
                     isShowingPermissionDialog = false
                 }
                 if (
                     permissionToBeRequested == Permission.FineLocation
-                    && hasFineLocationPermission(context)
+                    && Permission.FineLocation.isGranted(context)
                 ) {
                     isShowingPermissionDialog = false
                     hasLocationPermission = true
@@ -252,15 +249,15 @@ fun MapScreen(
                     },
                     onStart = {
                         val permissionsToRequest = buildList {
-                            if (!hasFineLocationPermission(context)) {
-                                add(Manifest.permission.ACCESS_FINE_LOCATION)
+                            if (!Permission.FineLocation.isGranted(context)) {
+                                add(Permission.FineLocation.permission)
                             }
 
                             if (
                                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
-                                && !hasNotificationPermission(context)
+                                && !Permission.PostNotifications.isGranted(context)
                             ) {
-                                add(Manifest.permission.POST_NOTIFICATIONS)
+                                add(Permission.PostNotifications.permission)
                             }
                         }
 
@@ -269,13 +266,13 @@ fun MapScreen(
                             return@MapControlButtons
                         }
 
-                        if (!isDeveloperOptionsEnabled(context)) {
+                        if (!Permission.DeveloperOptions.isGranted(context)) {
                             permissionToBeRequested = Permission.DeveloperOptions
                             isShowingPermissionDialog = true
                             return@MapControlButtons
                         }
 
-                        if (!isAppSetAsMockLocationsApp(context)) {
+                        if (!Permission.MockLocations.isGranted(context)) {
                             permissionToBeRequested = Permission.MockLocations
                             isShowingPermissionDialog = true
                             return@MapControlButtons
@@ -310,8 +307,8 @@ fun MapScreen(
                         }
                     },
                     onUserLocationFocus = {
-                        if (!hasFineLocationPermission(context)) {
-                            permissionsLauncher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION))
+                        if (!Permission.FineLocation.isGranted(context)) {
+                            permissionsLauncher.launch(arrayOf(Permission.FineLocation.permission))
                             return@MapControlButtons
                         }
 
