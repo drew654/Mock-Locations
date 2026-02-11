@@ -68,12 +68,8 @@ fun MapScreen(
     var hasLocationPermission by remember {
         mutableStateOf(hasFineLocationPermission(context))
     }
-    val locationPermissionRequest = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission(),
-        onResult = {
-            hasLocationPermission = it
-        }
-    )
+    var permissionToBeRequested by remember { mutableStateOf<Permission?>(null) }
+    var isShowingPermissionDialog by remember { mutableStateOf(false) }
     val mapProperties by remember(hasLocationPermission) {
         mutableStateOf(
             MapProperties(
@@ -99,33 +95,44 @@ fun MapScreen(
     val savedRoutes by viewModel.savedRoutes.collectAsState()
     val controlsAreExpanded by viewModel.controlsAreExpanded.collectAsState()
     val isUsingCrosshairs by viewModel.isUsingCrosshairs.collectAsState()
-    var hasNotificationPermission by remember { mutableStateOf(hasNotificationPermission(context)) }
-    val notificationPermissionRequest = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission(),
-        onResult = {
-            hasNotificationPermission = it
+    val permissionsLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { result ->
+        val locationGranted = result[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
+        hasLocationPermission = locationGranted || hasFineLocationPermission(context)
+        if (!hasLocationPermission) {
+            permissionToBeRequested = Permission.FineLocation
+            isShowingPermissionDialog = true
         }
-    )
-    var isShowingPermissionDialog by remember { mutableStateOf(false) }
-    var permissionToBeRequested by remember { mutableStateOf<Permission?>(null) }
+    }
 
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                hasLocationPermission = hasFineLocationPermission(context)
-            }
             if (event == Lifecycle.Event.ON_PAUSE) {
                 viewModel.updateCameraPosition(
                     cameraPositionState.position
                 )
             }
             if (event == Lifecycle.Event.ON_RESUME || event == Lifecycle.Event.ON_START) {
-                if (permissionToBeRequested == Permission.MockLocations && isAppSetAsMockLocationsApp(context)) {
+                if (
+                    permissionToBeRequested == Permission.MockLocations
+                    && isAppSetAsMockLocationsApp(context)
+                ) {
                     isShowingPermissionDialog = false
                 }
-                if (permissionToBeRequested == Permission.DeveloperOptions && isDeveloperOptionsEnabled(context)) {
+                if (
+                    permissionToBeRequested == Permission.DeveloperOptions
+                    && isDeveloperOptionsEnabled(context)
+                ) {
                     isShowingPermissionDialog = false
+                }
+                if (
+                    permissionToBeRequested == Permission.FineLocation
+                    && hasFineLocationPermission(context)
+                ) {
+                    isShowingPermissionDialog = false
+                    hasLocationPermission = true
                 }
             }
         }
@@ -160,14 +167,9 @@ fun MapScreen(
         }
     }
 
-    LaunchedEffect(hasLocationPermission) {
-        if (
-            hasLocationPermission &&
-            locationTarget is LocationTarget.Empty &&
-            !hasCenteredOnUser
-        ) {
-            val fusedLocationClient =
-                LocationServices.getFusedLocationProviderClient(context)
+    LaunchedEffect(Unit) {
+        if (hasLocationPermission && !hasCenteredOnUser) {
+            val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
 
             try {
                 fusedLocationClient.lastLocation.addOnSuccessListener { location ->
@@ -250,28 +252,41 @@ fun MapScreen(
                         viewModel.clearLocationTarget()
                     },
                     onStart = {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !hasNotificationPermission) {
-                            notificationPermissionRequest.launch(Manifest.permission.POST_NOTIFICATIONS)
-                        }
-                        if (hasFineLocationPermission(context)) {
-                            if (isDeveloperOptionsEnabled(context)) {
-                                if (isAppSetAsMockLocationsApp(context)) {
-                                    scope.launch {
-                                        if (isUsingCrosshairs && locationTarget is LocationTarget.Empty) {
-                                            viewModel.pushPoint(cameraPositionState.position.target)
-                                        }
-                                        viewModel.startMockLocation(context)
-                                    }
-                                } else {
-                                    permissionToBeRequested = Permission.MockLocations
-                                    isShowingPermissionDialog = true
-                                }
-                            } else {
-                                permissionToBeRequested = Permission.DeveloperOptions
-                                isShowingPermissionDialog = true
+                        val permissionsToRequest = buildList {
+                            if (!hasFineLocationPermission(context)) {
+                                add(Manifest.permission.ACCESS_FINE_LOCATION)
                             }
-                        } else {
-                            locationPermissionRequest.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+
+                            if (
+                                Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+                                && !hasNotificationPermission(context)
+                            ) {
+                                add(Manifest.permission.POST_NOTIFICATIONS)
+                            }
+                        }
+
+                        if (permissionsToRequest.contains(Manifest.permission.ACCESS_FINE_LOCATION)) {
+                            permissionsLauncher.launch(permissionsToRequest.toTypedArray())
+                            return@MapControlButtons
+                        }
+
+                        if (!isDeveloperOptionsEnabled(context)) {
+                            permissionToBeRequested = Permission.DeveloperOptions
+                            isShowingPermissionDialog = true
+                            return@MapControlButtons
+                        }
+
+                        if (!isAppSetAsMockLocationsApp(context)) {
+                            permissionToBeRequested = Permission.MockLocations
+                            isShowingPermissionDialog = true
+                            return@MapControlButtons
+                        }
+
+                        scope.launch {
+                            if (isUsingCrosshairs && locationTarget is LocationTarget.Empty) {
+                                viewModel.pushPoint(cameraPositionState.position.target)
+                            }
+                            viewModel.startMockLocation(context)
                         }
                     },
                     onStop = {
