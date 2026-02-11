@@ -11,6 +11,7 @@ import android.os.IBinder
 import android.os.SystemClock
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
+import com.drew654.mocklocations.R
 import com.drew654.mocklocations.domain.SettingsManager
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.RoutePoint
@@ -68,7 +69,7 @@ class MockLocationService : Service() {
     override fun onDestroy() {
         try {
             tearDownTestProvider()
-        } catch (e: Exception) {
+        } catch (_: Exception) {
         }
 
         super.onDestroy()
@@ -79,7 +80,7 @@ class MockLocationService : Service() {
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Location Mocking Active")
             .setContentText("Your location is currently being spoofed.")
-            .setSmallIcon(android.R.drawable.ic_menu_mylocation)
+            .setSmallIcon(R.drawable.baseline_my_location_24)
             .setOngoing(true)
             .build()
 
@@ -331,7 +332,7 @@ class MockLocationService : Service() {
     private fun setUpTestProvider() {
         try {
             locationManager.removeTestProvider(providerName)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
         }
 
         locationManager.addTestProvider(
@@ -345,7 +346,7 @@ class MockLocationService : Service() {
         try {
             locationManager.setTestProviderEnabled(providerName, false)
             locationManager.removeTestProvider(providerName)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
         }
     }
 
