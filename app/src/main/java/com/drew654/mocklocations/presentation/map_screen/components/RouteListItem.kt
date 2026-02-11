@@ -1,6 +1,7 @@
 package com.drew654.mocklocations.presentation.map_screen.components
 
 import android.content.res.Configuration
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -19,6 +20,7 @@ import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 import com.google.android.gms.maps.model.LatLng
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun RouteListItem(
     selected: Boolean,
