@@ -25,8 +25,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class MockLocationsViewModel(application: Application) : AndroidViewModel(application) {
-    private val _isShowingPermissionsDialog = MutableStateFlow(false)
-    val isShowingPermissionsDialog = _isShowingPermissionsDialog.asStateFlow()
     private val _cameraPosition = MutableStateFlow<SavedCameraPosition?>(null)
     val cameraPosition = _cameraPosition.asStateFlow()
     private val _hasCenteredOnUser = MutableStateFlow(false)
@@ -95,10 +93,6 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         }, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
     }
 
-    fun setIsShowingPermissionsDialog(shouldShow: Boolean) {
-        _isShowingPermissionsDialog.value = shouldShow
-    }
-
     fun updateCameraPosition(position: CameraPosition) {
         _cameraPosition.value = SavedCameraPosition(
             latitude = position.target.latitude,
@@ -146,20 +140,16 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     }
 
     fun startMockLocation(context: Context) {
-        if (hasFineLocationPermission(context)) {
-            val target = activeLocationTarget.value
-            if (target is LocationTarget.Empty) return
+        val target = activeLocationTarget.value
+        if (target is LocationTarget.Empty) return
 
-            viewModelScope.launch {
-                settingsManager.setActiveLocationTarget(target)
+        viewModelScope.launch {
+            settingsManager.setActiveLocationTarget(target)
 
-                val intent = Intent(getApplication(), MockLocationService::class.java).apply {
-                    action = ACTION_START_MOCKING
-                }
-                context.startForegroundService(intent)
+            val intent = Intent(getApplication(), MockLocationService::class.java).apply {
+                action = ACTION_START_MOCKING
             }
-        } else {
-            _isShowingPermissionsDialog.value = true
+            context.startForegroundService(intent)
         }
     }
 

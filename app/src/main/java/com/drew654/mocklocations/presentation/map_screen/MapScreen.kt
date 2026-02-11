@@ -1,5 +1,9 @@
 package com.drew654.mocklocations.presentation.map_screen
 
+import android.Manifest
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,8 +27,10 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import com.drew654.mocklocations.R
 import com.drew654.mocklocations.domain.model.LocationTarget
+import com.drew654.mocklocations.domain.model.Permission
+import com.drew654.mocklocations.domain.model.isGranted
 import com.drew654.mocklocations.presentation.MockLocationsViewModel
-import com.drew654.mocklocations.presentation.hasFineLocationPermission
+import com.drew654.mocklocations.presentation.components.PermissionsDialog
 import com.drew654.mocklocations.presentation.map_screen.components.ExpandedControls
 import com.drew654.mocklocations.presentation.map_screen.components.MapControlButtons
 import com.drew654.mocklocations.presentation.map_screen.components.SavedRoutesDialog
@@ -57,8 +63,9 @@ fun MapScreen(
     val isPaused by viewModel.isPaused.collectAsState()
     val speedMetersPerSec by viewModel.speedMetersPerSec.collectAsState()
     var hasLocationPermission by remember {
-        mutableStateOf(hasFineLocationPermission(context))
+        mutableStateOf(Permission.FineLocation.isGranted(context))
     }
+    var permissionToBeRequested by remember { mutableStateOf<Permission?>(null) }
     val mapProperties by remember(hasLocationPermission) {
         mutableStateOf(
             MapProperties(
@@ -84,16 +91,43 @@ fun MapScreen(
     val savedRoutes by viewModel.savedRoutes.collectAsState()
     val controlsAreExpanded by viewModel.controlsAreExpanded.collectAsState()
     val isUsingCrosshairs by viewModel.isUsingCrosshairs.collectAsState()
+    val permissionsLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { result ->
+        val locationGranted = result[Permission.FineLocation.permission] ?: false
+        hasLocationPermission = locationGranted || Permission.FineLocation.isGranted(context)
+        if (!hasLocationPermission) {
+            permissionToBeRequested = Permission.FineLocation
+        }
+    }
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                hasLocationPermission = hasFineLocationPermission(context)
-            }
             if (event == Lifecycle.Event.ON_PAUSE) {
                 viewModel.updateCameraPosition(
                     cameraPositionState.position
                 )
+            }
+            if (event == Lifecycle.Event.ON_RESUME || event == Lifecycle.Event.ON_START) {
+                if (
+                    permissionToBeRequested == Permission.MockLocations
+                    && Permission.MockLocations.isGranted(context)
+                ) {
+                    permissionToBeRequested = null
+                }
+                if (
+                    permissionToBeRequested == Permission.DeveloperOptions
+                    && Permission.DeveloperOptions.isGranted(context)
+                ) {
+                    permissionToBeRequested = null
+                }
+                if (
+                    permissionToBeRequested == Permission.FineLocation
+                    && Permission.FineLocation.isGranted(context)
+                ) {
+                    permissionToBeRequested = null
+                    hasLocationPermission = true
+                }
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -127,14 +161,9 @@ fun MapScreen(
         }
     }
 
-    LaunchedEffect(hasLocationPermission) {
-        if (
-            hasLocationPermission &&
-            locationTarget is LocationTarget.Empty &&
-            !hasCenteredOnUser
-        ) {
-            val fusedLocationClient =
-                LocationServices.getFusedLocationProviderClient(context)
+    LaunchedEffect(Unit) {
+        if (hasLocationPermission && !hasCenteredOnUser) {
+            val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
 
             try {
                 fusedLocationClient.lastLocation.addOnSuccessListener { location ->
@@ -148,7 +177,8 @@ fun MapScreen(
                         viewModel.markCenteredOnUser()
                     }
                 }
-            } catch (_: SecurityException) {}
+            } catch (_: SecurityException) {
+            }
         }
     }
 
@@ -216,6 +246,34 @@ fun MapScreen(
                         viewModel.clearLocationTarget()
                     },
                     onStart = {
+                        val permissionsToRequest = buildList {
+                            if (!Permission.FineLocation.isGranted(context)) {
+                                add(Permission.FineLocation.permission)
+                            }
+
+                            if (
+                                Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+                                && !Permission.PostNotifications.isGranted(context)
+                            ) {
+                                add(Permission.PostNotifications.permission)
+                            }
+                        }
+
+                        if (permissionsToRequest.contains(Manifest.permission.ACCESS_FINE_LOCATION)) {
+                            permissionsLauncher.launch(permissionsToRequest.toTypedArray())
+                            return@MapControlButtons
+                        }
+
+                        if (!Permission.DeveloperOptions.isGranted(context)) {
+                            permissionToBeRequested = Permission.DeveloperOptions
+                            return@MapControlButtons
+                        }
+
+                        if (!Permission.MockLocations.isGranted(context)) {
+                            permissionToBeRequested = Permission.MockLocations
+                            return@MapControlButtons
+                        }
+
                         scope.launch {
                             if (isUsingCrosshairs && locationTarget is LocationTarget.Empty) {
                                 viewModel.pushPoint(cameraPositionState.position.target)
@@ -242,6 +300,32 @@ fun MapScreen(
                     onAddCrosshairsPoint = {
                         scope.launch {
                             viewModel.pushPoint(cameraPositionState.position.target)
+                        }
+                    },
+                    onUserLocationFocus = {
+                        if (!Permission.FineLocation.isGranted(context)) {
+                            permissionsLauncher.launch(arrayOf(Permission.FineLocation.permission))
+                            return@MapControlButtons
+                        }
+
+                        scope.launch {
+                            val fusedLocationClient =
+                                LocationServices.getFusedLocationProviderClient(context)
+                            try {
+                                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                                    if (location != null) {
+                                        scope.launch {
+                                            cameraPositionState.animate(
+                                                CameraUpdateFactory.newLatLngZoom(
+                                                    LatLng(location.latitude, location.longitude),
+                                                    15f
+                                                )
+                                            )
+                                        }
+                                    }
+                                }
+                            } catch (_: SecurityException) {
+                            }
                         }
                     }
                 )
@@ -278,6 +362,16 @@ fun MapScreen(
             viewModel.deleteSavedRoute(it)
         }
     )
+    permissionToBeRequested?.let { permission ->
+        PermissionsDialog(
+            permission = permission,
+            setShowMockLocationDialog = { permissionToBeRequested = null },
+            onDismiss = {
+                permissionToBeRequested = null
+            },
+            context = context
+        )
+    }
 }
 
 private fun getMarkerHue(index: Int, numPoints: Int): Float {
