@@ -66,7 +66,6 @@ fun MapScreen(
         mutableStateOf(Permission.FineLocation.isGranted(context))
     }
     var permissionToBeRequested by remember { mutableStateOf<Permission?>(null) }
-    var isShowingPermissionDialog by remember { mutableStateOf(false) }
     val mapProperties by remember(hasLocationPermission) {
         mutableStateOf(
             MapProperties(
@@ -99,7 +98,6 @@ fun MapScreen(
         hasLocationPermission = locationGranted || Permission.FineLocation.isGranted(context)
         if (!hasLocationPermission) {
             permissionToBeRequested = Permission.FineLocation
-            isShowingPermissionDialog = true
         }
     }
 
@@ -115,19 +113,19 @@ fun MapScreen(
                     permissionToBeRequested == Permission.MockLocations
                     && Permission.MockLocations.isGranted(context)
                 ) {
-                    isShowingPermissionDialog = false
+                    permissionToBeRequested = null
                 }
                 if (
                     permissionToBeRequested == Permission.DeveloperOptions
                     && Permission.DeveloperOptions.isGranted(context)
                 ) {
-                    isShowingPermissionDialog = false
+                    permissionToBeRequested = null
                 }
                 if (
                     permissionToBeRequested == Permission.FineLocation
                     && Permission.FineLocation.isGranted(context)
                 ) {
-                    isShowingPermissionDialog = false
+                    permissionToBeRequested = null
                     hasLocationPermission = true
                 }
             }
@@ -268,13 +266,11 @@ fun MapScreen(
 
                         if (!Permission.DeveloperOptions.isGranted(context)) {
                             permissionToBeRequested = Permission.DeveloperOptions
-                            isShowingPermissionDialog = true
                             return@MapControlButtons
                         }
 
                         if (!Permission.MockLocations.isGranted(context)) {
                             permissionToBeRequested = Permission.MockLocations
-                            isShowingPermissionDialog = true
                             return@MapControlButtons
                         }
 
@@ -369,8 +365,7 @@ fun MapScreen(
     permissionToBeRequested?.let { permission ->
         PermissionsDialog(
             permission = permission,
-            showMockLocationDialog = isShowingPermissionDialog,
-            setShowMockLocationDialog = { isShowingPermissionDialog = it },
+            setShowMockLocationDialog = { permissionToBeRequested = null },
             onDismiss = {
                 permissionToBeRequested = null
             },
