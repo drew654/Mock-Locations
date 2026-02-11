@@ -34,12 +34,11 @@ class SettingsManager(private val context: Context) {
         .registerTypeAdapter(LocationTarget::class.java, LocationTargetAdapter())
         .create()
 
-    val activeLocationTargetFlow: Flow<LocationTarget> = context.dataStore.data
-        .map { preferences ->
-            val json = preferences[ACTIVE_LOCATION_TARGET_JSON] ?: ""
-            if (json.isEmpty()) LocationTarget.Empty
-            else gson.fromJson(json, LocationTarget::class.java)
-        }
+    val activeLocationTargetFlow: Flow<LocationTarget> = context.dataStore.data.map { preferences ->
+        val json = preferences[ACTIVE_LOCATION_TARGET_JSON] ?: ""
+        if (json.isEmpty()) LocationTarget.Empty
+        else gson.fromJson(json, LocationTarget::class.java)
+    }
 
     suspend fun setActiveLocationTarget(target: LocationTarget) {
         context.dataStore.edit {
@@ -115,7 +114,7 @@ class SettingsManager(private val context: Context) {
                 try {
                     val type = object : TypeToken<List<LocationTarget.SavedRoute>>() {}.type
                     gson.fromJson(json, type)
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     emptyList()
                 }
             }
@@ -128,7 +127,7 @@ class SettingsManager(private val context: Context) {
                 try {
                     val type = object : TypeToken<MutableList<LocationTarget.SavedRoute>>() {}.type
                     gson.fromJson<MutableList<LocationTarget.SavedRoute>>(existingJson, type)
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     mutableListOf()
                 }
             } else {

@@ -58,7 +58,7 @@ fun RoutesListDialogBody(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("No saved routes found")
+                    Text(text = "No saved routes found")
                 }
             } else {
                 LazyColumn {

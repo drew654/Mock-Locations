@@ -6,11 +6,12 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
+import java.lang.reflect.Type
 
 class LocationTargetAdapter : JsonSerializer<LocationTarget>, JsonDeserializer<LocationTarget> {
     override fun serialize(
         src: LocationTarget?,
-        typeOfSrc: java.lang.reflect.Type?,
+        typeOfSrc: Type?,
         context: JsonSerializationContext?
     ): JsonElement? {
         val jsonObject = JsonObject()
@@ -28,7 +29,7 @@ class LocationTargetAdapter : JsonSerializer<LocationTarget>, JsonDeserializer<L
 
     override fun deserialize(
         json: JsonElement?,
-        typeOfT: java.lang.reflect.Type?,
+        typeOfT: Type?,
         context: JsonDeserializationContext?
     ): LocationTarget? {
         val jsonObject = json?.asJsonObject

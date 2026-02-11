@@ -164,10 +164,7 @@ fun MapControlButtons(
                 .fillMaxSize()
         ) {
             if (isUsingCrosshairs) {
-                Crosshairs(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                )
+                Crosshairs(modifier = Modifier.align(Alignment.Center))
             }
         }
     }
