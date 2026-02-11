@@ -12,7 +12,7 @@ import com.drew654.mocklocations.R
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 
 @Composable
-fun MyLocationButton(
+fun UserLocationButton(
     onClick: () -> Unit
 ) {
     SmallFloatingActionButton(
@@ -39,10 +39,10 @@ fun MyLocationButton(
     showBackground = true
 )
 @Composable
-fun MyLocationButtonPreview() {
+fun UserLocationButtonPreview() {
     MockLocationsTheme {
         Surface {
-            MyLocationButton(
+            UserLocationButton(
                 onClick = { }
             )
         }

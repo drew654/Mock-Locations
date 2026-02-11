@@ -73,7 +73,7 @@ fun MapControlButtons(
                     modifier = Modifier
                         .padding(12.dp)
                 ) {
-                    MyLocationButton(
+                    UserLocationButton(
                         onClick = {
                             onUserLocationFocus()
                         }
