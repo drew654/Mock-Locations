@@ -7,35 +7,39 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import com.drew654.mocklocations.domain.model.Permission
 import com.drew654.mocklocations.presentation.hasFineLocationPermission
-import com.drew654.mocklocations.presentation.isDeveloperOptionsEnabled
 
 @Composable
 fun PermissionsDialog(
+    permission: Permission,
     showMockLocationDialog: Boolean,
     setShowMockLocationDialog: (Boolean) -> Unit,
+    onDismiss: () -> Unit,
     context: Context
 ) {
     if (showMockLocationDialog) {
-        val (bodyText, buttonText) = when (true) {
-            !hasFineLocationPermission(context) -> Pair(
-                "To use this app, you must grant 'Fine Location' permission in App Settings.",
+        val (bodyText, buttonText) = when (permission) {
+             is Permission.FineLocation -> Pair(
+                "To use this app, you must grant \"Fine Location\" permission in App Settings.",
                 "Open Location Settings"
             )
 
-            isDeveloperOptionsEnabled(context) -> Pair(
-                "To use this app, you must select 'Mock Locations' as the Mock Location App in Developer Options.",
+            is Permission.MockLocations -> Pair(
+                "To use this app, you must select \"Mock Locations\" as the Mock Location App in Developer Options. It should be near the bottom of the list.",
                 "Open Developer Options"
             )
 
-            else -> Pair(
-                "You need to enable Developer Options first. Go to Settings > About Phone and tap 'Build Number' 7 times.",
+            is Permission.DeveloperOptions -> Pair(
+                "You need to enable Developer Options first. Go to About phone > Software information and tap \"Build Number\" 7 times.",
                 "Open About Phone"
             )
         }
 
         AlertDialog(
-            onDismissRequest = { },
+            onDismissRequest = {
+                onDismiss()
+            },
             title = { Text(if (!hasFineLocationPermission(context)) "Location Permission Required" else "Developer Options Required") },
             text = {
                 Text(bodyText)
@@ -44,8 +48,8 @@ fun PermissionsDialog(
                 TextButton(
                     onClick = {
                         try {
-                            when (true) {
-                                !hasFineLocationPermission(context) -> {
+                            when (permission) {
+                                is Permission.FineLocation -> {
                                     context.startActivity(
                                         Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
                                             data = android.net.Uri.fromParts(
@@ -57,15 +61,15 @@ fun PermissionsDialog(
                                     )
                                 }
 
-                                isDeveloperOptionsEnabled(context) -> context.startActivity(
+                                is Permission.MockLocations -> context.startActivity(
                                     Intent(
                                         Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS
                                     )
                                 )
 
-                                else -> context.startActivity(Intent(Settings.ACTION_DEVICE_INFO_SETTINGS))
+                                is Permission.DeveloperOptions -> context.startActivity(Intent(Settings.ACTION_DEVICE_INFO_SETTINGS))
                             }
-                        } catch (e: Exception) {
+                        } catch (_: Exception) {
                             context.startActivity(Intent(Settings.ACTION_SETTINGS))
                         }
                     }

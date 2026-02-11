@@ -1,5 +1,9 @@
 package com.drew654.mocklocations.presentation.map_screen
 
+import android.Manifest
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,8 +27,13 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import com.drew654.mocklocations.R
 import com.drew654.mocklocations.domain.model.LocationTarget
+import com.drew654.mocklocations.domain.model.Permission
 import com.drew654.mocklocations.presentation.MockLocationsViewModel
+import com.drew654.mocklocations.presentation.components.PermissionsDialog
 import com.drew654.mocklocations.presentation.hasFineLocationPermission
+import com.drew654.mocklocations.presentation.hasNotificationPermission
+import com.drew654.mocklocations.presentation.isAppSetAsMockLocationsApp
+import com.drew654.mocklocations.presentation.isDeveloperOptionsEnabled
 import com.drew654.mocklocations.presentation.map_screen.components.ExpandedControls
 import com.drew654.mocklocations.presentation.map_screen.components.MapControlButtons
 import com.drew654.mocklocations.presentation.map_screen.components.SavedRoutesDialog
@@ -59,6 +68,12 @@ fun MapScreen(
     var hasLocationPermission by remember {
         mutableStateOf(hasFineLocationPermission(context))
     }
+    val locationPermissionRequest = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = {
+            hasLocationPermission = it
+        }
+    )
     val mapProperties by remember(hasLocationPermission) {
         mutableStateOf(
             MapProperties(
@@ -84,6 +99,16 @@ fun MapScreen(
     val savedRoutes by viewModel.savedRoutes.collectAsState()
     val controlsAreExpanded by viewModel.controlsAreExpanded.collectAsState()
     val isUsingCrosshairs by viewModel.isUsingCrosshairs.collectAsState()
+    var hasNotificationPermission by remember { mutableStateOf(hasNotificationPermission(context)) }
+    val notificationPermissionRequest = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = {
+            hasNotificationPermission = it
+        }
+    )
+    var isShowingPermissionDialog by remember { mutableStateOf(false) }
+    var permissionToBeRequested by remember { mutableStateOf<Permission?>(null) }
+
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -94,6 +119,14 @@ fun MapScreen(
                 viewModel.updateCameraPosition(
                     cameraPositionState.position
                 )
+            }
+            if (event == Lifecycle.Event.ON_RESUME || event == Lifecycle.Event.ON_START) {
+                if (permissionToBeRequested == Permission.MockLocations && isAppSetAsMockLocationsApp(context)) {
+                    isShowingPermissionDialog = false
+                }
+                if (permissionToBeRequested == Permission.DeveloperOptions && isDeveloperOptionsEnabled(context)) {
+                    isShowingPermissionDialog = false
+                }
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -148,7 +181,8 @@ fun MapScreen(
                         viewModel.markCenteredOnUser()
                     }
                 }
-            } catch (_: SecurityException) {}
+            } catch (_: SecurityException) {
+            }
         }
     }
 
@@ -216,11 +250,28 @@ fun MapScreen(
                         viewModel.clearLocationTarget()
                     },
                     onStart = {
-                        scope.launch {
-                            if (isUsingCrosshairs && locationTarget is LocationTarget.Empty) {
-                                viewModel.pushPoint(cameraPositionState.position.target)
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !hasNotificationPermission) {
+                            notificationPermissionRequest.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        }
+                        if (hasFineLocationPermission(context)) {
+                            if (isDeveloperOptionsEnabled(context)) {
+                                if (isAppSetAsMockLocationsApp(context)) {
+                                    scope.launch {
+                                        if (isUsingCrosshairs && locationTarget is LocationTarget.Empty) {
+                                            viewModel.pushPoint(cameraPositionState.position.target)
+                                        }
+                                        viewModel.startMockLocation(context)
+                                    }
+                                } else {
+                                    permissionToBeRequested = Permission.MockLocations
+                                    isShowingPermissionDialog = true
+                                }
+                            } else {
+                                permissionToBeRequested = Permission.DeveloperOptions
+                                isShowingPermissionDialog = true
                             }
-                            viewModel.startMockLocation(context)
+                        } else {
+                            locationPermissionRequest.launch(Manifest.permission.ACCESS_FINE_LOCATION)
                         }
                     },
                     onStop = {
@@ -278,6 +329,17 @@ fun MapScreen(
             viewModel.deleteSavedRoute(it)
         }
     )
+    permissionToBeRequested?.let { permission ->
+        PermissionsDialog(
+            permission = permission,
+            showMockLocationDialog = isShowingPermissionDialog,
+            setShowMockLocationDialog = { isShowingPermissionDialog = it },
+            onDismiss = {
+                permissionToBeRequested = null
+            },
+            context = context
+        )
+    }
 }
 
 private fun getMarkerHue(index: Int, numPoints: Int): Float {
