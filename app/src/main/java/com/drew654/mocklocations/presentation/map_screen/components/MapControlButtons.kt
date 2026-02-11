@@ -47,9 +47,9 @@ fun MapControlButtons(
     isMocking: Boolean,
     isPaused: Boolean,
     isUsingCrosshairs: Boolean,
-    onAddCrosshairsPoint: () -> Unit
+    onAddCrosshairsPoint: () -> Unit,
+    onUserLocationFocus: () -> Unit
 ) {
-    val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
     Box(
@@ -74,9 +74,9 @@ fun MapControlButtons(
                         .padding(12.dp)
                 ) {
                     MyLocationButton(
-                        scope = scope,
-                        context = context,
-                        cameraPositionState = cameraPositionState
+                        onClick = {
+                            onUserLocationFocus()
+                        }
                     )
                     if (cameraPositionState.position.bearing != 0f) {
                         Spacer(Modifier.height(4.dp))
@@ -201,7 +201,8 @@ fun MapControlButtonsPreview() {
                 isMocking = false,
                 isPaused = false,
                 isUsingCrosshairs = true,
-                onAddCrosshairsPoint = { }
+                onAddCrosshairsPoint = { },
+                onUserLocationFocus = { }
             )
         }
     }

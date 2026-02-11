@@ -106,7 +106,6 @@ fun MapScreen(
         }
     }
 
-
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_PAUSE) {
@@ -308,6 +307,32 @@ fun MapScreen(
                     onAddCrosshairsPoint = {
                         scope.launch {
                             viewModel.pushPoint(cameraPositionState.position.target)
+                        }
+                    },
+                    onUserLocationFocus = {
+                        if (!hasFineLocationPermission(context)) {
+                            permissionsLauncher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION))
+                            return@MapControlButtons
+                        }
+
+                        scope.launch {
+                            val fusedLocationClient =
+                                LocationServices.getFusedLocationProviderClient(context)
+                            try {
+                                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                                    if (location != null) {
+                                        scope.launch {
+                                            cameraPositionState.animate(
+                                                CameraUpdateFactory.newLatLngZoom(
+                                                    LatLng(location.latitude, location.longitude),
+                                                    15f
+                                                )
+                                            )
+                                        }
+                                    }
+                                }
+                            } catch (_: SecurityException) {
+                            }
                         }
                     }
                 )
