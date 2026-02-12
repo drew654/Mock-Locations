@@ -1,5 +1,6 @@
 package com.drew654.mocklocations.presentation.map_screen.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,13 +13,17 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.R
 import com.drew654.mocklocations.domain.model.LocationTarget
+import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
+import com.google.android.gms.maps.model.LatLng
 
 @Composable
 fun PrimaryMockLocationControls(
@@ -124,6 +129,33 @@ fun PrimaryMockLocationControls(
                     )
                 }
             }
+        }
+    }
+}
+
+@Preview(
+    name = "Light Mode",
+    showBackground = true
+)
+@Preview(
+    name = "Dark Mode",
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+    showBackground = true
+)
+@Composable
+fun PrimaryMockLocationControlsPreview() {
+    MockLocationsTheme {
+        Surface {
+            PrimaryMockLocationControls(
+                onStart = { },
+                onStop = { },
+                onTogglePause = { },
+                isMocking = false,
+                isPaused = true,
+                locationTarget = LocationTarget.Route(listOf(LatLng(0.0, 0.0), LatLng(0.0, 0.0))),
+                isUsingCrosshairs = true,
+                onAddCrosshairsPoint = { },
+            )
         }
     }
 }
