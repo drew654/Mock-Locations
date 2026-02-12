@@ -54,9 +54,9 @@ fun SwitchRowPreview() {
     MockLocationsTheme {
         Surface {
             SwitchRow(
-                label = "Clear points on stop",
+                label = "Clear route on stop",
                 checked = true,
-                onCheckedChange = {}
+                onCheckedChange = { }
             )
         }
     }

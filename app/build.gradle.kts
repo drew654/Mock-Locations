@@ -16,8 +16,8 @@ android {
         applicationId = "com.drew654.mocklocations"
         minSdk = 31
         targetSdk = 36
-        versionCode = 5
-        versionName = "0.1.0"
+        versionCode = 6
+        versionName = "0.2.0-alpha.1"
         setProperty("archivesBaseName", "mock-locations")
 
         val localProperties = Properties()
@@ -67,6 +67,7 @@ dependencies {
     implementation(libs.play.services.maps)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.play.services.location)
+    implementation(libs.gson)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
