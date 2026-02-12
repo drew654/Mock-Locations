@@ -79,7 +79,7 @@ class MockLocationService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Location Mocking Active")
-            .setContentText("Your location is currently being spoofed.")
+            .setContentText("Your location is currently being mocked.")
             .setSmallIcon(R.drawable.baseline_my_location_24)
             .setOngoing(true)
             .build()
