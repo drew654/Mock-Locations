@@ -31,7 +31,7 @@ fun PermissionsDialog(
         )
 
         is Permission.DeveloperOptions -> Triple(
-            "You need to enable Developer Options first. Go to About phone > Software information and tap \"Build Number\" 7 times.",
+            "You need to enable Developer Options first. Go to Settings > About phone and tap \"Build Number\" 7 times.",
             "Open About Phone",
             "Developer Options Required"
         )
