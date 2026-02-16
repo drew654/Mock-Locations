@@ -52,7 +52,7 @@ fun MockLocationControls(
         modifier = modifier,
         horizontalAlignment = Alignment.End
     ) {
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height((64 + 8).dp))
         SecondaryMockLocationControls(
             onClearLocationTarget = onClearLocationTarget,
             onSaveLocationTarget = onSaveLocationTarget,
