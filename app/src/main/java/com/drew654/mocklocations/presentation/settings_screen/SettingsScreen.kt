@@ -1,5 +1,6 @@
 package com.drew654.mocklocations.presentation.settings_screen
 
+import android.content.Intent
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -19,10 +20,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.core.net.toUri
 import androidx.navigation.NavController
 import com.drew654.mocklocations.R
 import com.drew654.mocklocations.presentation.MockLocationsViewModel
 import com.drew654.mocklocations.presentation.settings_screen.components.SwitchRow
+import com.drew654.mocklocations.presentation.settings_screen.components.TextRow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -77,6 +80,28 @@ fun SettingsScreen(
                 checked = clearPointsOnStop,
                 onCheckedChange = {
                     viewModel.setClearRouteOnStop(it)
+                }
+            )
+            TextRow(
+                label = "Manual",
+                onClick = {
+                    Intent().apply {
+                        action = Intent.ACTION_VIEW
+                        data = "https://github.com/drew654/Mock-Locations/blob/master/README.md".toUri()
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        navController.context.startActivity(this)
+                    }
+                }
+            )
+            TextRow(
+                label = "Privacy policy",
+                onClick = {
+                    Intent().apply {
+                        action = Intent.ACTION_VIEW
+                        data = "https://github.com/drew654/Mock-Locations/blob/master/PRIVACY_POLICY.md".toUri()
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        navController.context.startActivity(this)
+                    }
                 }
             )
         }

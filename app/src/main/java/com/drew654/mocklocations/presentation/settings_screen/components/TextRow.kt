@@ -3,12 +3,10 @@ package com.drew654.mocklocations.presentation.settings_screen.components
 import android.content.res.Configuration
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -18,27 +16,21 @@ import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 
 @Composable
-fun SwitchRow(
+fun TextRow(
     label: String,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
+    onClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable {
-                onCheckedChange(!checked)
+                onClick()
             }
             .padding(horizontal = 16.dp)
             .height(64.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(text = label)
-        Spacer(Modifier.weight(1f))
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange
-        )
     }
 }
 
@@ -52,13 +44,12 @@ fun SwitchRow(
     showBackground = true
 )
 @Composable
-fun SwitchRowPreview() {
+fun TextRowPreview() {
     MockLocationsTheme {
         Surface {
-            SwitchRow(
-                label = "Clear route on stop",
-                checked = true,
-                onCheckedChange = { }
+            TextRow(
+                onClick = { },
+                label = "Manual"
             )
         }
     }
