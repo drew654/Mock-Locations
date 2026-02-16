@@ -18,12 +18,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.core.net.toUri
 import androidx.navigation.NavController
 import com.drew654.mocklocations.R
 import com.drew654.mocklocations.presentation.MockLocationsViewModel
+import com.drew654.mocklocations.presentation.settings_screen.components.MapStyleDialog
 import com.drew654.mocklocations.presentation.settings_screen.components.SwitchRow
 import com.drew654.mocklocations.presentation.settings_screen.components.TextRow
 
@@ -35,6 +39,7 @@ fun SettingsScreen(
 ) {
     val isUsingCrosshairs by viewModel.isUsingCrosshairs.collectAsState()
     val clearPointsOnStop by viewModel.clearRouteOnStop.collectAsState()
+    var isShowingMapStylesDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = Modifier
@@ -83,6 +88,12 @@ fun SettingsScreen(
                 }
             )
             TextRow(
+                label = "Map style",
+                onClick = {
+                    isShowingMapStylesDialog = true
+                }
+            )
+            TextRow(
                 label = "Manual",
                 onClick = {
                     Intent().apply {
@@ -106,4 +117,14 @@ fun SettingsScreen(
             )
         }
     }
+
+    MapStyleDialog(
+        isVisible = isShowingMapStylesDialog,
+        onDismiss = { isShowingMapStylesDialog = false },
+        selectedStyle = viewModel.mapStyle.collectAsState().value,
+        onStyleSelected = {
+            viewModel.setMapStyle(it)
+            isShowingMapStylesDialog = false
+        }
+    )
 }
