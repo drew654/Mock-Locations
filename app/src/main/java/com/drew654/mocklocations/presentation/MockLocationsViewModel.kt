@@ -10,6 +10,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.drew654.mocklocations.domain.SettingsManager
 import com.drew654.mocklocations.domain.model.LocationTarget
+import com.drew654.mocklocations.domain.model.MapStyle
 import com.drew654.mocklocations.domain.model.SavedCameraPosition
 import com.drew654.mocklocations.service.MockLocationService
 import com.drew654.mocklocations.service.MockLocationService.Companion.ACTION_RESTORE_STRAIGHT_LINE_MOCKING
@@ -55,6 +56,11 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = true
+    )
+    val mapStyle: StateFlow<MapStyle?> = settingsManager.mapStyleFlow.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
     )
 
     init {
@@ -207,6 +213,12 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     fun setIsUsingCrosshairs(enabled: Boolean) {
         viewModelScope.launch {
             settingsManager.setIsUsingCrosshairs(enabled)
+        }
+    }
+
+    fun setMapStyle(mapStyle: MapStyle?) {
+        viewModelScope.launch {
+            settingsManager.setMapStyle(mapStyle)
         }
     }
 }

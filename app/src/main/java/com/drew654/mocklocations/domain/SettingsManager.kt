@@ -10,7 +10,9 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.LocationTargetAdapter
+import com.drew654.mocklocations.domain.model.MapStyle
 import com.drew654.mocklocations.domain.model.RoutePoint
+import com.drew654.mocklocations.domain.model.getMapStyleByName
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.flow.Flow
@@ -28,6 +30,7 @@ class SettingsManager(private val context: Context) {
         val SPEED_METERS_PER_SEC = doublePreferencesKey("speed_meters_per_sec")
         val SAVED_ROUTES_JSON = stringPreferencesKey("saved_routes_json")
         val IS_USING_CROSSHAIRS = booleanPreferencesKey("is_using_crosshairs")
+        val MAP_STYLE = stringPreferencesKey("map_style")
     }
 
     private val gson = GsonBuilder()
@@ -162,6 +165,16 @@ class SettingsManager(private val context: Context) {
     suspend fun setIsUsingCrosshairs(enabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[IS_USING_CROSSHAIRS] = enabled
+        }
+    }
+
+    val mapStyleFlow: Flow<MapStyle?> = context.dataStore.data.map { preferences ->
+        getMapStyleByName(preferences[MAP_STYLE] ?: "")
+    }
+
+    suspend fun setMapStyle(mapStyle: MapStyle?) {
+        context.dataStore.edit { preferences ->
+            preferences[MAP_STYLE] = mapStyle?.name ?: ""
         }
     }
 }

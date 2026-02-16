@@ -66,17 +66,19 @@ fun MapScreen(
         mutableStateOf(Permission.FineLocation.isGranted(context))
     }
     var permissionToBeRequested by remember { mutableStateOf<Permission?>(null) }
-    val mapProperties by remember(hasLocationPermission) {
-        mutableStateOf(
-            MapProperties(
-                isMyLocationEnabled = hasLocationPermission,
-                mapStyleOptions = MapStyleOptions.loadRawResourceStyle(
-                    context,
-                    if (systemInDarkTheme) R.raw.map_style_night else R.raw.map_style_standard
-                )
-            )
+    val mapStyle by viewModel.mapStyle.collectAsState()
+    val mapProperties = MapProperties(
+        isMyLocationEnabled = hasLocationPermission,
+        mapStyleOptions = MapStyleOptions.loadRawResourceStyle(
+            context,
+            mapStyle?.resourceId
+                ?: if (systemInDarkTheme) {
+                    R.raw.map_style_night
+                } else {
+                    R.raw.map_style_standard
+                }
         )
-    }
+    )
     val mapUiSettings = MapUiSettings(
         compassEnabled = false,
         myLocationButtonEnabled = false,
