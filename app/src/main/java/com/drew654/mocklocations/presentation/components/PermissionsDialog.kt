@@ -31,7 +31,7 @@ fun PermissionsDialog(
         )
 
         is Permission.DeveloperOptions -> Triple(
-            "You need to enable Developer Options first. Go to Settings > About Phone and tap \"Build Number\" 7 times. \"Build Number\" may be found in \"About Phone > Software Information\" on Samsung devices.",
+            "You need to enable Developer Options first. Go to Settings > About Phone and tap \"Build Number\" 7 times. \"Build Number\" may be found in About Phone > Software Information on Samsung devices.",
             "Open About Phone",
             "Developer Options Required"
         )
