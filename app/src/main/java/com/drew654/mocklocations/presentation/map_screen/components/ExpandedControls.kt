@@ -25,7 +25,8 @@ fun ExpandedControls(
     isExpanded: Boolean,
     speedMetersPerSec: Double,
     onSpeedChanged: (Double) -> Unit,
-    onSpeedChangeFinished: (Double) -> Unit
+    onSpeedChangeFinished: (Double) -> Unit,
+    speedUnitLabel: String
 ) {
     if (isExpanded) {
         Row(
@@ -39,7 +40,7 @@ fun ExpandedControls(
                 modifier = Modifier.width(116.dp)
             ) {
                 Text(
-                    text = "${speedMetersPerSec.toInt()} m/s",
+                    text = "${speedMetersPerSec.toInt()} $speedUnitLabel",
                     modifier = Modifier
                         .background(
                             MaterialTheme.colorScheme.surfaceVariant,
@@ -85,7 +86,8 @@ fun ExpandedControlsPreview() {
                 isExpanded = true,
                 speedMetersPerSec = 30.0,
                 onSpeedChanged = { },
-                onSpeedChangeFinished = { }
+                onSpeedChangeFinished = { },
+                speedUnitLabel = "mph"
             )
         }
     }

@@ -102,6 +102,7 @@ fun MapScreen(
             permissionToBeRequested = Permission.FineLocation
         }
     }
+    val speedUnitLabel = viewModel.speedUnit.collectAsState().value.name
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -340,7 +341,8 @@ fun MapScreen(
                 },
                 onSpeedChangeFinished = {
                     viewModel.saveSpeedMetersPerSec(speedMetersPerSec)
-                }
+                },
+                speedUnitLabel = speedUnitLabel
             )
         }
     }
