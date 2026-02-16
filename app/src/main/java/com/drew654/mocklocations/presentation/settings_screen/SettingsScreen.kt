@@ -28,6 +28,7 @@ import androidx.navigation.NavController
 import com.drew654.mocklocations.R
 import com.drew654.mocklocations.presentation.MockLocationsViewModel
 import com.drew654.mocklocations.presentation.settings_screen.components.MapStyleDialog
+import com.drew654.mocklocations.presentation.settings_screen.components.SpeedUnitDialog
 import com.drew654.mocklocations.presentation.settings_screen.components.SwitchRow
 import com.drew654.mocklocations.presentation.settings_screen.components.TextRow
 
@@ -40,6 +41,7 @@ fun SettingsScreen(
     val isUsingCrosshairs by viewModel.isUsingCrosshairs.collectAsState()
     val clearPointsOnStop by viewModel.clearRouteOnStop.collectAsState()
     var isShowingMapStylesDialog by remember { mutableStateOf(false) }
+    var isShowingSpeedUnitDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = Modifier
@@ -94,6 +96,12 @@ fun SettingsScreen(
                 }
             )
             TextRow(
+                label = "Speed unit",
+                onClick = {
+                    isShowingSpeedUnitDialog = true
+                }
+            )
+            TextRow(
                 label = "Manual",
                 onClick = {
                     Intent().apply {
@@ -125,6 +133,16 @@ fun SettingsScreen(
         onStyleSelected = {
             viewModel.setMapStyle(it)
             isShowingMapStylesDialog = false
+        }
+    )
+
+    SpeedUnitDialog(
+        isVisible = isShowingSpeedUnitDialog,
+        onDismiss = { isShowingSpeedUnitDialog = false },
+        selectedUnit = viewModel.speedUnit.collectAsState().value,
+        onUnitSelected = {
+            viewModel.setSpeedUnit(it)
+            isShowingSpeedUnitDialog = false
         }
     )
 }

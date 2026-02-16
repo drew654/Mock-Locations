@@ -12,7 +12,9 @@ import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.LocationTargetAdapter
 import com.drew654.mocklocations.domain.model.MapStyle
 import com.drew654.mocklocations.domain.model.RoutePoint
+import com.drew654.mocklocations.domain.model.SpeedUnit
 import com.drew654.mocklocations.domain.model.getMapStyleByName
+import com.drew654.mocklocations.domain.model.getSpeedUnitByName
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.flow.Flow
@@ -31,6 +33,7 @@ class SettingsManager(private val context: Context) {
         val SAVED_ROUTES_JSON = stringPreferencesKey("saved_routes_json")
         val IS_USING_CROSSHAIRS = booleanPreferencesKey("is_using_crosshairs")
         val MAP_STYLE = stringPreferencesKey("map_style")
+        val SPEED_UNIT = stringPreferencesKey("speed_unit")
     }
 
     private val gson = GsonBuilder()
@@ -175,6 +178,16 @@ class SettingsManager(private val context: Context) {
     suspend fun setMapStyle(mapStyle: MapStyle?) {
         context.dataStore.edit { preferences ->
             preferences[MAP_STYLE] = mapStyle?.name ?: ""
+        }
+    }
+
+    val speedUnitFlow: Flow<SpeedUnit> = context.dataStore.data.map { preferences ->
+        getSpeedUnitByName(preferences[SPEED_UNIT] ?: "")
+    }
+
+    suspend fun setSpeedUnit(speedUnit: SpeedUnit) {
+        context.dataStore.edit { preferences ->
+            preferences[SPEED_UNIT] = speedUnit.name
         }
     }
 }

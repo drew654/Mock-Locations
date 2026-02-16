@@ -12,6 +12,7 @@ import com.drew654.mocklocations.domain.SettingsManager
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.MapStyle
 import com.drew654.mocklocations.domain.model.SavedCameraPosition
+import com.drew654.mocklocations.domain.model.SpeedUnit
 import com.drew654.mocklocations.service.MockLocationService
 import com.drew654.mocklocations.service.MockLocationService.Companion.ACTION_RESTORE_STRAIGHT_LINE_MOCKING
 import com.drew654.mocklocations.service.MockLocationService.Companion.ACTION_START_MOCKING
@@ -61,6 +62,11 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = null
+    )
+    val speedUnit: StateFlow<SpeedUnit> = settingsManager.speedUnitFlow.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = SpeedUnit.MetersPerSecond
     )
 
     init {
@@ -219,6 +225,12 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     fun setMapStyle(mapStyle: MapStyle?) {
         viewModelScope.launch {
             settingsManager.setMapStyle(mapStyle)
+        }
+    }
+
+    fun setSpeedUnit(speedUnit: SpeedUnit) {
+        viewModelScope.launch {
+            settingsManager.setSpeedUnit(speedUnit)
         }
     }
 }
