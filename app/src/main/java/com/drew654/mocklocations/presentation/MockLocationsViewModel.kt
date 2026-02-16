@@ -59,9 +59,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
 
     init {
         viewModelScope.launch {
-            settingsManager.speedMetersPerSecFlow.collect {
-                _speedMetersPerSec.value = it
-            }
+            _speedMetersPerSec.value = settingsManager.speedMetersPerSecFlow.first()
         }
 
         viewModelScope.launch {
