@@ -28,6 +28,7 @@ import androidx.navigation.NavController
 import com.drew654.mocklocations.R
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.Permission
+import com.drew654.mocklocations.domain.model.SpeedUnitValue
 import com.drew654.mocklocations.domain.model.isGranted
 import com.drew654.mocklocations.presentation.MockLocationsViewModel
 import com.drew654.mocklocations.presentation.components.PermissionsDialog
@@ -61,7 +62,7 @@ fun MapScreen(
     val locationTarget by viewModel.activeLocationTarget.collectAsState()
     val isMocking by viewModel.isMocking.collectAsState()
     val isPaused by viewModel.isPaused.collectAsState()
-    val speedMetersPerSec by viewModel.speedMetersPerSec.collectAsState()
+    val speedUnitValue by viewModel.speedUnitValue.collectAsState()
     var hasLocationPermission by remember {
         mutableStateOf(Permission.FineLocation.isGranted(context))
     }
@@ -102,7 +103,6 @@ fun MapScreen(
             permissionToBeRequested = Permission.FineLocation
         }
     }
-    val speedUnitLabel = viewModel.speedUnit.collectAsState().value.name
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -335,14 +335,19 @@ fun MapScreen(
             }
             ExpandedControls(
                 isExpanded = controlsAreExpanded,
-                speedMetersPerSec = speedMetersPerSec,
+                speedUnitValue = speedUnitValue,
                 onSpeedChanged = {
-                    viewModel.setSpeedMetersPerSec(it)
+                    viewModel.setSpeedUnitValue(speedUnitValue)
+                    viewModel.setSpeedUnitValue(
+                        SpeedUnitValue(
+                            value = it,
+                            speedUnit = speedUnitValue.speedUnit
+                        )
+                    )
                 },
                 onSpeedChangeFinished = {
-                    viewModel.saveSpeedMetersPerSec(speedMetersPerSec)
-                },
-                speedUnitLabel = speedUnitLabel
+                    viewModel.saveSpeedUnitValue(speedUnitValue)
+                }
             )
         }
     }

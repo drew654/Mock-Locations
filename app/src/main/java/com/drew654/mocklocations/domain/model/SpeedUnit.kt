@@ -6,10 +6,10 @@ sealed class SpeedUnit(val name: String) {
     object MilesPerHour : SpeedUnit("mph")
 }
 
-fun getSpeedUnitByName(name: String): SpeedUnit {
-    return when (name) {
-        SpeedUnit.MetersPerSecond.name -> SpeedUnit.MetersPerSecond
-        SpeedUnit.KilometersPerHour.name -> SpeedUnit.KilometersPerHour
-        else -> SpeedUnit.MilesPerHour
+fun SpeedUnit.toMetersPerSecond(speed: Double): Double {
+    return when (this) {
+        SpeedUnit.MetersPerSecond -> speed
+        SpeedUnit.KilometersPerHour -> speed * 0.277778
+        SpeedUnit.MilesPerHour -> speed * 0.44704
     }
 }

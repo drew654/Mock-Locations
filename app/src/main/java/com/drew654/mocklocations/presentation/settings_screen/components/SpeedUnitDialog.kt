@@ -16,12 +16,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.drew654.mocklocations.domain.model.SpeedUnit
+import com.drew654.mocklocations.domain.model.SpeedUnitValue
 
 @Composable
 fun SpeedUnitDialog(
     isVisible: Boolean,
-    selectedUnit: SpeedUnit,
-    onUnitSelected: (SpeedUnit) -> Unit,
+    selectedSpeedUnitValue: SpeedUnitValue,
+    onSpeedUnitValueSelected: (SpeedUnitValue) -> Unit,
     onDismiss: () -> Unit
 ) {
     val speedUnits = listOf(
@@ -45,15 +46,15 @@ fun SpeedUnitDialog(
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(8.dp))
                                 .clickable {
-                                    onUnitSelected(it)
+                                    onSpeedUnitValueSelected(SpeedUnitValue(value = selectedSpeedUnitValue.value, speedUnit = it))
                                     onDismiss()
                                 },
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             RadioButton(
-                                selected = it == selectedUnit,
+                                selected = it == selectedSpeedUnitValue.speedUnit,
                                 onClick = {
-                                    onUnitSelected(it)
+                                    onSpeedUnitValueSelected(SpeedUnitValue(value = selectedSpeedUnitValue.value, speedUnit = it))
                                     onDismiss()
                                 }
                             )

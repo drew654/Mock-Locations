@@ -143,9 +143,10 @@ fun SettingsScreen(
     SpeedUnitDialog(
         isVisible = isShowingSpeedUnitDialog,
         onDismiss = { isShowingSpeedUnitDialog = false },
-        selectedUnit = viewModel.speedUnit.collectAsState().value,
-        onUnitSelected = {
-            viewModel.setSpeedUnit(it)
+        selectedSpeedUnitValue = viewModel.speedUnitValue.collectAsState().value,
+        onSpeedUnitValueSelected = {
+            viewModel.setSpeedUnitValue(it)
+            viewModel.saveSpeedUnitValue(it)
             isShowingSpeedUnitDialog = false
         }
     )

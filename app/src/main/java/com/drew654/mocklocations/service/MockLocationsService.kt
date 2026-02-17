@@ -15,6 +15,7 @@ import com.drew654.mocklocations.R
 import com.drew654.mocklocations.domain.SettingsManager
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.RoutePoint
+import com.drew654.mocklocations.domain.model.toMetersPerSecond
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -222,9 +223,9 @@ class MockLocationService : Service() {
                     Toast.LENGTH_SHORT
                 ).show()
 
-                var currentSpeed = 30.0
+                var currentSpeedMetersPerSec = 30.0
                 launch {
-                    settingsManager.speedMetersPerSecFlow.collect { currentSpeed = it }
+                    settingsManager.speedUnitValueFlow.collect { currentSpeedMetersPerSec = it.speedUnit.toMetersPerSecond(it.value) }
                 }
 
                 val updateIntervalMs = 1000L
@@ -251,7 +252,7 @@ class MockLocationService : Service() {
                         continue
                     }
 
-                    distanceAccumulator += currentSpeed * (updateIntervalMs / 1000.0)
+                    distanceAccumulator += currentSpeedMetersPerSec * (updateIntervalMs / 1000.0)
 
                     while (distanceAccumulator >= metersPerPoint && index < routePoints.size) {
                         distanceAccumulator -= metersPerPoint
@@ -264,7 +265,7 @@ class MockLocationService : Service() {
                         latitude = routePoint.latLng.latitude
                         longitude = routePoint.latLng.longitude
                         bearing = routePoint.bearing
-                        speed = currentSpeed.toFloat()
+                        speed = currentSpeedMetersPerSec.toFloat()
                         time = System.currentTimeMillis()
                         elapsedRealtimeNanos = SystemClock.elapsedRealtimeNanos()
                         accuracy = 3f

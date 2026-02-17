@@ -13,6 +13,7 @@ import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.MapStyle
 import com.drew654.mocklocations.domain.model.SavedCameraPosition
 import com.drew654.mocklocations.domain.model.SpeedUnit
+import com.drew654.mocklocations.domain.model.SpeedUnitValue
 import com.drew654.mocklocations.service.MockLocationService
 import com.drew654.mocklocations.service.MockLocationService.Companion.ACTION_RESTORE_STRAIGHT_LINE_MOCKING
 import com.drew654.mocklocations.service.MockLocationService.Companion.ACTION_START_MOCKING
@@ -34,8 +35,8 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     private val _controlsAreExpanded = MutableStateFlow(false)
     val controlsAreExpanded: StateFlow<Boolean> = _controlsAreExpanded.asStateFlow()
     private val settingsManager = SettingsManager(application)
-    private val _speedMetersPerSec = MutableStateFlow(30.0)
-    val speedMetersPerSec: StateFlow<Double> = _speedMetersPerSec.asStateFlow()
+    private val _speedUnitValue = MutableStateFlow(SpeedUnitValue(value = 30.0, speedUnit = SpeedUnit.MetersPerSecond))
+    val speedUnitValue: StateFlow<SpeedUnitValue> = _speedUnitValue.asStateFlow()
     val activeLocationTarget =
         settingsManager.activeLocationTargetFlow
             .stateIn(
@@ -63,15 +64,10 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = null
     )
-    val speedUnit: StateFlow<SpeedUnit> = settingsManager.speedUnitFlow.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = SpeedUnit.MetersPerSecond
-    )
 
     init {
         viewModelScope.launch {
-            _speedMetersPerSec.value = settingsManager.speedMetersPerSecFlow.first()
+            _speedUnitValue.value = settingsManager.speedUnitValueFlow.first()
         }
 
         viewModelScope.launch {
@@ -145,8 +141,8 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
-    fun setSpeedMetersPerSec(speed: Double) {
-        _speedMetersPerSec.value = speed
+    fun setSpeedUnitValue(speedUnitValue: SpeedUnitValue) {
+        _speedUnitValue.value = speedUnitValue
     }
 
     fun startMockLocation(context: Context) {
@@ -210,9 +206,9 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
-    fun saveSpeedMetersPerSec(speed: Double) {
+    fun saveSpeedUnitValue(speedUnitValue: SpeedUnitValue) {
         viewModelScope.launch {
-            settingsManager.setSpeedMetersPerSec(speed)
+            settingsManager.setSpeedUnitValue(speedUnitValue)
         }
     }
 
@@ -225,12 +221,6 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     fun setMapStyle(mapStyle: MapStyle?) {
         viewModelScope.launch {
             settingsManager.setMapStyle(mapStyle)
-        }
-    }
-
-    fun setSpeedUnit(speedUnit: SpeedUnit) {
-        viewModelScope.launch {
-            settingsManager.setSpeedUnit(speedUnit)
         }
     }
 }

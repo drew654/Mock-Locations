@@ -18,15 +18,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.drew654.mocklocations.domain.model.SpeedUnit
+import com.drew654.mocklocations.domain.model.SpeedUnitValue
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 
 @Composable
 fun ExpandedControls(
     isExpanded: Boolean,
-    speedMetersPerSec: Double,
+    speedUnitValue: SpeedUnitValue,
     onSpeedChanged: (Double) -> Unit,
-    onSpeedChangeFinished: (Double) -> Unit,
-    speedUnitLabel: String
+    onSpeedChangeFinished: (SpeedUnitValue) -> Unit
 ) {
     if (isExpanded) {
         Row(
@@ -40,7 +41,7 @@ fun ExpandedControls(
                 modifier = Modifier.width(116.dp)
             ) {
                 Text(
-                    text = "${speedMetersPerSec.toInt()} $speedUnitLabel",
+                    text = "${speedUnitValue.value.toInt()} ${speedUnitValue.speedUnit.name}",
                     modifier = Modifier
                         .background(
                             MaterialTheme.colorScheme.surfaceVariant,
@@ -52,7 +53,7 @@ fun ExpandedControls(
             }
             Spacer(modifier = Modifier.weight(1f))
             Slider(
-                value = speedMetersPerSec.toFloat(),
+                value = speedUnitValue.value.toFloat(),
                 onValueChange = {
                     onSpeedChanged(it.toDouble())
                 },
@@ -61,7 +62,7 @@ fun ExpandedControls(
                     .fillMaxWidth()
                 ,
                 onValueChangeFinished = {
-                    onSpeedChangeFinished(speedMetersPerSec)
+                    onSpeedChangeFinished(speedUnitValue)
                 },
                 valueRange = 0f..100f
             )
@@ -84,10 +85,9 @@ fun ExpandedControlsPreview() {
         Surface {
             ExpandedControls(
                 isExpanded = true,
-                speedMetersPerSec = 30.0,
+                speedUnitValue = SpeedUnitValue(value = 30.0, speedUnit = SpeedUnit.MetersPerSecond),
                 onSpeedChanged = { },
-                onSpeedChangeFinished = { },
-                speedUnitLabel = "mph"
+                onSpeedChangeFinished = { }
             )
         }
     }
