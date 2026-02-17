@@ -29,6 +29,7 @@ import androidx.core.net.toUri
 import androidx.navigation.NavController
 import com.drew654.mocklocations.R
 import com.drew654.mocklocations.presentation.MockLocationsViewModel
+import com.drew654.mocklocations.presentation.Screen
 import com.drew654.mocklocations.presentation.settings_screen.components.MapStyleDialog
 import com.drew654.mocklocations.presentation.settings_screen.components.SpeedUnitDialog
 import com.drew654.mocklocations.presentation.settings_screen.components.SwitchRow
@@ -108,6 +109,12 @@ fun SettingsScreen(
                     isShowingSpeedUnitDialog = true
                 },
                 value = speedUnitValue.speedUnit.name
+            )
+            TextRow(
+                label = "Configure expanded controls",
+                onClick = {
+                    navController.navigate(Screen.ExpandedControlsConfiguration.route)
+                }
             )
             TextRow(
                 label = "Manual",

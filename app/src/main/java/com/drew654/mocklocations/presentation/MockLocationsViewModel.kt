@@ -64,6 +64,16 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = null
     )
+    val speedSliderLowerEnd: StateFlow<Int> = settingsManager.speedSliderLowerEndFlow.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = 0
+    )
+    val speedSliderUpperEnd: StateFlow<Int> = settingsManager.speedSliderUpperEndFlow.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = 100
+    )
 
     init {
         viewModelScope.launch {
@@ -221,6 +231,18 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     fun setMapStyle(mapStyle: MapStyle?) {
         viewModelScope.launch {
             settingsManager.setMapStyle(mapStyle)
+        }
+    }
+
+    fun setSpeedSliderLowerEnd(value: Int) {
+        viewModelScope.launch {
+            settingsManager.setSpeedSliderLowerEnd(value)
+        }
+    }
+
+    fun setSpeedSliderUpperEnd(value: Int) {
+        viewModelScope.launch {
+            settingsManager.setSpeedSliderUpperEnd(value)
         }
     }
 }

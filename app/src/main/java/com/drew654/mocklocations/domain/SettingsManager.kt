@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.drew654.mocklocations.domain.model.LocationTarget
@@ -33,6 +34,8 @@ class SettingsManager(private val context: Context) {
         val IS_USING_CROSSHAIRS = booleanPreferencesKey("is_using_crosshairs")
         val MAP_STYLE = stringPreferencesKey("map_style")
         val SPEED_UNIT_VALUE_JSON = stringPreferencesKey("speed_unit_value_json")
+        val SPEED_SLIDER_UPPER_END = intPreferencesKey("speed_slider_upper_end")
+        val SPEED_SLIDER_LOWER_END = intPreferencesKey("speed_slider_lower_end")
     }
 
     private val gson = GsonBuilder()
@@ -180,6 +183,26 @@ class SettingsManager(private val context: Context) {
     suspend fun setMapStyle(mapStyle: MapStyle?) {
         context.dataStore.edit { preferences ->
             preferences[MAP_STYLE] = mapStyle?.name ?: ""
+        }
+    }
+
+    val speedSliderUpperEndFlow: Flow<Int> = context.dataStore.data.map { preferences ->
+        preferences[SPEED_SLIDER_UPPER_END] ?: 100
+    }
+
+    suspend fun setSpeedSliderUpperEnd(value: Int) {
+        context.dataStore.edit { preferences ->
+            preferences[SPEED_SLIDER_UPPER_END] = value
+        }
+    }
+
+    val speedSliderLowerEndFlow: Flow<Int> = context.dataStore.data.map { preferences ->
+        preferences[SPEED_SLIDER_LOWER_END] ?: 0
+    }
+
+    suspend fun setSpeedSliderLowerEnd(value: Int) {
+        context.dataStore.edit { preferences ->
+            preferences[SPEED_SLIDER_LOWER_END] = value
         }
     }
 }
