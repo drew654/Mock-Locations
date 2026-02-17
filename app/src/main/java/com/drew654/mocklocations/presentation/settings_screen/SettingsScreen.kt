@@ -45,6 +45,8 @@ fun SettingsScreen(
     var isShowingMapStylesDialog by remember { mutableStateOf(false) }
     var isShowingSpeedUnitDialog by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
+    val mapStyle by viewModel.mapStyle.collectAsState()
+    val speedUnitValue by viewModel.speedUnitValue.collectAsState()
 
     Scaffold(
         modifier = Modifier
@@ -97,13 +99,15 @@ fun SettingsScreen(
                 label = "Map style",
                 onClick = {
                     isShowingMapStylesDialog = true
-                }
+                },
+                value = mapStyle?.name ?: "Default"
             )
             TextRow(
                 label = "Speed unit",
                 onClick = {
                     isShowingSpeedUnitDialog = true
-                }
+                },
+                value = speedUnitValue.speedUnit.name
             )
             TextRow(
                 label = "Manual",
@@ -133,7 +137,7 @@ fun SettingsScreen(
     MapStyleDialog(
         isVisible = isShowingMapStylesDialog,
         onDismiss = { isShowingMapStylesDialog = false },
-        selectedStyle = viewModel.mapStyle.collectAsState().value,
+        selectedStyle = mapStyle,
         onStyleSelected = {
             viewModel.setMapStyle(it)
             isShowingMapStylesDialog = false
@@ -143,7 +147,7 @@ fun SettingsScreen(
     SpeedUnitDialog(
         isVisible = isShowingSpeedUnitDialog,
         onDismiss = { isShowingSpeedUnitDialog = false },
-        selectedSpeedUnitValue = viewModel.speedUnitValue.collectAsState().value,
+        selectedSpeedUnitValue = speedUnitValue,
         onSpeedUnitValueSelected = {
             viewModel.setSpeedUnitValue(it)
             viewModel.saveSpeedUnitValue(it)
