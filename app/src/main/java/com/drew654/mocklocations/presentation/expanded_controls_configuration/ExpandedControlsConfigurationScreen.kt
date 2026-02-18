@@ -20,13 +20,19 @@ fun ExpandedControlsConfigurationScreen(
         speedUnitLabel = speedUnitValue.speedUnit.name,
         originalSpeedSliderLowerEnd = speedSliderLowerEnd,
         originalSpeedSliderUpperEnd = speedSliderUpperEnd,
-        onSetSpeedSliderLowerEnd = {
-            viewModel.setSpeedSliderLowerEnd(it)
-        },
-        onSetSpeedSliderUpperEnd = {
-            viewModel.setSpeedSliderUpperEnd(it)
-        },
-        onSaved = {
+        onSaved = { speedSliderLowerEnd, speedSliderUpperEnd ->
+            if (speedUnitValue.value < speedSliderLowerEnd) {
+                viewModel.setSpeedUnitValue(
+                    speedUnitValue.copy(value = speedSliderLowerEnd.toDouble())
+                )
+            }
+            if (speedUnitValue.value > speedSliderUpperEnd) {
+                viewModel.setSpeedUnitValue(
+                    speedUnitValue.copy(value = speedSliderUpperEnd.toDouble())
+                )
+            }
+            viewModel.setSpeedSliderLowerEnd(speedSliderLowerEnd)
+            viewModel.setSpeedSliderUpperEnd(speedSliderUpperEnd)
             navController.popBackStack()
         }
     )

@@ -1,6 +1,7 @@
 package com.drew654.mocklocations.presentation.expanded_controls_configuration.components
 
 import android.content.res.Configuration
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -27,6 +28,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -39,10 +41,9 @@ fun ExpandedControlsConfigurationContent(
     speedUnitLabel: String,
     originalSpeedSliderLowerEnd: Int,
     originalSpeedSliderUpperEnd: Int,
-    onSetSpeedSliderLowerEnd: (Int) -> Unit,
-    onSetSpeedSliderUpperEnd: (Int) -> Unit,
-    onSaved: () -> Unit
+    onSaved: (Int, Int) -> Unit
 ) {
+    val context = LocalContext.current
     val focusManager = LocalFocusManager.current
     var speedSliderLowerEnd by remember(originalSpeedSliderLowerEnd) {
         mutableStateOf(originalSpeedSliderLowerEnd.toString())
@@ -116,9 +117,9 @@ fun ExpandedControlsConfigurationContent(
         TextButton(
             onClick = {
                 if (formIsValid()) {
-                    onSetSpeedSliderLowerEnd(speedSliderLowerEnd.toInt())
-                    onSetSpeedSliderUpperEnd(speedSliderUpperEnd.toInt())
-                    onSaved()
+                    onSaved(speedSliderLowerEnd.toInt(), speedSliderUpperEnd.toInt())
+                } else {
+                    Toast.makeText(context, "Invalid values", Toast.LENGTH_SHORT).show()
                 }
             },
             modifier = Modifier.fillMaxWidth()
@@ -145,9 +146,7 @@ fun ExpandableControlsConfigurationContentPreview() {
                 speedUnitLabel = "mph",
                 originalSpeedSliderLowerEnd = 0,
                 originalSpeedSliderUpperEnd = 100,
-                onSetSpeedSliderLowerEnd = { },
-                onSetSpeedSliderUpperEnd = { },
-                onSaved = { }
+                onSaved = { _, _ -> }
             )
         }
     }

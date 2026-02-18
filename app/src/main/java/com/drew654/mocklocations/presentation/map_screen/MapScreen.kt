@@ -103,6 +103,8 @@ fun MapScreen(
             permissionToBeRequested = Permission.FineLocation
         }
     }
+    val speedSliderLowerEnd by viewModel.speedSliderLowerEnd.collectAsState()
+    val speedSliderUpperEnd by viewModel.speedSliderUpperEnd.collectAsState()
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -347,7 +349,9 @@ fun MapScreen(
                 },
                 onSpeedChangeFinished = {
                     viewModel.saveSpeedUnitValue(speedUnitValue)
-                }
+                },
+                sliderLowerEnd = speedSliderLowerEnd,
+                sliderUpperEnd = speedSliderUpperEnd
             )
         }
     }
