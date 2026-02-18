@@ -31,7 +31,6 @@ import com.drew654.mocklocations.R
 import com.drew654.mocklocations.presentation.MockLocationsViewModel
 import com.drew654.mocklocations.presentation.Screen
 import com.drew654.mocklocations.presentation.settings_screen.components.MapStyleDialog
-import com.drew654.mocklocations.presentation.settings_screen.components.SpeedUnitDialog
 import com.drew654.mocklocations.presentation.settings_screen.components.SwitchRow
 import com.drew654.mocklocations.presentation.settings_screen.components.TextRow
 
@@ -44,10 +43,8 @@ fun SettingsScreen(
     val isUsingCrosshairs by viewModel.isUsingCrosshairs.collectAsState()
     val clearPointsOnStop by viewModel.clearRouteOnStop.collectAsState()
     var isShowingMapStylesDialog by remember { mutableStateOf(false) }
-    var isShowingSpeedUnitDialog by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
     val mapStyle by viewModel.mapStyle.collectAsState()
-    val speedUnitValue by viewModel.speedUnitValue.collectAsState()
 
     Scaffold(
         modifier = Modifier
@@ -104,13 +101,6 @@ fun SettingsScreen(
                 value = mapStyle?.name ?: "Default"
             )
             TextRow(
-                label = "Speed unit",
-                onClick = {
-                    isShowingSpeedUnitDialog = true
-                },
-                value = speedUnitValue.speedUnit.name
-            )
-            TextRow(
                 label = "Configure expanded controls",
                 onClick = {
                     navController.navigate(Screen.ExpandedControlsConfiguration.route)
@@ -148,17 +138,6 @@ fun SettingsScreen(
         onStyleSelected = {
             viewModel.setMapStyle(it)
             isShowingMapStylesDialog = false
-        }
-    )
-
-    SpeedUnitDialog(
-        isVisible = isShowingSpeedUnitDialog,
-        onDismiss = { isShowingSpeedUnitDialog = false },
-        selectedSpeedUnitValue = speedUnitValue,
-        onSpeedUnitValueSelected = {
-            viewModel.setSpeedUnitValue(it)
-            viewModel.saveSpeedUnitValue(it)
-            isShowingSpeedUnitDialog = false
         }
     )
 }

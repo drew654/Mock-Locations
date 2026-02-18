@@ -41,19 +41,27 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.R
+import com.drew654.mocklocations.domain.model.SpeedUnit
+import com.drew654.mocklocations.domain.model.SpeedUnitValue
+import com.drew654.mocklocations.presentation.settings_screen.components.SpeedUnitDialog
+import com.drew654.mocklocations.presentation.settings_screen.components.TextRow
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExpandedControlsConfigurationContent(
-    speedUnitLabel: String,
+    originalSpeedUnitValue: SpeedUnitValue,
     originalSpeedSliderLowerEnd: Int,
     originalSpeedSliderUpperEnd: Int,
-    onSaved: (Int, Int) -> Unit,
+    onSaved: (SpeedUnitValue, Int, Int) -> Unit,
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
+    var isShowingSpeedUnitDialog by remember { mutableStateOf(false) }
+    var speedUnitValue by remember(originalSpeedUnitValue) {
+        mutableStateOf(originalSpeedUnitValue)
+    }
     var speedSliderLowerEnd by remember(originalSpeedSliderLowerEnd) {
         mutableStateOf(originalSpeedSliderLowerEnd.toString())
     }
@@ -106,20 +114,26 @@ fun ExpandedControlsConfigurationContent(
                     focusManager.clearFocus()
                 }
                 .padding(innerPadding)
-                .padding(16.dp)
                 .windowInsetsPadding(
                     WindowInsets.displayCutout.only(
                         WindowInsetsSides.Horizontal
                     )
                 )
         ) {
-            Text("Speed slider bounds ($speedUnitLabel)")
+            TextRow(
+                label = "Speed unit",
+                onClick = {
+                    isShowingSpeedUnitDialog = true
+                },
+                value = speedUnitValue.speedUnit.name
+            )
 
             OutlinedTextField(
                 value = speedSliderLowerEnd,
                 onValueChange = {
                     speedSliderLowerEnd = it
                 },
+                modifier = Modifier.padding(horizontal = 16.dp),
                 label = { Text("Lower end") },
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Number,
@@ -137,6 +151,7 @@ fun ExpandedControlsConfigurationContent(
                 onValueChange = {
                     speedSliderUpperEnd = it
                 },
+                modifier = Modifier.padding(horizontal = 16.dp),
                 label = { Text("Upper end") },
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Number,
@@ -154,17 +169,29 @@ fun ExpandedControlsConfigurationContent(
             TextButton(
                 onClick = {
                     if (formIsValid()) {
-                        onSaved(speedSliderLowerEnd.toInt(), speedSliderUpperEnd.toInt())
+                        onSaved(speedUnitValue, speedSliderLowerEnd.toInt(), speedSliderUpperEnd.toInt())
                     } else {
                         Toast.makeText(context, "Invalid values", Toast.LENGTH_SHORT).show()
                     }
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
             ) {
                 Text("Save")
             }
         }
     }
+
+    SpeedUnitDialog(
+        isVisible = isShowingSpeedUnitDialog,
+        onDismiss = { isShowingSpeedUnitDialog = false },
+        selectedSpeedUnitValue = speedUnitValue,
+        onSpeedUnitValueSelected = {
+            speedUnitValue = it
+            isShowingSpeedUnitDialog = false
+        }
+    )
 }
 
 @Preview(
@@ -181,10 +208,10 @@ fun ExpandableControlsConfigurationContentPreview() {
     MockLocationsTheme {
         Surface {
             ExpandedControlsConfigurationContent(
-                speedUnitLabel = "mph",
+                originalSpeedUnitValue = SpeedUnitValue(30.0, SpeedUnit.MilesPerHour),
                 originalSpeedSliderLowerEnd = 0,
                 originalSpeedSliderUpperEnd = 100,
-                onSaved = { _, _ -> },
+                onSaved = { _, _, _ -> },
                 onBack = { }
             )
         }

@@ -17,19 +17,23 @@ fun ExpandedControlsConfigurationScreen(
     val speedSliderUpperEnd by viewModel.speedSliderUpperEnd.collectAsState()
 
     ExpandedControlsConfigurationContent(
-        speedUnitLabel = speedUnitValue.speedUnit.name,
+        originalSpeedUnitValue = speedUnitValue,
         originalSpeedSliderLowerEnd = speedSliderLowerEnd,
         originalSpeedSliderUpperEnd = speedSliderUpperEnd,
-        onSaved = { speedSliderLowerEnd, speedSliderUpperEnd ->
+        onSaved = { speedUnitValue, speedSliderLowerEnd, speedSliderUpperEnd ->
             if (speedUnitValue.value < speedSliderLowerEnd) {
                 viewModel.setSpeedUnitValue(
                     speedUnitValue.copy(value = speedSliderLowerEnd.toDouble())
                 )
+            } else {
+                viewModel.setSpeedUnitValue(speedUnitValue)
             }
             if (speedUnitValue.value > speedSliderUpperEnd) {
                 viewModel.setSpeedUnitValue(
                     speedUnitValue.copy(value = speedSliderUpperEnd.toDouble())
                 )
+            } else {
+                viewModel.saveSpeedUnitValue(speedUnitValue)
             }
             viewModel.setSpeedSliderLowerEnd(speedSliderLowerEnd)
             viewModel.setSpeedSliderUpperEnd(speedSliderUpperEnd)
