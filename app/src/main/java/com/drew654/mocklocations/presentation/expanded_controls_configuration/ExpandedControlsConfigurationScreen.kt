@@ -34,6 +34,9 @@ fun ExpandedControlsConfigurationScreen(
             viewModel.setSpeedSliderLowerEnd(speedSliderLowerEnd)
             viewModel.setSpeedSliderUpperEnd(speedSliderUpperEnd)
             navController.popBackStack()
+        },
+        onBack = {
+            navController.popBackStack()
         }
     )
 }
