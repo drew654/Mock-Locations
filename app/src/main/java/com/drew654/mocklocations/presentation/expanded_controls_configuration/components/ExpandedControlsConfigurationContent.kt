@@ -15,8 +15,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -58,6 +60,7 @@ fun ExpandedControlsConfigurationContent(
 ) {
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
+    val scrollState = rememberScrollState()
     var isShowingSpeedUnitDialog by remember { mutableStateOf(false) }
     var speedUnitValue by remember(originalSpeedUnitValue) {
         mutableStateOf(originalSpeedUnitValue)
@@ -80,12 +83,16 @@ fun ExpandedControlsConfigurationContent(
 
     Scaffold(
         modifier = Modifier
+            .background(MaterialTheme.colorScheme.background)
             .fillMaxSize()
             .windowInsetsPadding(
                 WindowInsets.displayCutout.only(
                     WindowInsetsSides.Horizontal
                 )
-            ),
+            )
+            .clickable(interactionSource = null, indication = null) {
+                focusManager.clearFocus()
+            },
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("Expanded Controls") },
@@ -106,77 +113,71 @@ fun ExpandedControlsConfigurationContent(
         }
     ) { innerPadding ->
         Column(
-            verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .clickable(interactionSource = null, indication = null) {
-                    focusManager.clearFocus()
-                }
                 .padding(innerPadding)
-                .windowInsetsPadding(
-                    WindowInsets.displayCutout.only(
-                        WindowInsetsSides.Horizontal
+        ) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier
+                    .weight(1f)
+                    .verticalScroll(scrollState)
+            ) {
+                TextRow(
+                    label = "Speed unit",
+                    onClick = {
+                        isShowingSpeedUnitDialog = true
+                    },
+                    value = speedUnitValue.speedUnit.name
+                )
+
+                OutlinedTextField(
+                    value = speedSliderLowerEnd,
+                    onValueChange = { speedSliderLowerEnd = it },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    label = { Text("Lower end") },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number,
+                        imeAction = ImeAction.Next
                     )
                 )
-        ) {
-            TextRow(
-                label = "Speed unit",
-                onClick = {
-                    isShowingSpeedUnitDialog = true
-                },
-                value = speedUnitValue.speedUnit.name
-            )
 
-            OutlinedTextField(
-                value = speedSliderLowerEnd,
-                onValueChange = {
-                    speedSliderLowerEnd = it
-                },
-                modifier = Modifier.padding(horizontal = 16.dp),
-                label = { Text("Lower end") },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Number,
-                    imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(
-                    onDone = {
-                        focusManager.clearFocus()
-                    }
+                OutlinedTextField(
+                    value = speedSliderUpperEnd,
+                    onValueChange = { speedSliderUpperEnd = it },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    label = { Text("Upper end") },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number,
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onDone = { focusManager.clearFocus() }
+                    )
                 )
-            )
 
-            OutlinedTextField(
-                value = speedSliderUpperEnd,
-                onValueChange = {
-                    speedSliderUpperEnd = it
-                },
-                modifier = Modifier.padding(horizontal = 16.dp),
-                label = { Text("Upper end") },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Number,
-                    imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(
-                    onDone = {
-                        focusManager.clearFocus()
-                    }
-                )
-            )
-
-            Spacer(Modifier.weight(1f))
+                Spacer(Modifier.padding(bottom = 16.dp))
+            }
 
             TextButton(
                 onClick = {
                     if (formIsValid()) {
-                        onSaved(speedUnitValue, speedSliderLowerEnd.toInt(), speedSliderUpperEnd.toInt())
+                        onSaved(
+                            speedUnitValue,
+                            speedSliderLowerEnd.toInt(),
+                            speedSliderUpperEnd.toInt()
+                        )
                     } else {
                         Toast.makeText(context, "Invalid values", Toast.LENGTH_SHORT).show()
                     }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
+                    .padding(8.dp)
             ) {
                 Text("Save")
             }
