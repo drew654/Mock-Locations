@@ -260,6 +260,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     }
 
     fun setIsCameraFollowingMockedLocation(value: Boolean) {
+        _isCameraCurrentlyFollowingMockedLocation.value = value
         viewModelScope.launch {
             settingsManager.setIsCameraFollowingMockedLocation(value)
         }
