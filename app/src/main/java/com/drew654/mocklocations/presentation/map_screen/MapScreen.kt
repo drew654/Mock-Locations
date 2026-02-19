@@ -106,7 +106,7 @@ fun MapScreen(
     val speedSliderLowerEnd by viewModel.speedSliderLowerEnd.collectAsState()
     val speedSliderUpperEnd by viewModel.speedSliderUpperEnd.collectAsState()
     val isCameraFollowingMockedLocation by viewModel.isCameraFollowingMockedLocation.collectAsState()
-    var isCameraCurrentlyFollowingMockedLocation by remember(isCameraFollowingMockedLocation) { mutableStateOf(isCameraFollowingMockedLocation) }
+    val isCameraCurrentlyFollowingMockedLocation by viewModel.isCameraCurrentlyFollowingMockedLocation.collectAsState()
     val currentMockedLocation by viewModel.currentMockedLocation.collectAsState()
 
     DisposableEffect(lifecycleOwner) {
@@ -164,7 +164,7 @@ fun MapScreen(
             cameraPositionState.isMoving to cameraPositionState.cameraMoveStartedReason
         }.collect { (isMoving, reason) ->
             if (isMoving && reason == CameraMoveStartedReason.GESTURE) {
-                isCameraCurrentlyFollowingMockedLocation = false
+                viewModel.setIsCameraCurrentlyFollowingMockedLocation(false)
             }
 
             if (!isMoving) {
@@ -294,7 +294,7 @@ fun MapScreen(
                             return@MapControlButtons
                         }
 
-                        isCameraCurrentlyFollowingMockedLocation = isCameraFollowingMockedLocation
+                        viewModel.setIsCameraCurrentlyFollowingMockedLocation(isCameraFollowingMockedLocation)
                         scope.launch {
                             if (isUsingCrosshairs && locationTarget is LocationTarget.Empty) {
                                 viewModel.pushPoint(cameraPositionState.position.target)
@@ -329,7 +329,7 @@ fun MapScreen(
                             return@MapControlButtons
                         }
 
-                        isCameraCurrentlyFollowingMockedLocation = isCameraFollowingMockedLocation
+                        viewModel.setIsCameraCurrentlyFollowingMockedLocation(isCameraFollowingMockedLocation)
                         scope.launch {
                             val fusedLocationClient =
                                 LocationServices.getFusedLocationProviderClient(context)
