@@ -36,6 +36,7 @@ class SettingsManager(private val context: Context) {
         val SPEED_UNIT_VALUE_JSON = stringPreferencesKey("speed_unit_value_json")
         val SPEED_SLIDER_UPPER_END = intPreferencesKey("speed_slider_upper_end")
         val SPEED_SLIDER_LOWER_END = intPreferencesKey("speed_slider_lower_end")
+        val IS_CAMERA_FOLLOWING_MOCKED_LOCATION = booleanPreferencesKey("is_camera_following_mocked_location")
     }
 
     private val gson = GsonBuilder()
@@ -203,6 +204,16 @@ class SettingsManager(private val context: Context) {
     suspend fun setSpeedSliderLowerEnd(value: Int) {
         context.dataStore.edit { preferences ->
             preferences[SPEED_SLIDER_LOWER_END] = value
+        }
+    }
+
+    val isCameraFollowingMockedLocation: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[IS_CAMERA_FOLLOWING_MOCKED_LOCATION] ?: true
+    }
+
+    suspend fun setIsCameraFollowingMockedLocation(value: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[IS_CAMERA_FOLLOWING_MOCKED_LOCATION] = value
         }
     }
 }

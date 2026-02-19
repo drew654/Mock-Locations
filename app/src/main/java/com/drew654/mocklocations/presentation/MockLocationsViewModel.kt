@@ -74,6 +74,11 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = 100
     )
+    val isCameraFollowingMockedLocation: StateFlow<Boolean> = settingsManager.isCameraFollowingMockedLocation.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = true
+    )
 
     init {
         viewModelScope.launch {
@@ -243,6 +248,12 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     fun setSpeedSliderUpperEnd(value: Int) {
         viewModelScope.launch {
             settingsManager.setSpeedSliderUpperEnd(value)
+        }
+    }
+
+    fun setIsCameraFollowingMockedLocation(value: Boolean) {
+        viewModelScope.launch {
+            settingsManager.setIsCameraFollowingMockedLocation(value)
         }
     }
 }

@@ -47,6 +47,7 @@ fun SettingsScreen(
     var isShowingMapStylesDialog by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
     val mapStyle by viewModel.mapStyle.collectAsState()
+    val isCameraFollowingMockedLocation by viewModel.isCameraFollowingMockedLocation.collectAsState()
 
     Scaffold(
         modifier = Modifier
@@ -94,6 +95,13 @@ fun SettingsScreen(
                 checked = clearPointsOnStop,
                 onCheckedChange = {
                     viewModel.setClearRouteOnStop(it)
+                }
+            )
+            SwitchRow(
+                label = "Camera follows mocked location",
+                checked = isCameraFollowingMockedLocation,
+                onCheckedChange = {
+                    viewModel.setIsCameraFollowingMockedLocation(it)
                 }
             )
             TextRow(
