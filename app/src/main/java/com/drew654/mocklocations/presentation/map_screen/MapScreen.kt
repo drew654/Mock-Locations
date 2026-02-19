@@ -176,7 +176,7 @@ fun MapScreen(
     LaunchedEffect(currentMockedLocation, isCameraFollowingMockedLocation) {
         if (isMocking && isCameraCurrentlyFollowingMockedLocation && currentMockedLocation != null) {
             cameraPositionState.move(
-                CameraUpdateFactory.newLatLngZoom(currentMockedLocation!!.latLng, 15f)
+                CameraUpdateFactory.newLatLng(currentMockedLocation!!.latLng)
             )
         }
     }
@@ -294,7 +294,10 @@ fun MapScreen(
                             return@MapControlButtons
                         }
 
-                        viewModel.setIsCameraCurrentlyFollowingMockedLocation(isCameraFollowingMockedLocation)
+                        if (isCameraFollowingMockedLocation) {
+                            viewModel.setIsCameraCurrentlyFollowingMockedLocation(true)
+                            cameraPositionState.move(CameraUpdateFactory.zoomTo(15f))
+                        }
                         scope.launch {
                             if (isUsingCrosshairs && locationTarget is LocationTarget.Empty) {
                                 viewModel.pushPoint(cameraPositionState.position.target)
@@ -329,7 +332,10 @@ fun MapScreen(
                             return@MapControlButtons
                         }
 
-                        viewModel.setIsCameraCurrentlyFollowingMockedLocation(isCameraFollowingMockedLocation)
+                        if (isCameraFollowingMockedLocation) {
+                            viewModel.setIsCameraCurrentlyFollowingMockedLocation(true)
+                            cameraPositionState.move(CameraUpdateFactory.zoomTo(15f))
+                        }
                         scope.launch {
                             val fusedLocationClient =
                                 LocationServices.getFusedLocationProviderClient(context)
@@ -349,7 +355,8 @@ fun MapScreen(
                             } catch (_: SecurityException) {
                             }
                         }
-                    }
+                    },
+                    isCameraCurrentlyFollowingMockedLocation = isCameraCurrentlyFollowingMockedLocation
                 )
             }
             ExpandedControls(

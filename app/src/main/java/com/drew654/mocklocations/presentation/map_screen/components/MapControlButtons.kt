@@ -48,7 +48,8 @@ fun MapControlButtons(
     isPaused: Boolean,
     isUsingCrosshairs: Boolean,
     onAddCrosshairsPoint: () -> Unit,
-    onUserLocationFocus: () -> Unit
+    onUserLocationFocus: () -> Unit,
+    isCameraCurrentlyFollowingMockedLocation: Boolean
 ) {
     val scope = rememberCoroutineScope()
 
@@ -90,6 +91,7 @@ fun MapControlButtons(
                 MapZoomButtons(
                     cameraPositionState = cameraPositionState,
                     scope = scope,
+                    isCameraCurrentlyFollowingMockedLocation = isCameraCurrentlyFollowingMockedLocation,
                     modifier = Modifier
                         .padding(12.dp)
                         .padding(bottom = 32.dp)
@@ -199,7 +201,8 @@ fun MapControlButtonsPreview() {
                 isPaused = false,
                 isUsingCrosshairs = true,
                 onAddCrosshairsPoint = { },
-                onUserLocationFocus = { }
+                onUserLocationFocus = { },
+                isCameraCurrentlyFollowingMockedLocation = false
             )
         }
     }
