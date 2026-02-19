@@ -16,7 +16,7 @@ android {
         applicationId = "com.drew654.mocklocations"
         minSdk = 31
         targetSdk = 36
-        versionCode = 8
+        versionCode = 9
         versionName = "0.3.0-alpha.1"
         setProperty("archivesBaseName", "mock-locations")
 
