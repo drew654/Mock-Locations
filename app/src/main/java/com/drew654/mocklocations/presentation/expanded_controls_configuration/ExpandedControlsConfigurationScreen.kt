@@ -21,19 +21,15 @@ fun ExpandedControlsConfigurationScreen(
         originalSpeedSliderLowerEnd = speedSliderLowerEnd,
         originalSpeedSliderUpperEnd = speedSliderUpperEnd,
         onSaved = { speedUnitValue, speedSliderLowerEnd, speedSliderUpperEnd ->
+            viewModel.setSpeedUnitValue(speedUnitValue)
+            viewModel.saveSpeedUnitValue(speedUnitValue)
             if (speedUnitValue.value < speedSliderLowerEnd) {
-                viewModel.setSpeedUnitValue(
-                    speedUnitValue.copy(value = speedSliderLowerEnd.toDouble())
-                )
-            } else {
-                viewModel.setSpeedUnitValue(speedUnitValue)
+                viewModel.setSpeedUnitValue(speedUnitValue.copy(value = speedSliderLowerEnd.toDouble()))
+                viewModel.saveSpeedUnitValue(speedUnitValue.copy(value = speedSliderLowerEnd.toDouble()))
             }
             if (speedUnitValue.value > speedSliderUpperEnd) {
-                viewModel.setSpeedUnitValue(
-                    speedUnitValue.copy(value = speedSliderUpperEnd.toDouble())
-                )
-            } else {
-                viewModel.saveSpeedUnitValue(speedUnitValue)
+                viewModel.setSpeedUnitValue(speedUnitValue.copy(value = speedSliderUpperEnd.toDouble()))
+                viewModel.saveSpeedUnitValue(speedUnitValue.copy(value = speedSliderUpperEnd.toDouble()))
             }
             viewModel.setSpeedSliderLowerEnd(speedSliderLowerEnd)
             viewModel.setSpeedSliderUpperEnd(speedSliderUpperEnd)
