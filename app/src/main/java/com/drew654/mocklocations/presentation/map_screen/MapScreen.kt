@@ -40,6 +40,7 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.MapStyleOptions
+import com.google.maps.android.compose.CameraMoveStartedReason
 import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
@@ -104,6 +105,9 @@ fun MapScreen(
     }
     val speedSliderLowerEnd by viewModel.speedSliderLowerEnd.collectAsState()
     val speedSliderUpperEnd by viewModel.speedSliderUpperEnd.collectAsState()
+    val isCameraFollowingMockedLocation by viewModel.isCameraFollowingMockedLocation.collectAsState()
+    var isCameraCurrentlyFollowingMockedLocation by remember(isCameraFollowingMockedLocation) { mutableStateOf(isCameraFollowingMockedLocation) }
+    val currentMockedLocation by viewModel.currentMockedLocation.collectAsState()
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -157,11 +161,23 @@ fun MapScreen(
 
     LaunchedEffect(cameraPositionState) {
         snapshotFlow {
-            cameraPositionState.isMoving to cameraPositionState.position
-        }.collect { (isMoving, position) ->
-            if (!isMoving) {
-                viewModel.updateCameraPosition(position)
+            cameraPositionState.isMoving to cameraPositionState.cameraMoveStartedReason
+        }.collect { (isMoving, reason) ->
+            if (isMoving && reason == CameraMoveStartedReason.GESTURE) {
+                isCameraCurrentlyFollowingMockedLocation = false
             }
+
+            if (!isMoving) {
+                viewModel.updateCameraPosition(cameraPositionState.position)
+            }
+        }
+    }
+
+    LaunchedEffect(currentMockedLocation, isCameraFollowingMockedLocation) {
+        if (isMocking && isCameraCurrentlyFollowingMockedLocation && currentMockedLocation != null) {
+            cameraPositionState.move(
+                CameraUpdateFactory.newLatLngZoom(currentMockedLocation!!.latLng, 15f)
+            )
         }
     }
 
@@ -278,6 +294,7 @@ fun MapScreen(
                             return@MapControlButtons
                         }
 
+                        isCameraCurrentlyFollowingMockedLocation = isCameraFollowingMockedLocation
                         scope.launch {
                             if (isUsingCrosshairs && locationTarget is LocationTarget.Empty) {
                                 viewModel.pushPoint(cameraPositionState.position.target)
@@ -312,6 +329,7 @@ fun MapScreen(
                             return@MapControlButtons
                         }
 
+                        isCameraCurrentlyFollowingMockedLocation = isCameraFollowingMockedLocation
                         scope.launch {
                             val fusedLocationClient =
                                 LocationServices.getFusedLocationProviderClient(context)
