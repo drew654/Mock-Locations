@@ -46,7 +46,7 @@ fun SpeedUnitDialog(
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(8.dp))
                                 .clickable {
-                                    onSpeedUnitValueSelected(SpeedUnitValue(value = selectedSpeedUnitValue.value, speedUnit = it))
+                                    onSpeedUnitValueSelected(selectedSpeedUnitValue.copy(speedUnit = it))
                                     onDismiss()
                                 },
                             verticalAlignment = Alignment.CenterVertically
@@ -54,7 +54,7 @@ fun SpeedUnitDialog(
                             RadioButton(
                                 selected = it == selectedSpeedUnitValue.speedUnit,
                                 onClick = {
-                                    onSpeedUnitValueSelected(SpeedUnitValue(value = selectedSpeedUnitValue.value, speedUnit = it))
+                                    onSpeedUnitValueSelected(selectedSpeedUnitValue.copy(speedUnit = it))
                                     onDismiss()
                                 }
                             )

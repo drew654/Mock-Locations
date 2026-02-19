@@ -28,7 +28,6 @@ import androidx.navigation.NavController
 import com.drew654.mocklocations.R
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.Permission
-import com.drew654.mocklocations.domain.model.SpeedUnitValue
 import com.drew654.mocklocations.domain.model.isGranted
 import com.drew654.mocklocations.presentation.MockLocationsViewModel
 import com.drew654.mocklocations.presentation.components.PermissionsDialog
@@ -339,13 +338,7 @@ fun MapScreen(
                 isExpanded = controlsAreExpanded,
                 speedUnitValue = speedUnitValue,
                 onSpeedChanged = {
-                    viewModel.setSpeedUnitValue(speedUnitValue)
-                    viewModel.setSpeedUnitValue(
-                        SpeedUnitValue(
-                            value = it,
-                            speedUnit = speedUnitValue.speedUnit
-                        )
-                    )
+                    viewModel.setSpeedUnitValue(speedUnitValue.copy(value = it))
                 },
                 onSpeedChangeFinished = {
                     viewModel.saveSpeedUnitValue(speedUnitValue)
