@@ -61,7 +61,7 @@ fun MapScreen(
     val locationTarget by viewModel.activeLocationTarget.collectAsState()
     val isMocking by viewModel.isMocking.collectAsState()
     val isPaused by viewModel.isPaused.collectAsState()
-    val speedMetersPerSec by viewModel.speedMetersPerSec.collectAsState()
+    val speedUnitValue by viewModel.speedUnitValue.collectAsState()
     var hasLocationPermission by remember {
         mutableStateOf(Permission.FineLocation.isGranted(context))
     }
@@ -102,6 +102,8 @@ fun MapScreen(
             permissionToBeRequested = Permission.FineLocation
         }
     }
+    val speedSliderLowerEnd by viewModel.speedSliderLowerEnd.collectAsState()
+    val speedSliderUpperEnd by viewModel.speedSliderUpperEnd.collectAsState()
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -334,13 +336,15 @@ fun MapScreen(
             }
             ExpandedControls(
                 isExpanded = controlsAreExpanded,
-                speedMetersPerSec = speedMetersPerSec,
+                speedUnitValue = speedUnitValue,
                 onSpeedChanged = {
-                    viewModel.setSpeedMetersPerSec(it)
+                    viewModel.setSpeedUnitValue(speedUnitValue.copy(value = it))
                 },
                 onSpeedChangeFinished = {
-                    viewModel.saveSpeedMetersPerSec(speedMetersPerSec)
-                }
+                    viewModel.saveSpeedUnitValue(speedUnitValue)
+                },
+                sliderLowerEnd = speedSliderLowerEnd,
+                sliderUpperEnd = speedSliderUpperEnd
             )
         }
     }

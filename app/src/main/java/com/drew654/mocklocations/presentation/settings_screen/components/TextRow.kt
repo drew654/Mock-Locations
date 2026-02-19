@@ -3,6 +3,7 @@ package com.drew654.mocklocations.presentation.settings_screen.components
 import android.content.res.Configuration
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -18,6 +19,7 @@ import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 @Composable
 fun TextRow(
     label: String,
+    value: String? = null,
     onClick: () -> Unit
 ) {
     Row(
@@ -31,6 +33,10 @@ fun TextRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(text = label)
+        value?.let {
+            Spacer(Modifier.weight(1f))
+            Text(text = it)
+        }
     }
 }
 
@@ -44,12 +50,34 @@ fun TextRow(
     showBackground = true
 )
 @Composable
-fun TextRowPreview() {
+fun TextRowPreview1() {
     MockLocationsTheme {
         Surface {
             TextRow(
                 onClick = { },
                 label = "Manual"
+            )
+        }
+    }
+}
+
+@Preview(
+    name = "Light Mode",
+    showBackground = true
+)
+@Preview(
+    name = "Dark Mode",
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+    showBackground = true
+)
+@Composable
+fun TextRowPreview2() {
+    MockLocationsTheme {
+        Surface {
+            TextRow(
+                onClick = { },
+                label = "Speed unit",
+                value = "mph"
             )
         }
     }
