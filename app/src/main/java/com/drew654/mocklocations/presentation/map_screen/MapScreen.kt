@@ -103,6 +103,7 @@ fun MapScreen(
             permissionToBeRequested = Permission.FineLocation
         }
     }
+    var isNamingRoute by remember { mutableStateOf(false) }
     val speedSliderLowerEnd by viewModel.speedSliderLowerEnd.collectAsState()
     val speedSliderUpperEnd by viewModel.speedSliderUpperEnd.collectAsState()
     val isCameraFollowingMockedLocation by viewModel.isCameraFollowingMockedLocation.collectAsState()
@@ -316,6 +317,9 @@ fun MapScreen(
                     },
                     onSaveLocationTarget = {
                         isShowingSavedRoutesDialog = true
+                        if (isMocking) {
+                            isNamingRoute = true
+                        }
                     },
                     locationTarget = locationTarget,
                     isMocking = isMocking,
@@ -375,6 +379,10 @@ fun MapScreen(
     }
     SavedRoutesDialog(
         isVisible = isShowingSavedRoutesDialog,
+        isNamingRoute = isNamingRoute,
+        onSetIsNamingRoute = {
+            isNamingRoute = it
+        },
         onDismiss = {
             isShowingSavedRoutesDialog = false
         },
@@ -391,7 +399,8 @@ fun MapScreen(
         },
         onRouteDeleted = {
             viewModel.deleteSavedRoute(it)
-        }
+        },
+        isMocking = isMocking
     )
     permissionToBeRequested?.let { permission ->
         PermissionsDialog(

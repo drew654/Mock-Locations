@@ -16,14 +16,16 @@ import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 @Composable
 fun SavedRoutesDialog(
     isVisible: Boolean,
+    isNamingRoute: Boolean,
+    onSetIsNamingRoute: (Boolean) -> Unit,
     onDismiss: () -> Unit,
     savedRoutes: List<LocationTarget.SavedRoute>,
     onRouteSaved: (String) -> Unit,
     locationTarget: LocationTarget,
     onRouteLoaded: (LocationTarget.SavedRoute) -> Unit,
-    onRouteDeleted: (LocationTarget.SavedRoute) -> Unit
+    onRouteDeleted: (LocationTarget.SavedRoute) -> Unit,
+    isMocking: Boolean
 ) {
-    var isNamingRoute by remember { mutableStateOf(false) }
     var routeName by remember { mutableStateOf("") }
     var selectedRoutes by remember { mutableStateOf(emptyList<LocationTarget.SavedRoute>()) }
 
@@ -31,7 +33,7 @@ fun SavedRoutesDialog(
         Dialog(
             onDismissRequest = {
                 onDismiss()
-                isNamingRoute = false
+                onSetIsNamingRoute(false)
                 routeName = ""
             }
         ) {
@@ -41,13 +43,16 @@ fun SavedRoutesDialog(
                         routeName = routeName,
                         onRouteNameChange = { routeName = it },
                         onBack = {
-                            isNamingRoute = false
+                            if (isMocking) {
+                                onDismiss()
+                            }
+                            onSetIsNamingRoute(false)
                             routeName = ""
                         },
                         onConfirm = {
                             onRouteSaved(routeName)
                             onDismiss()
-                            isNamingRoute = false
+                            onSetIsNamingRoute(false)
                             routeName = ""
                         },
                         savedRoutes = savedRoutes
@@ -57,12 +62,12 @@ fun SavedRoutesDialog(
                         savedRoutes = savedRoutes,
                         onDismiss = {
                             onDismiss()
-                            isNamingRoute = false
+                            onSetIsNamingRoute(false)
                             routeName = ""
                         },
                         locationTarget = locationTarget,
                         onConfirm = {
-                            isNamingRoute = true
+                            onSetIsNamingRoute(true)
                         },
                         onRouteLoaded = {
                             onRouteLoaded(it)
@@ -108,12 +113,15 @@ fun SavedRoutesDialogPreview() {
         Surface {
             SavedRoutesDialog(
                 isVisible = true,
+                isNamingRoute = false,
+                onSetIsNamingRoute = { },
                 onDismiss = { },
                 savedRoutes = emptyList(),
                 onRouteSaved = { },
                 locationTarget = LocationTarget.Empty,
                 onRouteLoaded = { },
-                onRouteDeleted = { }
+                onRouteDeleted = { },
+                isMocking = false
             )
         }
     }
