@@ -10,3 +10,7 @@ class NoRippleInteractionSource : MutableInteractionSource {
     override suspend fun emit(interaction: Interaction) {}
     override fun tryEmit(interaction: Interaction) = true
 }
+
+fun mToMiles(m: Double) = m * 0.000621371
+
+fun mToKm(m: Double) = m / 1000.0

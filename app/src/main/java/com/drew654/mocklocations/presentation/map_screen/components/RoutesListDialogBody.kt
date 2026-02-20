@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.domain.model.LocationTarget
+import com.drew654.mocklocations.domain.model.SpeedUnit
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 import com.google.android.gms.maps.model.LatLng
 
@@ -36,7 +37,8 @@ fun RoutesListDialogBody(
     onRouteSelected: (LocationTarget.SavedRoute) -> Unit,
     onRouteDeselected: (LocationTarget.SavedRoute) -> Unit,
     onClearSelectedRoutes: () -> Unit,
-    onDeleteSelectedRoutes: () -> Unit
+    onDeleteSelectedRoutes: () -> Unit,
+    speedUnit: SpeedUnit
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -80,7 +82,8 @@ fun RoutesListDialogBody(
                             onLongClick = {
                                 onRouteSelected(route)
                             },
-                            shouldShowCheckbox = selectedRoutes.isNotEmpty()
+                            shouldShowCheckbox = selectedRoutes.isNotEmpty(),
+                            speedUnit = speedUnit
                         )
                     }
                 }
@@ -178,7 +181,8 @@ fun RoutesDialogBodyUnselectedPreview() {
                     onRouteSelected = { },
                     onRouteDeselected = { },
                     onClearSelectedRoutes = { },
-                    onDeleteSelectedRoutes = { }
+                    onDeleteSelectedRoutes = { },
+                    speedUnit = SpeedUnit.MilesPerHour
                 )
             }
         }
@@ -231,7 +235,8 @@ fun RoutesDialogBodySelectedPreview() {
                     onRouteSelected = { },
                     onRouteDeselected = { },
                     onClearSelectedRoutes = { },
-                    onDeleteSelectedRoutes = { }
+                    onDeleteSelectedRoutes = { },
+                    speedUnit = SpeedUnit.MilesPerHour
                 )
             }
         }

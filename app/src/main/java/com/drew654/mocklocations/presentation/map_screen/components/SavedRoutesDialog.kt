@@ -11,6 +11,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.window.Dialog
 import com.drew654.mocklocations.domain.model.LocationTarget
+import com.drew654.mocklocations.domain.model.SpeedUnit
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 
 @Composable
@@ -24,7 +25,8 @@ fun SavedRoutesDialog(
     locationTarget: LocationTarget,
     onRouteLoaded: (LocationTarget.SavedRoute) -> Unit,
     onRouteDeleted: (LocationTarget.SavedRoute) -> Unit,
-    isMocking: Boolean
+    isMocking: Boolean,
+    speedUnit: SpeedUnit
 ) {
     var routeName by remember { mutableStateOf("") }
     var selectedRoutes by remember { mutableStateOf(emptyList<LocationTarget.SavedRoute>()) }
@@ -90,7 +92,8 @@ fun SavedRoutesDialog(
                                 onRouteDeleted(route)
                             }
                             selectedRoutes = emptyList()
-                        }
+                        },
+                        speedUnit = speedUnit
                     )
                 }
             }
@@ -121,7 +124,8 @@ fun SavedRoutesDialogPreview() {
                 locationTarget = LocationTarget.Empty,
                 onRouteLoaded = { },
                 onRouteDeleted = { },
-                isMocking = false
+                isMocking = false,
+                speedUnit = SpeedUnit.MilesPerHour
             )
         }
     }

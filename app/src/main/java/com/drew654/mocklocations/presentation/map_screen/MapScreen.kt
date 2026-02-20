@@ -400,7 +400,8 @@ fun MapScreen(
         onRouteDeleted = {
             viewModel.deleteSavedRoute(it)
         },
-        isMocking = isMocking
+        isMocking = isMocking,
+        speedUnit = speedUnitValue.speedUnit
     )
     permissionToBeRequested?.let { permission ->
         PermissionsDialog(
