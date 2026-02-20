@@ -100,6 +100,7 @@ fun MapScreen(
             permissionToBeRequested = Permission.FineLocation
         }
     }
+    var isNamingRoute by remember { mutableStateOf(false) }
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -292,6 +293,9 @@ fun MapScreen(
                     },
                     onSaveLocationTarget = {
                         isShowingSavedRoutesDialog = true
+                        if (isMocking) {
+                            isNamingRoute = true
+                        }
                     },
                     locationTarget = locationTarget,
                     isMocking = isMocking,
@@ -344,6 +348,10 @@ fun MapScreen(
     }
     SavedRoutesDialog(
         isVisible = isShowingSavedRoutesDialog,
+        isNamingRoute = isNamingRoute,
+        onSetIsNamingRoute = {
+            isNamingRoute = it
+        },
         onDismiss = {
             isShowingSavedRoutesDialog = false
         },
@@ -360,7 +368,8 @@ fun MapScreen(
         },
         onRouteDeleted = {
             viewModel.deleteSavedRoute(it)
-        }
+        },
+        isMocking = isMocking
     )
     permissionToBeRequested?.let { permission ->
         PermissionsDialog(
