@@ -28,6 +28,7 @@ import kotlinx.coroutines.launch
 fun MapZoomButtons(
     cameraPositionState: CameraPositionState,
     scope: CoroutineScope,
+    isCameraCurrentlyFollowingMockedLocation: Boolean,
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -47,7 +48,13 @@ fun MapZoomButtons(
         ) {
             IconButton(
                 onClick = {
-                    scope.launch { cameraPositionState.animate(CameraUpdateFactory.zoomIn()) }
+                    scope.launch {
+                        if (isCameraCurrentlyFollowingMockedLocation) {
+                            cameraPositionState.move(CameraUpdateFactory.zoomIn())
+                        } else {
+                            cameraPositionState.animate(CameraUpdateFactory.zoomIn())
+                        }
+                    }
                 },
                 modifier = Modifier.size(40.dp)
             ) {
@@ -66,7 +73,13 @@ fun MapZoomButtons(
 
             IconButton(
                 onClick = {
-                    scope.launch { cameraPositionState.animate(CameraUpdateFactory.zoomOut()) }
+                    scope.launch {
+                        if (isCameraCurrentlyFollowingMockedLocation) {
+                            cameraPositionState.move(CameraUpdateFactory.zoomOut())
+                        } else {
+                            cameraPositionState.animate(CameraUpdateFactory.zoomOut())
+                        }
+                    }
                 },
                 modifier = Modifier.size(40.dp)
             ) {
@@ -95,7 +108,8 @@ fun MapZoomButtonsPreview() {
         Surface {
             MapZoomButtons(
                 cameraPositionState = CameraPositionState(),
-                scope = CoroutineScope(Dispatchers.Main)
+                scope = CoroutineScope(Dispatchers.Main),
+                isCameraCurrentlyFollowingMockedLocation = false
             )
         }
     }

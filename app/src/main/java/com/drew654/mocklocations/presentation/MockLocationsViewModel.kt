@@ -11,6 +11,7 @@ import androidx.lifecycle.viewModelScope
 import com.drew654.mocklocations.domain.SettingsManager
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.MapStyle
+import com.drew654.mocklocations.domain.model.RoutePoint
 import com.drew654.mocklocations.domain.model.SavedCameraPosition
 import com.drew654.mocklocations.domain.model.SpeedUnit
 import com.drew654.mocklocations.domain.model.SpeedUnitValue
@@ -73,6 +74,18 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = 100
+    )
+    val isCameraFollowingMockedLocation: StateFlow<Boolean> = settingsManager.isCameraFollowingMockedLocation.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = true
+    )
+    private val _isCameraCurrentlyFollowingMockedLocation = MutableStateFlow(false)
+    val isCameraCurrentlyFollowingMockedLocation = _isCameraCurrentlyFollowingMockedLocation.asStateFlow()
+    val currentMockedLocation: StateFlow<RoutePoint?> = settingsManager.currentMockedLocationFlow.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
     )
 
     init {
@@ -244,5 +257,16 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         viewModelScope.launch {
             settingsManager.setSpeedSliderUpperEnd(value)
         }
+    }
+
+    fun setIsCameraFollowingMockedLocation(value: Boolean) {
+        _isCameraCurrentlyFollowingMockedLocation.value = value
+        viewModelScope.launch {
+            settingsManager.setIsCameraFollowingMockedLocation(value)
+        }
+    }
+
+    fun setIsCameraCurrentlyFollowingMockedLocation(value: Boolean) {
+        _isCameraCurrentlyFollowingMockedLocation.value = value
     }
 }
