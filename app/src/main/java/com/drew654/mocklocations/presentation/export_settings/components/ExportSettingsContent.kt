@@ -40,7 +40,8 @@ import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExportSettingsContent(
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onExport: () -> Unit
 ) {
     val scrollState = rememberScrollState()
     var isExportingRoutes by remember { mutableStateOf(true) }
@@ -57,7 +58,7 @@ fun ExportSettingsContent(
             ),
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Expanded Controls") },
+                title = { Text("Export Settings") },
                 navigationIcon = {
                     IconButton(
                         onClick = {
@@ -104,7 +105,7 @@ fun ExportSettingsContent(
 
             TextButton(
                 onClick = {
-
+                    onExport()
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -130,7 +131,8 @@ fun ExportSettingsContentPreview() {
     MockLocationsTheme {
         Surface {
             ExportSettingsContent(
-                onBack = { }
+                onBack = { },
+                onExport = { }
             )
         }
     }

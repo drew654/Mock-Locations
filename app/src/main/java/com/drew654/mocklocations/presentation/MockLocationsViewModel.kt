@@ -8,6 +8,7 @@ import android.content.IntentFilter
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.drew654.mocklocations.data.repository.ExportRepository
 import com.drew654.mocklocations.domain.SettingsManager
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.MapStyle
@@ -36,6 +37,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     private val _controlsAreExpanded = MutableStateFlow(false)
     val controlsAreExpanded: StateFlow<Boolean> = _controlsAreExpanded.asStateFlow()
     private val settingsManager = SettingsManager(application)
+    val repository = ExportRepository(settingsManager)
     private val _speedUnitValue = MutableStateFlow(SpeedUnitValue(value = 30.0, speedUnit = SpeedUnit.MetersPerSecond))
     val speedUnitValue: StateFlow<SpeedUnitValue> = _speedUnitValue.asStateFlow()
     val activeLocationTarget =

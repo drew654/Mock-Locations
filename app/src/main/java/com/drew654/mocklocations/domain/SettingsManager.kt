@@ -16,6 +16,7 @@ import com.drew654.mocklocations.domain.model.SpeedUnit
 import com.drew654.mocklocations.domain.model.SpeedUnitTypeAdapter
 import com.drew654.mocklocations.domain.model.SpeedUnitValue
 import com.drew654.mocklocations.domain.model.getMapStyleByName
+import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.flow.Flow
@@ -38,8 +39,7 @@ class SettingsManager(private val context: Context) {
         val SPEED_SLIDER_LOWER_END = intPreferencesKey("speed_slider_lower_end")
         val IS_CAMERA_FOLLOWING_MOCKED_LOCATION = booleanPreferencesKey("is_camera_following_mocked_location")
     }
-
-    private val gson = GsonBuilder()
+    val gson: Gson = GsonBuilder()
         .registerTypeAdapter(LocationTarget::class.java, LocationTargetAdapter())
         .registerTypeAdapter(SpeedUnit::class.java, SpeedUnitTypeAdapter())
         .create()
