@@ -118,6 +118,12 @@ fun SettingsScreen(
                 }
             )
             TextRow(
+                label = "Export settings",
+                onClick = {
+                    navController.navigate(Screen.ExportSettings.route)
+                }
+            )
+            TextRow(
                 label = "Manual",
                 onClick = {
                     Intent().apply {

@@ -4,4 +4,5 @@ sealed class Screen(val route: String) {
     object Map : Screen("map")
     object Settings : Screen("settings")
     object ExpandedControlsConfiguration : Screen("expanded_controls_configuration")
+    object ExportSettings : Screen("export_settings")
 }
