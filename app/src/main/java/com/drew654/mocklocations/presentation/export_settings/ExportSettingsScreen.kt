@@ -3,7 +3,11 @@ package com.drew654.mocklocations.presentation.export_settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import com.drew654.mocklocations.presentation.MockLocationsViewModel
@@ -18,6 +22,8 @@ fun ExportSettingsScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    var pendingExportSettings by rememberSaveable { mutableStateOf(false) }
+    var pendingExportRoutes by rememberSaveable { mutableStateOf(false) }
     val exportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/json")
     ) { uri ->
@@ -25,8 +31,8 @@ fun ExportSettingsScreen(
 
         scope.launch {
             val json = viewModel.repository.generateExportToJson(
-                exportSettings = true,
-                exportRoutes = true
+                exportSettings = pendingExportSettings,
+                exportRoutes = pendingExportRoutes
             )
 
             context.contentResolver.openOutputStream(uri)?.use { output ->
@@ -40,7 +46,10 @@ fun ExportSettingsScreen(
         onBack = {
             navController.popBackStack()
         },
-        onExport = {
+        onExport = { isExportingSettings, isExportingRoutes ->
+            pendingExportSettings = isExportingSettings
+            pendingExportRoutes = isExportingRoutes
+
             val timestamp = SimpleDateFormat(
                 "yyyy_MM_dd_HH_mm_ss",
                 java.util.Locale.getDefault()

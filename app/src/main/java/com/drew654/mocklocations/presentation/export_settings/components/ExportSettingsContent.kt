@@ -41,7 +41,7 @@ import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 @Composable
 fun ExportSettingsContent(
     onBack: () -> Unit,
-    onExport: () -> Unit
+    onExport: (Boolean, Boolean) -> Unit
 ) {
     val scrollState = rememberScrollState()
     var isExportingRoutes by remember { mutableStateOf(true) }
@@ -105,11 +105,12 @@ fun ExportSettingsContent(
 
             TextButton(
                 onClick = {
-                    onExport()
+                    onExport(isExportingSettings, isExportingRoutes)
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(8.dp)
+                    .padding(8.dp),
+                enabled = isExportingRoutes || isExportingSettings
             ) {
                 Text("Export")
             }
@@ -132,7 +133,7 @@ fun ExportSettingsContentPreview() {
         Surface {
             ExportSettingsContent(
                 onBack = { },
-                onExport = { }
+                onExport = { _, _ -> }
             )
         }
     }
