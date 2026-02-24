@@ -41,7 +41,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     val controlsAreExpanded: StateFlow<Boolean> = _controlsAreExpanded.asStateFlow()
     private val settingsManager = SettingsManager(application)
     val repository = ExportRepository(settingsManager)
-    private val _speedUnitValue = MutableStateFlow(SpeedUnitValue(value = 30.0, speedUnit = SpeedUnit.MetersPerSecond))
+    private val _speedUnitValue = MutableStateFlow(SpeedUnitValue(value = 30.0, speedUnit = SpeedUnit.MilesPerHour))
     val speedUnitValue: StateFlow<SpeedUnitValue> = _speedUnitValue.asStateFlow()
     val activeLocationTarget =
         settingsManager.activeLocationTargetFlow

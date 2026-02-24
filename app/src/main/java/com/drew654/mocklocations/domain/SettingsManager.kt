@@ -107,7 +107,7 @@ class SettingsManager(private val context: Context) {
 
     val speedUnitValueFlow: Flow<SpeedUnitValue> = context.dataStore.data.map { preferences ->
         val json = preferences[SPEED_UNIT_VALUE_JSON] ?: ""
-        if (json.isEmpty()) SpeedUnitValue(value = 30.0, speedUnit = SpeedUnit.MetersPerSecond)
+        if (json.isEmpty()) SpeedUnitValue(value = 30.0, speedUnit = SpeedUnit.MilesPerHour)
         else gson.fromJson(json, SpeedUnitValue::class.java)
     }
 
