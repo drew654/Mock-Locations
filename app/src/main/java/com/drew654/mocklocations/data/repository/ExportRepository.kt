@@ -63,7 +63,7 @@ class ExportRepository(
         settingsManager.setIsUsingCrosshairs(settings.useCrosshairs)
         settingsManager.setClearRouteOnStop(settings.clearRouteOnStop)
         settingsManager.setIsCameraFollowingMockedLocation(settings.cameraFollowsMockedLocation)
-        settings.mapStyle?.let { settingsManager.setMapStyle(getMapStyleByName(it)) }
+        settingsManager.setMapStyle(getMapStyleByName(settings.mapStyle ?: ""))
         settingsManager.setSpeedUnitValue(settings.expandedControlsSpeedUnitValue)
         settingsManager.setSpeedSliderLowerEnd(settings.expandedControlsSpeedSliderLowerEnd)
         settingsManager.setSpeedSliderUpperEnd(settings.expandedControlsSpeedSliderUpperEnd)
