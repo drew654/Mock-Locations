@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.net.Uri
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -21,6 +22,7 @@ import com.drew654.mocklocations.service.MockLocationService.Companion.ACTION_RE
 import com.drew654.mocklocations.service.MockLocationService.Companion.ACTION_START_MOCKING
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -122,6 +124,20 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
                 }
             }
         }, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
+    }
+
+    fun exportDataToUri(uri: Uri, exportSettings: Boolean, exportRoutes: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val jsonString = repository.generateExportToJson(exportSettings, exportRoutes)
+                getApplication<Application>().contentResolver.openOutputStream(uri)?.use { outputStream ->
+                    outputStream.write(jsonString.toByteArray())
+                    outputStream.flush()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     fun updateCameraPosition(position: CameraPosition) {
