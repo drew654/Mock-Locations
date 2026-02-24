@@ -26,6 +26,7 @@ fun ExportSettingsScreen(
         uri?.let {
             viewModel.exportDataToUri(it, pendingExportSettings, pendingExportRoutes)
         }
+        navController.popBackStack()
     }
 
     ExportSettingsContent(

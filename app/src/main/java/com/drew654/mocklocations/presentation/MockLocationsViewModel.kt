@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.net.Uri
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -135,8 +136,14 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
                     outputStream.write(jsonString.toByteArray())
                     outputStream.flush()
                 }
+                launch(Dispatchers.Main) {
+                    Toast.makeText(context, "Export successful", Toast.LENGTH_SHORT).show()
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
+                launch(Dispatchers.Main) {
+                    Toast.makeText(getApplication(), "Export failed", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
