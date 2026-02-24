@@ -18,12 +18,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.domain.model.LocationTarget
+import com.drew654.mocklocations.domain.model.MockControlAction
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 import com.google.android.gms.maps.model.LatLng
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MockLocationControls(
+    visibleMockControlActions: Set<MockControlAction>,
+    enabledMockControlActions: Set<MockControlAction>,
     onClearLocationTarget: () -> Unit,
     onStart: () -> Unit,
     onStop: () -> Unit,
@@ -31,9 +34,7 @@ fun MockLocationControls(
     onTogglePause: () -> Unit,
     locationTarget: LocationTarget,
     isMocking: Boolean,
-    isPaused: Boolean,
     onSaveLocationTarget: () -> Unit,
-    isUsingCrosshairs: Boolean,
     onAddCrosshairsPoint: () -> Unit,
     controlsAreExpanded: Boolean,
     setControlsAreExpanded: (Boolean) -> Unit,
@@ -80,13 +81,11 @@ fun MockLocationControls(
                     )
 
                     PrimaryMockLocationControls(
+                        visibleMockControlActions = visibleMockControlActions,
+                        enabledMockControlActions = enabledMockControlActions,
                         onStart = onStart,
                         onStop = onStop,
                         onTogglePause = onTogglePause,
-                        isMocking = isMocking,
-                        isPaused = isPaused,
-                        locationTarget = locationTarget,
-                        isUsingCrosshairs = isUsingCrosshairs,
                         onAddCrosshairsPoint = onAddCrosshairsPoint
                     )
                 }
@@ -105,13 +104,11 @@ fun MockLocationControls(
                     )
 
                     PrimaryMockLocationControls(
+                        visibleMockControlActions = visibleMockControlActions,
+                        enabledMockControlActions = enabledMockControlActions,
                         onStart = onStart,
                         onStop = onStop,
                         onTogglePause = onTogglePause,
-                        isMocking = isMocking,
-                        isPaused = isPaused,
-                        locationTarget = locationTarget,
-                        isUsingCrosshairs = isUsingCrosshairs,
                         onAddCrosshairsPoint = onAddCrosshairsPoint,
                         modifier = Modifier.weight(1f)
                     )
@@ -135,6 +132,14 @@ private fun MockLocationControlsPreview1() {
     MockLocationsTheme {
         Surface {
             MockLocationControls(
+                visibleMockControlActions = setOf(
+                    MockControlAction.START,
+                    MockControlAction.ADD_POINT
+                ),
+                enabledMockControlActions = setOf(
+                    MockControlAction.START,
+                    MockControlAction.ADD_POINT
+                ),
                 onClearLocationTarget = { },
                 onStart = { },
                 onStop = { },
@@ -142,9 +147,7 @@ private fun MockLocationControlsPreview1() {
                 onTogglePause = { },
                 locationTarget = LocationTarget.Empty,
                 isMocking = false,
-                isPaused = false,
                 onSaveLocationTarget = { },
-                isUsingCrosshairs = true,
                 onAddCrosshairsPoint = { },
                 controlsAreExpanded = false,
                 setControlsAreExpanded = { }
@@ -167,6 +170,14 @@ private fun MockLocationControlsPreview2() {
     MockLocationsTheme {
         Surface {
             MockLocationControls(
+                visibleMockControlActions = setOf(
+                    MockControlAction.STOP,
+                    MockControlAction.PAUSE
+                ),
+                enabledMockControlActions = setOf(
+                    MockControlAction.STOP,
+                    MockControlAction.PAUSE
+                ),
                 onClearLocationTarget = { },
                 onStart = { },
                 onStop = { },
@@ -174,9 +185,7 @@ private fun MockLocationControlsPreview2() {
                 onTogglePause = { },
                 locationTarget = LocationTarget.Route(listOf(LatLng(0.0, 0.0), LatLng(0.0, 0.0))),
                 isMocking = true,
-                isPaused = false,
                 onSaveLocationTarget = { },
-                isUsingCrosshairs = false,
                 onAddCrosshairsPoint = { },
                 controlsAreExpanded = false,
                 setControlsAreExpanded = { }
@@ -201,6 +210,14 @@ private fun MockLocationControlsPreviewNarrow() {
     MockLocationsTheme {
         Surface {
             MockLocationControls(
+                visibleMockControlActions = setOf(
+                    MockControlAction.START,
+                    MockControlAction.ADD_POINT
+                ),
+                enabledMockControlActions = setOf(
+                    MockControlAction.START,
+                    MockControlAction.ADD_POINT
+                ),
                 onClearLocationTarget = { },
                 onStart = { },
                 onStop = { },
@@ -208,9 +225,7 @@ private fun MockLocationControlsPreviewNarrow() {
                 onTogglePause = { },
                 locationTarget = LocationTarget.Empty,
                 isMocking = false,
-                isPaused = false,
                 onSaveLocationTarget = { },
-                isUsingCrosshairs = true,
                 onAddCrosshairsPoint = { },
                 controlsAreExpanded = false,
                 setControlsAreExpanded = { }

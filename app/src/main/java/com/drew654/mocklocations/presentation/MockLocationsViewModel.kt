@@ -14,10 +14,12 @@ import com.drew654.mocklocations.data.repository.ExportRepository
 import com.drew654.mocklocations.domain.SettingsManager
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.MapStyle
+import com.drew654.mocklocations.domain.model.MockControlAction
 import com.drew654.mocklocations.domain.model.RoutePoint
 import com.drew654.mocklocations.domain.model.SavedCameraPosition
 import com.drew654.mocklocations.domain.model.SpeedUnit
 import com.drew654.mocklocations.domain.model.SpeedUnitValue
+import com.drew654.mocklocations.domain.rules.MockControlActionRules
 import com.drew654.mocklocations.service.MockLocationService
 import com.drew654.mocklocations.service.MockLocationService.Companion.ACTION_RESTORE_STRAIGHT_LINE_MOCKING
 import com.drew654.mocklocations.service.MockLocationService.Companion.ACTION_START_MOCKING
@@ -28,6 +30,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -41,7 +44,8 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     val controlsAreExpanded: StateFlow<Boolean> = _controlsAreExpanded.asStateFlow()
     private val settingsManager = SettingsManager(application)
     val repository = ExportRepository(settingsManager)
-    private val _speedUnitValue = MutableStateFlow(SpeedUnitValue(value = 30.0, speedUnit = SpeedUnit.MilesPerHour))
+    private val _speedUnitValue =
+        MutableStateFlow(SpeedUnitValue(value = 30.0, speedUnit = SpeedUnit.MilesPerHour))
     val speedUnitValue: StateFlow<SpeedUnitValue> = _speedUnitValue.asStateFlow()
     val activeLocationTarget =
         settingsManager.activeLocationTargetFlow
@@ -80,17 +84,56 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = 100
     )
-    val isCameraFollowingMockedLocation: StateFlow<Boolean> = settingsManager.isCameraFollowingMockedLocation.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = true
-    )
+    val isCameraFollowingMockedLocation: StateFlow<Boolean> =
+        settingsManager.isCameraFollowingMockedLocation.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = true
+        )
     private val _isCameraCurrentlyFollowingMockedLocation = MutableStateFlow(false)
-    val isCameraCurrentlyFollowingMockedLocation = _isCameraCurrentlyFollowingMockedLocation.asStateFlow()
-    val currentMockedLocation: StateFlow<RoutePoint?> = settingsManager.currentMockedLocationFlow.stateIn(
+    val isCameraCurrentlyFollowingMockedLocation =
+        _isCameraCurrentlyFollowingMockedLocation.asStateFlow()
+    val currentMockedLocation: StateFlow<RoutePoint?> =
+        settingsManager.currentMockedLocationFlow.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = null
+        )
+    val visibleMockControlActions: StateFlow<Set<MockControlAction>> =
+        combine(
+            isMocking,
+            isPaused,
+            activeLocationTarget,
+            isUsingCrosshairs
+        ) { mocking, paused, target, crosshairs ->
+            MockControlActionRules.visibleActions(
+                mocking,
+                paused,
+                target,
+                crosshairs
+            )
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptySet()
+        )
+
+    val enabledMockControlActions: StateFlow<Set<MockControlAction>> = combine(
+        isMocking,
+        isPaused,
+        activeLocationTarget,
+        isUsingCrosshairs
+    ) { mocking, paused, target, crosshairs ->
+        MockControlActionRules.enabledActions(
+            mocking,
+            paused,
+            target,
+            crosshairs
+        )
+    }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = null
+        initialValue = emptySet()
     )
 
     init {

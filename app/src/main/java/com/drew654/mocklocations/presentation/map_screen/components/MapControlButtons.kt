@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.drew654.mocklocations.R
 import com.drew654.mocklocations.domain.model.LocationTarget
+import com.drew654.mocklocations.domain.model.MockControlAction
 import com.drew654.mocklocations.presentation.Screen
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 import com.google.maps.android.compose.CameraPositionState
@@ -34,6 +35,8 @@ import com.google.maps.android.compose.CameraPositionState
 @Composable
 fun MapControlButtons(
     navController: NavController,
+    visibleMockControlActions: Set<MockControlAction>,
+    enabledMockControlActions: Set<MockControlAction>,
     cameraPositionState: CameraPositionState,
     controlsAreExpanded: Boolean,
     setControlsAreExpanded: (Boolean) -> Unit,
@@ -125,6 +128,8 @@ fun MapControlButtons(
                 .fillMaxSize()
         ) {
             MockLocationControls(
+                visibleMockControlActions = visibleMockControlActions,
+                enabledMockControlActions = enabledMockControlActions,
                 onClearLocationTarget = {
                     onClearLocationTarget()
                 },
@@ -149,8 +154,6 @@ fun MapControlButtons(
                 },
                 locationTarget = locationTarget,
                 isMocking = isMocking,
-                isPaused = isPaused,
-                isUsingCrosshairs = isUsingCrosshairs,
                 onAddCrosshairsPoint = {
                     onAddCrosshairsPoint()
                 },
@@ -187,6 +190,14 @@ fun MapControlButtonsPreview() {
         Surface {
             MapControlButtons(
                 navController = NavController(LocalContext.current),
+                visibleMockControlActions = setOf(
+                    MockControlAction.START,
+                    MockControlAction.ADD_POINT
+                ),
+                enabledMockControlActions = setOf(
+                    MockControlAction.START,
+                    MockControlAction.ADD_POINT
+                ),
                 cameraPositionState = CameraPositionState(),
                 controlsAreExpanded = false,
                 setControlsAreExpanded = { },

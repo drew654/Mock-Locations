@@ -109,6 +109,8 @@ fun MapScreen(
     val isCameraFollowingMockedLocation by viewModel.isCameraFollowingMockedLocation.collectAsState()
     val isCameraCurrentlyFollowingMockedLocation by viewModel.isCameraCurrentlyFollowingMockedLocation.collectAsState()
     val currentMockedLocation by viewModel.currentMockedLocation.collectAsState()
+    val visibleMockControlActions by viewModel.visibleMockControlActions.collectAsState()
+    val enabledMockControlActions by viewModel.enabledMockControlActions.collectAsState()
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -258,6 +260,8 @@ fun MapScreen(
                 }
                 MapControlButtons(
                     navController = navController,
+                    visibleMockControlActions = visibleMockControlActions,
+                    enabledMockControlActions = enabledMockControlActions,
                     cameraPositionState = cameraPositionState,
                     controlsAreExpanded = controlsAreExpanded,
                     setControlsAreExpanded = {
