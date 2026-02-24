@@ -129,7 +129,8 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     fun exportDataToUri(uri: Uri, exportSettings: Boolean, exportRoutes: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val jsonString = repository.generateExportToJson(exportSettings, exportRoutes)
+                val context = getApplication<Application>().applicationContext
+                val jsonString = repository.generateExportToJson(context, exportSettings, exportRoutes)
                 getApplication<Application>().contentResolver.openOutputStream(uri)?.use { outputStream ->
                     outputStream.write(jsonString.toByteArray())
                     outputStream.flush()
