@@ -35,6 +35,7 @@ import com.drew654.mocklocations.R
 import com.drew654.mocklocations.presentation.MockLocationsViewModel
 import com.drew654.mocklocations.presentation.Screen
 import com.drew654.mocklocations.presentation.settings_screen.components.MapStyleDialog
+import com.drew654.mocklocations.presentation.settings_screen.components.ResetSettingsDialog
 import com.drew654.mocklocations.presentation.settings_screen.components.SwitchRow
 import com.drew654.mocklocations.presentation.settings_screen.components.TextRow
 
@@ -57,6 +58,7 @@ fun SettingsScreen(
             viewModel.importDataFromUri(it)
         }
     }
+    var isShowingResetSettingsDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = Modifier
@@ -139,6 +141,12 @@ fun SettingsScreen(
                 }
             )
             TextRow(
+                label = "Reset to default",
+                onClick = {
+                    isShowingResetSettingsDialog = true
+                }
+            )
+            TextRow(
                 label = "Manual",
                 onClick = {
                     Intent().apply {
@@ -170,6 +178,17 @@ fun SettingsScreen(
         onStyleSelected = {
             viewModel.setMapStyle(it)
             isShowingMapStylesDialog = false
+        }
+    )
+
+    ResetSettingsDialog(
+        isVisible = isShowingResetSettingsDialog,
+        onConfirm = {
+            viewModel.resetSettingsToDefault()
+            isShowingResetSettingsDialog = false
+        },
+        onDismiss = {
+            isShowingResetSettingsDialog = false
         }
     )
 }

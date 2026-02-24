@@ -174,6 +174,12 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
+    fun resetSettingsToDefault() {
+        viewModelScope.launch {
+            settingsManager.resetToDefault()
+            _speedUnitValue.value = settingsManager.speedUnitValueFlow.first()
+        }
+    }
 
     fun updateCameraPosition(position: CameraPosition) {
         _cameraPosition.value = SavedCameraPosition(

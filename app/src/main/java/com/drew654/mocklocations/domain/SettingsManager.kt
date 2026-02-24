@@ -26,12 +26,17 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "se
 
 class SettingsManager(private val context: Context) {
     companion object {
+        // App data and status
         val ACTIVE_LOCATION_TARGET_JSON = stringPreferencesKey("active_location_target_json")
         val IS_MOCKING = booleanPreferencesKey("is_mocking")
         val IS_PAUSED = booleanPreferencesKey("is_paused")
         val CURRENT_MOCKED_LOCATION_JSON = stringPreferencesKey("current_mocked_location_json")
-        val CLEAR_ROUTE_ON_STOP = booleanPreferencesKey("clear_route_on_stop")
+
+        // Saved routes
         val SAVED_ROUTES_JSON = stringPreferencesKey("saved_routes_json")
+
+        // User preferences
+        val CLEAR_ROUTE_ON_STOP = booleanPreferencesKey("clear_route_on_stop")
         val IS_USING_CROSSHAIRS = booleanPreferencesKey("is_using_crosshairs")
         val MAP_STYLE = stringPreferencesKey("map_style")
         val SPEED_UNIT_VALUE_JSON = stringPreferencesKey("speed_unit_value_json")
@@ -43,6 +48,18 @@ class SettingsManager(private val context: Context) {
         .registerTypeAdapter(LocationTarget::class.java, LocationTargetAdapter())
         .registerTypeAdapter(SpeedUnit::class.java, SpeedUnitTypeAdapter())
         .create()
+
+    suspend fun resetToDefault() {
+        context.dataStore.edit { preferences ->
+            preferences.remove(CLEAR_ROUTE_ON_STOP)
+            preferences.remove(IS_USING_CROSSHAIRS)
+            preferences.remove(MAP_STYLE)
+            preferences.remove(SPEED_UNIT_VALUE_JSON)
+            preferences.remove(SPEED_SLIDER_UPPER_END)
+            preferences.remove(SPEED_SLIDER_LOWER_END)
+            preferences.remove(IS_CAMERA_FOLLOWING_MOCKED_LOCATION)
+        }
+    }
 
     val activeLocationTargetFlow: Flow<LocationTarget> = context.dataStore.data.map { preferences ->
         val json = preferences[ACTIVE_LOCATION_TARGET_JSON] ?: ""
