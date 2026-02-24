@@ -148,6 +148,33 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
+    fun importDataFromUri(uri: Uri) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val context = getApplication<Application>().applicationContext
+
+            try {
+                val json = context.contentResolver
+                    .openInputStream(uri)
+                    ?.bufferedReader()
+                    ?.use { it.readText() }
+                    ?: throw IllegalStateException("Unable to read file")
+
+                repository.importFromJson(json)
+                _speedUnitValue.value = settingsManager.speedUnitValueFlow.first()
+
+                launch(Dispatchers.Main) {
+                    Toast.makeText(context, "Import successful", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                launch(Dispatchers.Main) {
+                    Toast.makeText(context, "Import failed", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+
     fun updateCameraPosition(position: CameraPosition) {
         _cameraPosition.value = SavedCameraPosition(
             latitude = position.target.latitude,

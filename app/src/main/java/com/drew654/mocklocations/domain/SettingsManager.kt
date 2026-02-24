@@ -167,6 +167,12 @@ class SettingsManager(private val context: Context) {
         }
     }
 
+    suspend fun replaceRoutes(routes: List<LocationTarget.SavedRoute>) {
+        context.dataStore.edit { preferences ->
+            preferences[SAVED_ROUTES_JSON] = gson.toJson(routes)
+        }
+    }
+
     val isUsingCrosshairsFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
         preferences[IS_USING_CROSSHAIRS] ?: true
     }

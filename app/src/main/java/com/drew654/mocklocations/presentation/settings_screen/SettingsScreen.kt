@@ -1,6 +1,8 @@
 package com.drew654.mocklocations.presentation.settings_screen
 
 import android.content.Intent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
@@ -48,6 +50,13 @@ fun SettingsScreen(
     val scrollState = rememberScrollState()
     val mapStyle by viewModel.mapStyle.collectAsState()
     val isCameraFollowingMockedLocation by viewModel.isCameraFollowingMockedLocation.collectAsState()
+    val importLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        uri?.let {
+            viewModel.importDataFromUri(it)
+        }
+    }
 
     Scaffold(
         modifier = Modifier
@@ -121,6 +130,12 @@ fun SettingsScreen(
                 label = "Export settings",
                 onClick = {
                     navController.navigate(Screen.ExportSettings.route)
+                }
+            )
+            TextRow(
+                label = "Import settings",
+                onClick = {
+                    importLauncher.launch(arrayOf("application/json"))
                 }
             )
             TextRow(

@@ -5,6 +5,8 @@ import com.drew654.mocklocations.domain.SettingsManager
 import com.drew654.mocklocations.domain.model.ExportData
 import com.drew654.mocklocations.domain.model.ExportMeta
 import com.drew654.mocklocations.domain.model.ExportSettings
+import com.drew654.mocklocations.domain.model.LocationTarget
+import com.drew654.mocklocations.domain.model.getMapStyleByName
 import kotlinx.coroutines.flow.first
 import java.time.Instant
 import java.time.format.DateTimeFormatter
@@ -47,5 +49,28 @@ class ExportRepository(
         )
 
         return settingsManager.gson.toJson(exportData)
+    }
+
+    suspend fun importFromJson(json: String) {
+        val exportData = settingsManager.gson.fromJson(json, ExportData::class.java)
+
+        importSettings(exportData.settings)
+        importRoutes(exportData.routes)
+    }
+
+    private suspend fun importSettings(settings: ExportSettings?) {
+        if (settings == null) return
+        settingsManager.setIsUsingCrosshairs(settings.useCrosshairs)
+        settingsManager.setClearRouteOnStop(settings.clearRouteOnStop)
+        settingsManager.setIsCameraFollowingMockedLocation(settings.cameraFollowsMockedLocation)
+        settings.mapStyle?.let { settingsManager.setMapStyle(getMapStyleByName(it)) }
+        settingsManager.setSpeedUnitValue(settings.expandedControlsSpeedUnitValue)
+        settingsManager.setSpeedSliderLowerEnd(settings.expandedControlsSpeedSliderLowerEnd)
+        settingsManager.setSpeedSliderUpperEnd(settings.expandedControlsSpeedSliderUpperEnd)
+    }
+
+    private suspend fun importRoutes(routes: List<LocationTarget.SavedRoute>?) {
+        if (routes == null) return
+        settingsManager.replaceRoutes(routes)
     }
 }
