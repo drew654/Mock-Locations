@@ -16,6 +16,7 @@ import com.drew654.mocklocations.domain.model.SpeedUnit
 import com.drew654.mocklocations.domain.model.SpeedUnitTypeAdapter
 import com.drew654.mocklocations.domain.model.SpeedUnitValue
 import com.drew654.mocklocations.domain.model.getMapStyleByName
+import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.flow.Flow
@@ -25,12 +26,17 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "se
 
 class SettingsManager(private val context: Context) {
     companion object {
+        // App data and status
         val ACTIVE_LOCATION_TARGET_JSON = stringPreferencesKey("active_location_target_json")
         val IS_MOCKING = booleanPreferencesKey("is_mocking")
         val IS_PAUSED = booleanPreferencesKey("is_paused")
         val CURRENT_MOCKED_LOCATION_JSON = stringPreferencesKey("current_mocked_location_json")
-        val CLEAR_ROUTE_ON_STOP = booleanPreferencesKey("clear_route_on_stop")
+
+        // Saved routes
         val SAVED_ROUTES_JSON = stringPreferencesKey("saved_routes_json")
+
+        // User preferences
+        val CLEAR_ROUTE_ON_STOP = booleanPreferencesKey("clear_route_on_stop")
         val IS_USING_CROSSHAIRS = booleanPreferencesKey("is_using_crosshairs")
         val MAP_STYLE = stringPreferencesKey("map_style")
         val SPEED_UNIT_VALUE_JSON = stringPreferencesKey("speed_unit_value_json")
@@ -38,11 +44,22 @@ class SettingsManager(private val context: Context) {
         val SPEED_SLIDER_LOWER_END = intPreferencesKey("speed_slider_lower_end")
         val IS_CAMERA_FOLLOWING_MOCKED_LOCATION = booleanPreferencesKey("is_camera_following_mocked_location")
     }
-
-    private val gson = GsonBuilder()
+    val gson: Gson = GsonBuilder()
         .registerTypeAdapter(LocationTarget::class.java, LocationTargetAdapter())
         .registerTypeAdapter(SpeedUnit::class.java, SpeedUnitTypeAdapter())
         .create()
+
+    suspend fun resetToDefault() {
+        context.dataStore.edit { preferences ->
+            preferences.remove(CLEAR_ROUTE_ON_STOP)
+            preferences.remove(IS_USING_CROSSHAIRS)
+            preferences.remove(MAP_STYLE)
+            preferences.remove(SPEED_UNIT_VALUE_JSON)
+            preferences.remove(SPEED_SLIDER_UPPER_END)
+            preferences.remove(SPEED_SLIDER_LOWER_END)
+            preferences.remove(IS_CAMERA_FOLLOWING_MOCKED_LOCATION)
+        }
+    }
 
     val activeLocationTargetFlow: Flow<LocationTarget> = context.dataStore.data.map { preferences ->
         val json = preferences[ACTIVE_LOCATION_TARGET_JSON] ?: ""
@@ -107,7 +124,7 @@ class SettingsManager(private val context: Context) {
 
     val speedUnitValueFlow: Flow<SpeedUnitValue> = context.dataStore.data.map { preferences ->
         val json = preferences[SPEED_UNIT_VALUE_JSON] ?: ""
-        if (json.isEmpty()) SpeedUnitValue(value = 30.0, speedUnit = SpeedUnit.MetersPerSecond)
+        if (json.isEmpty()) SpeedUnitValue(value = 30.0, speedUnit = SpeedUnit.MilesPerHour)
         else gson.fromJson(json, SpeedUnitValue::class.java)
     }
 
@@ -164,6 +181,12 @@ class SettingsManager(private val context: Context) {
 
                 preferences[SAVED_ROUTES_JSON] = gson.toJson(currentList)
             }
+        }
+    }
+
+    suspend fun replaceRoutes(routes: List<LocationTarget.SavedRoute>) {
+        context.dataStore.edit { preferences ->
+            preferences[SAVED_ROUTES_JSON] = gson.toJson(routes)
         }
     }
 

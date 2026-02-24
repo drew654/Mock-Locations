@@ -101,7 +101,7 @@ fun ExpandedControlsPreview() {
                 isExpanded = true,
                 speedUnitValue = SpeedUnitValue(
                     value = 30.0,
-                    speedUnit = SpeedUnit.MetersPerSecond
+                    speedUnit = SpeedUnit.MilesPerHour
                 ),
                 onSpeedChanged = { },
                 onSpeedChangeFinished = { },

@@ -1,6 +1,8 @@
 package com.drew654.mocklocations.presentation.settings_screen
 
 import android.content.Intent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
@@ -33,6 +35,7 @@ import com.drew654.mocklocations.R
 import com.drew654.mocklocations.presentation.MockLocationsViewModel
 import com.drew654.mocklocations.presentation.Screen
 import com.drew654.mocklocations.presentation.settings_screen.components.MapStyleDialog
+import com.drew654.mocklocations.presentation.settings_screen.components.ResetSettingsDialog
 import com.drew654.mocklocations.presentation.settings_screen.components.SwitchRow
 import com.drew654.mocklocations.presentation.settings_screen.components.TextRow
 
@@ -48,6 +51,14 @@ fun SettingsScreen(
     val scrollState = rememberScrollState()
     val mapStyle by viewModel.mapStyle.collectAsState()
     val isCameraFollowingMockedLocation by viewModel.isCameraFollowingMockedLocation.collectAsState()
+    val importLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        uri?.let {
+            viewModel.importDataFromUri(it)
+        }
+    }
+    var isShowingResetSettingsDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = Modifier
@@ -118,6 +129,24 @@ fun SettingsScreen(
                 }
             )
             TextRow(
+                label = "Export settings",
+                onClick = {
+                    navController.navigate(Screen.ExportSettings.route)
+                }
+            )
+            TextRow(
+                label = "Import settings",
+                onClick = {
+                    importLauncher.launch(arrayOf("application/json"))
+                }
+            )
+            TextRow(
+                label = "Reset to default",
+                onClick = {
+                    isShowingResetSettingsDialog = true
+                }
+            )
+            TextRow(
                 label = "Manual",
                 onClick = {
                     Intent().apply {
@@ -149,6 +178,17 @@ fun SettingsScreen(
         onStyleSelected = {
             viewModel.setMapStyle(it)
             isShowingMapStylesDialog = false
+        }
+    )
+
+    ResetSettingsDialog(
+        isVisible = isShowingResetSettingsDialog,
+        onConfirm = {
+            viewModel.resetSettingsToDefault()
+            isShowingResetSettingsDialog = false
+        },
+        onDismiss = {
+            isShowingResetSettingsDialog = false
         }
     )
 }

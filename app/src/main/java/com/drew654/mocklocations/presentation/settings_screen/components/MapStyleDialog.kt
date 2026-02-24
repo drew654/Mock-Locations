@@ -102,7 +102,7 @@ fun MapStyleDialog(
     showBackground = true
 )
 @Composable
-fun MapStyleDialogPreview() {
+private fun MapStyleDialogPreview() {
     MockLocationsTheme {
         Surface {
             MapStyleDialog(
