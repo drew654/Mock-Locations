@@ -19,11 +19,15 @@ import com.drew654.mocklocations.domain.model.toMetersPerSecond
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.getValue
@@ -31,15 +35,12 @@ import kotlin.getValue
 class MockLocationService : Service() {
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private val settingsManager by lazy { SettingsManager(applicationContext) }
-    private var mockJob: kotlinx.coroutines.Job? = null
+    private var mockJob: Job? = null
     private val locationManager by lazy { getSystemService(LOCATION_SERVICE) as LocationManager }
     private val providerName = LocationManager.GPS_PROVIDER
 
-    @Volatile
-    private var isPaused = false
-
-    @Volatile
-    private var isClearRouteOnStopEnabled = false
+    private lateinit var isPausedState: StateFlow<Boolean>
+    private lateinit var isClearRouteOnStopState: StateFlow<Boolean>
 
     companion object {
         const val CHANNEL_ID = "mock_location_channel"
@@ -54,17 +55,17 @@ class MockLocationService : Service() {
         super.onCreate()
         createNotificationChannel()
 
-        serviceScope.launch {
-            settingsManager.isPausedFlow.collect { paused ->
-                isPaused = paused
-            }
-        }
+        isPausedState = settingsManager.isPausedFlow.stateIn(
+            scope = serviceScope,
+            started = SharingStarted.Eagerly,
+            initialValue = false
+        )
 
-        serviceScope.launch {
-            settingsManager.clearRouteOnStopFlow.collect { enabled ->
-                isClearRouteOnStopEnabled = enabled
-            }
-        }
+        isClearRouteOnStopState = settingsManager.clearRouteOnStopFlow.stateIn(
+            scope = serviceScope,
+            started = SharingStarted.Eagerly,
+            initialValue = false
+        )
     }
 
     override fun onDestroy() {
@@ -236,7 +237,7 @@ class MockLocationService : Service() {
                 var lastBroadcastLocation: Location? = null
 
                 while (index < routePoints.size && isActive) {
-                    if (isPaused) {
+                    if (isPausedState.value) {
                         lastBroadcastLocation?.let { loc ->
                             loc.time = System.currentTimeMillis()
                             loc.elapsedRealtimeNanos = SystemClock.elapsedRealtimeNanos()
@@ -369,7 +370,7 @@ class MockLocationService : Service() {
         settingsManager.setIsPaused(false)
         settingsManager.setCurrentMockedLocation(null)
 
-        if (isClearRouteOnStopEnabled) {
+        if (isClearRouteOnStopState.value) {
             sendBroadcast(Intent(ACTION_ROUTE_FINISHED).setPackage(packageName))
         }
 
