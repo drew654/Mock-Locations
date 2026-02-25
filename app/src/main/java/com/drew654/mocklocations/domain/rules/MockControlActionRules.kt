@@ -33,6 +33,9 @@ object MockControlActionRules {
             actions.add(MockControlAction.ADD_POINT)
         }
 
+        actions.add(MockControlAction.CLEAR_LOCATION_TARGET)
+        actions.add(MockControlAction.POP_POINT)
+
         return actions
     }
 
@@ -51,6 +54,11 @@ object MockControlActionRules {
 
         if (locationTarget is LocationTarget.Empty && !isUsingCrosshairs) {
             actions.remove(MockControlAction.START)
+        }
+
+        if (locationTarget is LocationTarget.Empty || isMocking) {
+            actions.remove(MockControlAction.CLEAR_LOCATION_TARGET)
+            actions.remove(MockControlAction.POP_POINT)
         }
 
         return actions

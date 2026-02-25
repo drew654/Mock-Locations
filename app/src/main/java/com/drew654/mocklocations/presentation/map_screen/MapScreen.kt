@@ -325,8 +325,6 @@ fun MapScreen(
                             isNamingRoute = true
                         }
                     },
-                    locationTarget = locationTarget,
-                    isMocking = isMocking,
                     isPaused = isPaused,
                     isUsingCrosshairs = isUsingCrosshairs,
                     onAddCrosshairsPoint = {

@@ -26,7 +26,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.drew654.mocklocations.R
-import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.MockControlAction
 import com.drew654.mocklocations.presentation.Screen
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
@@ -46,8 +45,6 @@ fun MapControlButtons(
     onPopPoint: () -> Unit,
     onTogglePause: () -> Unit,
     onSaveLocationTarget: () -> Unit,
-    locationTarget: LocationTarget,
-    isMocking: Boolean,
     isPaused: Boolean,
     isUsingCrosshairs: Boolean,
     onAddCrosshairsPoint: () -> Unit,
@@ -152,8 +149,6 @@ fun MapControlButtons(
                 onSaveLocationTarget = {
                     onSaveLocationTarget()
                 },
-                locationTarget = locationTarget,
-                isMocking = isMocking,
                 onAddCrosshairsPoint = {
                     onAddCrosshairsPoint()
                 },
@@ -207,8 +202,6 @@ fun MapControlButtonsPreview() {
                 onPopPoint = { },
                 onTogglePause = { },
                 onSaveLocationTarget = { },
-                locationTarget = LocationTarget.Empty,
-                isMocking = false,
                 isPaused = false,
                 isUsingCrosshairs = true,
                 onAddCrosshairsPoint = { },

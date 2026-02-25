@@ -17,10 +17,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.MockControlAction
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
-import com.google.android.gms.maps.model.LatLng
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,8 +30,6 @@ fun MockLocationControls(
     onStop: () -> Unit,
     onPopPoint: () -> Unit,
     onTogglePause: () -> Unit,
-    locationTarget: LocationTarget,
-    isMocking: Boolean,
     onSaveLocationTarget: () -> Unit,
     onAddCrosshairsPoint: () -> Unit,
     controlsAreExpanded: Boolean,
@@ -55,11 +51,10 @@ fun MockLocationControls(
     ) {
         Spacer(Modifier.height((64 + 8).dp))
         SecondaryMockLocationControls(
+            enabledMockControlActions = enabledMockControlActions,
             onClearLocationTarget = onClearLocationTarget,
             onSaveLocationTarget = onSaveLocationTarget,
             onPopPoint = onPopPoint,
-            locationTarget = locationTarget,
-            isMocking = isMocking,
             scrollState = scrollState,
             modifier = Modifier.weight(1f, fill = false)
         )
@@ -145,8 +140,6 @@ private fun MockLocationControlsPreview1() {
                 onStop = { },
                 onPopPoint = { },
                 onTogglePause = { },
-                locationTarget = LocationTarget.Empty,
-                isMocking = false,
                 onSaveLocationTarget = { },
                 onAddCrosshairsPoint = { },
                 controlsAreExpanded = false,
@@ -183,8 +176,6 @@ private fun MockLocationControlsPreview2() {
                 onStop = { },
                 onPopPoint = { },
                 onTogglePause = { },
-                locationTarget = LocationTarget.Route(listOf(LatLng(0.0, 0.0), LatLng(0.0, 0.0))),
-                isMocking = true,
                 onSaveLocationTarget = { },
                 onAddCrosshairsPoint = { },
                 controlsAreExpanded = false,
@@ -223,8 +214,6 @@ private fun MockLocationControlsPreviewNarrow() {
                 onStop = { },
                 onPopPoint = { },
                 onTogglePause = { },
-                locationTarget = LocationTarget.Empty,
-                isMocking = false,
                 onSaveLocationTarget = { },
                 onAddCrosshairsPoint = { },
                 controlsAreExpanded = false,

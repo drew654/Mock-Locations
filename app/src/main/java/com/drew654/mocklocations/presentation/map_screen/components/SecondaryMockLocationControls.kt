@@ -18,18 +18,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.R
-import com.drew654.mocklocations.domain.model.LocationTarget
+import com.drew654.mocklocations.domain.model.MockControlAction
 
 @Composable
 fun SecondaryMockLocationControls(
+    enabledMockControlActions: Set<MockControlAction>,
     onClearLocationTarget: () -> Unit,
     onSaveLocationTarget: () -> Unit,
     onPopPoint: () -> Unit,
-    locationTarget: LocationTarget,
-    isMocking: Boolean,
     scrollState: ScrollState,
     modifier: Modifier = Modifier
 ) {
+    val enabledTint = MaterialTheme.colorScheme.onPrimaryContainer
+    val disabledTint = MaterialTheme.colorScheme.onSurfaceVariant
+
     Column(
         modifier = modifier
             .verticalScroll(
@@ -51,7 +53,7 @@ fun SecondaryMockLocationControls(
             Icon(
                 painter = painterResource(id = R.drawable.baseline_save_24),
                 contentDescription = "Saved Routes",
-                tint = MaterialTheme.colorScheme.onPrimaryContainer
+                tint = enabledTint
             )
         }
         Spacer(Modifier.height(4.dp))
@@ -59,15 +61,15 @@ fun SecondaryMockLocationControls(
             onClick = {
                 onClearLocationTarget()
             },
-            enabled = locationTarget !is LocationTarget.Empty && !isMocking
+            enabled = MockControlAction.CLEAR_LOCATION_TARGET in enabledMockControlActions
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.baseline_clear_24),
                 contentDescription = "Clear",
-                tint = if (locationTarget is LocationTarget.Empty)
-                    MaterialTheme.colorScheme.onSurfaceVariant
+                tint = if (MockControlAction.CLEAR_LOCATION_TARGET in enabledMockControlActions)
+                    enabledTint
                 else
-                    MaterialTheme.colorScheme.onPrimaryContainer
+                    disabledTint
             )
         }
         Spacer(Modifier.height(4.dp))
@@ -75,15 +77,15 @@ fun SecondaryMockLocationControls(
             onClick = {
                 onPopPoint()
             },
-            enabled = locationTarget !is LocationTarget.Empty && !isMocking
+            enabled = MockControlAction.POP_POINT in enabledMockControlActions
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.baseline_backspace_24),
                 contentDescription = "Pop",
-                tint = if (locationTarget is LocationTarget.Empty)
-                    MaterialTheme.colorScheme.onSurfaceVariant
+                tint = if (MockControlAction.POP_POINT in enabledMockControlActions)
+                    enabledTint
                 else
-                    MaterialTheme.colorScheme.onPrimaryContainer
+                    disabledTint
             )
         }
     }
