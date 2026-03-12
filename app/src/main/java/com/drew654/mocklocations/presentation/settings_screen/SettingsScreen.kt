@@ -51,6 +51,7 @@ fun SettingsScreen(
     val scrollState = rememberScrollState()
     val mapStyle by viewModel.mapStyle.collectAsState()
     val isCameraFollowingMockedLocation by viewModel.isCameraFollowingMockedLocation.collectAsState()
+    val isGoingToWaitAtRouteFinish by viewModel.isGoingToWaitAtRouteFinish.collectAsState()
     val importLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
@@ -113,6 +114,13 @@ fun SettingsScreen(
                 checked = isCameraFollowingMockedLocation,
                 onCheckedChange = {
                     viewModel.setIsCameraFollowingMockedLocation(it)
+                }
+            )
+            SwitchRow(
+                label = "Wait at the end of a route",
+                checked = isGoingToWaitAtRouteFinish,
+                onCheckedChange = {
+                    viewModel.setIsGoingToWaitAtRouteFinish(it)
                 }
             )
             TextRow(

@@ -43,6 +43,7 @@ class SettingsManager(private val context: Context) {
         val SPEED_SLIDER_UPPER_END = intPreferencesKey("speed_slider_upper_end")
         val SPEED_SLIDER_LOWER_END = intPreferencesKey("speed_slider_lower_end")
         val IS_CAMERA_FOLLOWING_MOCKED_LOCATION = booleanPreferencesKey("is_camera_following_mocked_location")
+        val IS_GOING_TO_WAIT_AT_ROUTE_FINISH = booleanPreferencesKey("is_going_to_wait_at_route_finish")
     }
     val gson: Gson = GsonBuilder()
         .registerTypeAdapter(LocationTarget::class.java, LocationTargetAdapter())
@@ -58,6 +59,7 @@ class SettingsManager(private val context: Context) {
             preferences.remove(SPEED_SLIDER_UPPER_END)
             preferences.remove(SPEED_SLIDER_LOWER_END)
             preferences.remove(IS_CAMERA_FOLLOWING_MOCKED_LOCATION)
+            preferences.remove(IS_GOING_TO_WAIT_AT_ROUTE_FINISH)
         }
     }
 
@@ -237,6 +239,16 @@ class SettingsManager(private val context: Context) {
     suspend fun setIsCameraFollowingMockedLocation(value: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[IS_CAMERA_FOLLOWING_MOCKED_LOCATION] = value
+        }
+    }
+
+    val isGoingToWaitAtRouteFinishFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[IS_GOING_TO_WAIT_AT_ROUTE_FINISH] ?: false
+    }
+
+    suspend fun setIsGoingToWaitAtRouteFinish(value: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[IS_GOING_TO_WAIT_AT_ROUTE_FINISH] = value
         }
     }
 }
