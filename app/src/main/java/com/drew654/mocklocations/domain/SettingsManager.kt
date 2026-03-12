@@ -11,6 +11,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.LocationTargetAdapter
 import com.drew654.mocklocations.domain.model.MapStyle
+import com.drew654.mocklocations.domain.model.MockControlState
 import com.drew654.mocklocations.domain.model.RoutePoint
 import com.drew654.mocklocations.domain.model.SpeedUnit
 import com.drew654.mocklocations.domain.model.SpeedUnitTypeAdapter
@@ -26,10 +27,10 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "se
 
 class SettingsManager(private val context: Context) {
     companion object {
+        // Affects UI
+        val MOCK_CONTROL_STATE_JSON = stringPreferencesKey("mock_control_state_json")
+
         // App data and status
-        val ACTIVE_LOCATION_TARGET_JSON = stringPreferencesKey("active_location_target_json")
-        val IS_MOCKING = booleanPreferencesKey("is_mocking")
-        val IS_PAUSED = booleanPreferencesKey("is_paused")
         val CURRENT_MOCKED_LOCATION_JSON = stringPreferencesKey("current_mocked_location_json")
 
         // Saved routes
@@ -37,7 +38,6 @@ class SettingsManager(private val context: Context) {
 
         // User preferences
         val CLEAR_ROUTE_ON_STOP = booleanPreferencesKey("clear_route_on_stop")
-        val IS_USING_CROSSHAIRS = booleanPreferencesKey("is_using_crosshairs")
         val MAP_STYLE = stringPreferencesKey("map_style")
         val SPEED_UNIT_VALUE_JSON = stringPreferencesKey("speed_unit_value_json")
         val SPEED_SLIDER_UPPER_END = intPreferencesKey("speed_slider_upper_end")
@@ -50,9 +50,9 @@ class SettingsManager(private val context: Context) {
         .create()
 
     suspend fun resetToDefault() {
+        setIsUsingCrosshairs(false)
         context.dataStore.edit { preferences ->
             preferences.remove(CLEAR_ROUTE_ON_STOP)
-            preferences.remove(IS_USING_CROSSHAIRS)
             preferences.remove(MAP_STYLE)
             preferences.remove(SPEED_UNIT_VALUE_JSON)
             preferences.remove(SPEED_SLIDER_UPPER_END)
@@ -61,42 +61,25 @@ class SettingsManager(private val context: Context) {
         }
     }
 
-    val activeLocationTargetFlow: Flow<LocationTarget> = context.dataStore.data.map { preferences ->
-        val json = preferences[ACTIVE_LOCATION_TARGET_JSON] ?: ""
-        if (json.isEmpty()) LocationTarget.Empty
-        else gson.fromJson(json, LocationTarget::class.java)
-    }
+    val mockControlStateFlow: Flow<MockControlState> =
+        context.dataStore.data.map { preferences ->
+            val json = preferences[MOCK_CONTROL_STATE_JSON] ?: ""
 
-    suspend fun setActiveLocationTarget(target: LocationTarget) {
-        context.dataStore.edit {
-            it[ACTIVE_LOCATION_TARGET_JSON] = gson.toJson(target, LocationTarget::class.java)
+            if (json.isEmpty()) {
+                MockControlState()
+            } else {
+                try {
+                    gson.fromJson(json, MockControlState::class.java)
+                } catch (_: Exception) {
+                    MockControlState()
+                }
+            }
         }
-    }
 
-    val isMockingFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
-        preferences[IS_MOCKING] ?: false
-    }
-
-    suspend fun setIsMocking(isMocking: Boolean) {
+    suspend fun setMockControlState(state: MockControlState) {
         context.dataStore.edit { preferences ->
-            preferences[IS_MOCKING] = isMocking
-        }
-    }
-
-    val isPausedFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
-        preferences[IS_PAUSED] ?: false
-    }
-
-    suspend fun setIsPaused(isPaused: Boolean) {
-        context.dataStore.edit { preferences ->
-            preferences[IS_PAUSED] = isPaused
-        }
-    }
-
-    suspend fun toggleIsPaused() {
-        context.dataStore.edit { preferences ->
-            val current = preferences[IS_PAUSED] ?: false
-            preferences[IS_PAUSED] = !current
+            preferences[MOCK_CONTROL_STATE_JSON] =
+                gson.toJson(state, MockControlState::class.java)
         }
     }
 
@@ -190,13 +173,16 @@ class SettingsManager(private val context: Context) {
         }
     }
 
-    val isUsingCrosshairsFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
-        preferences[IS_USING_CROSSHAIRS] ?: true
-    }
-
-    suspend fun setIsUsingCrosshairs(enabled: Boolean) {
+    private suspend fun setIsUsingCrosshairs(enabled: Boolean) {
         context.dataStore.edit { preferences ->
-            preferences[IS_USING_CROSSHAIRS] = enabled
+            val current = preferences[MOCK_CONTROL_STATE_JSON]
+                ?.let { gson.fromJson(it, MockControlState::class.java) }
+                ?: MockControlState()
+
+            val updated = current.copy(isUsingCrosshairs = enabled)
+
+            preferences[MOCK_CONTROL_STATE_JSON] =
+                gson.toJson(updated, MockControlState::class.java)
         }
     }
 
