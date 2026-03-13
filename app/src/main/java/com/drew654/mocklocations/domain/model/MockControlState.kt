@@ -26,3 +26,15 @@ fun MockControlState.getEnabledActions(): Set<MockControlAction> {
         isUsingCrosshairs
     )
 }
+
+fun MockControlState.isPauseVisible(): Boolean {
+    val isRoute =
+        activeLocationTarget is LocationTarget.Route || activeLocationTarget is LocationTarget.SavedRoute
+    return isMocking && isRoute && !isPaused
+}
+
+fun MockControlState.isResumeVisible(): Boolean {
+    val isRoute =
+        activeLocationTarget is LocationTarget.Route || activeLocationTarget is LocationTarget.SavedRoute
+    return isMocking && isRoute && isPaused
+}
