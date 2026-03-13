@@ -12,10 +12,10 @@ object MockControlActionRules {
     ): Set<MockControlAction> {
         val actions = mutableSetOf<MockControlAction>()
 
-        if (!isMocking) {
-            actions.add(MockControlAction.START)
-        } else {
+        if (isMocking) {
             actions.add(MockControlAction.STOP)
+        } else {
+            actions.add(MockControlAction.START)
         }
 
         val isRoute =

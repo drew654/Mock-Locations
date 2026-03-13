@@ -2,6 +2,7 @@ package com.drew654.mocklocations.service
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
 import android.location.Location
@@ -48,6 +49,7 @@ class MockLocationService : Service() {
         const val NOTIFICATION_ID = 1
         const val ACTION_START_MOCKING = "ACTION_START_MOCKING"
         const val ACTION_STOP_MOCKING = "ACTION_STOP_MOCKING"
+        const val ACTION_STOP_MOCKING_NOTIFICATION = "ACTION_STOP_MOCKING_NOTIFICATION"
         const val ACTION_ROUTE_FINISHED = "ACTION_ROUTE_FINISHED"
         const val ACTION_RESTORE_STRAIGHT_LINE_MOCKING = "ACTION_RESTORE_STRAIGHT_LINE_MOCKING"
     }
@@ -82,11 +84,25 @@ class MockLocationService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        val stopMockingIntent = PendingIntent.getService(
+            this,
+            0,
+            Intent(this, MockLocationService::class.java).apply {
+                action = ACTION_STOP_MOCKING_NOTIFICATION
+            },
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Location Mocking Active")
             .setContentText("Your location is currently being mocked.")
             .setSmallIcon(R.drawable.baseline_my_location_24)
             .setOngoing(true)
+            .addAction(
+                R.drawable.baseline_stop_24,
+                "Stop",
+                stopMockingIntent
+            )
             .build()
 
         startForeground(NOTIFICATION_ID, notification)
@@ -105,6 +121,20 @@ class MockLocationService : Service() {
 
             ACTION_STOP_MOCKING -> {
                 serviceScope.launch {
+                    stopMocking()
+                }
+            }
+
+            ACTION_STOP_MOCKING_NOTIFICATION -> {
+                serviceScope.launch {
+                    settingsManager.setMockControlState(
+                        settingsManager.mockControlStateFlow.first().copy(
+                            isMocking = false,
+                            isPaused = false,
+                            activeLocationTarget = if (isClearRouteOnStopState.value) LocationTarget.Empty else settingsManager.mockControlStateFlow.first().activeLocationTarget
+                        )
+                    )
+
                     stopMocking()
                 }
             }
