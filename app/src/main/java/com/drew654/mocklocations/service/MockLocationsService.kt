@@ -50,6 +50,7 @@ class MockLocationService : Service() {
         const val ACTION_START_MOCKING = "ACTION_START_MOCKING"
         const val ACTION_STOP_MOCKING = "ACTION_STOP_MOCKING"
         const val ACTION_STOP_MOCKING_NOTIFICATION = "ACTION_STOP_MOCKING_NOTIFICATION"
+        const val ACTION_PAUSE_MOCKING_NOTIFICATION = "ACTION_PAUSE_MOCKING_NOTIFICATION"
         const val ACTION_ROUTE_FINISHED = "ACTION_ROUTE_FINISHED"
         const val ACTION_RESTORE_STRAIGHT_LINE_MOCKING = "ACTION_RESTORE_STRAIGHT_LINE_MOCKING"
     }
@@ -93,6 +94,16 @@ class MockLocationService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
+        val pauseMockingIntent = PendingIntent.getService(
+            this,
+            0,
+            Intent(this, MockLocationService::class.java).apply {
+                action = ACTION_PAUSE_MOCKING_NOTIFICATION
+            },
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Location Mocking Active")
             .setContentText("Your location is currently being mocked.")
@@ -102,6 +113,11 @@ class MockLocationService : Service() {
                 R.drawable.baseline_stop_24,
                 "Stop",
                 stopMockingIntent
+            )
+            .addAction(
+                R.drawable.baseline_pause_24,
+                "Pause",
+                pauseMockingIntent
             )
             .build()
 
@@ -136,6 +152,13 @@ class MockLocationService : Service() {
                     )
 
                     stopMocking()
+                }
+            }
+
+            ACTION_PAUSE_MOCKING_NOTIFICATION -> {
+                serviceScope.launch {
+                    val current = settingsManager.mockControlStateFlow.first().isPaused
+                    settingsManager.setMockControlState(settingsManager.mockControlStateFlow.first().copy(isPaused = !current))
                 }
             }
 
