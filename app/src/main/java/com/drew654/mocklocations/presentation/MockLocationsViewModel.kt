@@ -191,30 +191,31 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
+    private suspend fun updateControlState(transform: (MockControlState) -> MockControlState) {
+        val currentState = settingsManager.mockControlStateFlow.first()
+        val newState = transform(currentState)
+        settingsManager.setMockControlState(newState)
+    }
+
     fun togglePause() {
         viewModelScope.launch {
-            val current = settingsManager.mockControlStateFlow.first().isPaused
-            settingsManager.setMockControlState(settingsManager.mockControlStateFlow.first().copy(isPaused = !current))
+            updateControlState { it.copy(isPaused = !it.isPaused) }
         }
     }
 
     suspend fun pushPoint(point: LatLng) {
-        val current = settingsManager.mockControlStateFlow.first().activeLocationTarget
-        val updated = LocationTarget.create(current.points + point)
-        settingsManager.setMockControlState(settingsManager.mockControlStateFlow.first().copy(activeLocationTarget = updated))
+        updateControlState { it.copy(activeLocationTarget = LocationTarget.create(it.activeLocationTarget.points + point)) }
     }
 
     fun popPoint() {
         viewModelScope.launch {
-            val current = settingsManager.mockControlStateFlow.first().activeLocationTarget
-            val updated = LocationTarget.create(current.points.dropLast(1))
-            settingsManager.setMockControlState(settingsManager.mockControlStateFlow.first().copy(activeLocationTarget = updated))
+            updateControlState { it.copy(activeLocationTarget = LocationTarget.create(it.activeLocationTarget.points.dropLast(1))) }
         }
     }
 
     fun clearLocationTarget() {
         viewModelScope.launch {
-            settingsManager.setMockControlState(settingsManager.mockControlStateFlow.first().copy(activeLocationTarget = LocationTarget.Empty))
+            updateControlState { it.copy(activeLocationTarget = LocationTarget.Empty) }
         }
     }
 
@@ -223,15 +224,15 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     }
 
     fun startMockLocation(context: Context, pushPoint: LatLng? = null) {
-        val target = if (pushPoint == null) {
-            mockControlState.value.activeLocationTarget
-        } else {
-            LocationTarget.create(mockControlState.value.activeLocationTarget.points + pushPoint)
-        }
-        if (target is LocationTarget.Empty) return
-
         viewModelScope.launch {
-            settingsManager.setMockControlState(settingsManager.mockControlStateFlow.first().copy(isMocking = true, activeLocationTarget = target))
+            updateControlState { state ->
+                val target = if (pushPoint == null) {
+                    state.activeLocationTarget
+                } else {
+                    LocationTarget.create(state.activeLocationTarget.points + pushPoint)
+                }
+                state.copy(isMocking = true, activeLocationTarget = target)
+            }
 
             val intent = Intent(getApplication(), MockLocationService::class.java).apply {
                 action = ACTION_START_MOCKING
@@ -282,7 +283,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
 
     fun loadSavedRoute(route: LocationTarget.SavedRoute) {
         viewModelScope.launch {
-            settingsManager.setMockControlState(settingsManager.mockControlStateFlow.first().copy(activeLocationTarget = route))
+            updateControlState { it.copy(activeLocationTarget = route) }
         }
     }
 
@@ -300,7 +301,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
 
     fun setIsUsingCrosshairs(enabled: Boolean) {
         viewModelScope.launch {
-            settingsManager.setMockControlState(settingsManager.mockControlStateFlow.first().copy(isUsingCrosshairs = enabled))
+            updateControlState { it.copy(isUsingCrosshairs = enabled) }
         }
     }
 
