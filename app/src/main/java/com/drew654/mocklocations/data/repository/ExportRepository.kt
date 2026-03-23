@@ -28,7 +28,7 @@ class ExportRepository(
 
         val settings = if (exportSettings) {
             ExportSettings(
-                useCrosshairs = settingsManager.isUsingCrosshairsFlow.first(),
+                useCrosshairs = settingsManager.mockControlStateFlow.first().isUsingCrosshairs,
                 clearRouteOnStop = settingsManager.clearRouteOnStopFlow.first(),
                 cameraFollowsMockedLocation = settingsManager.isCameraFollowingMockedLocation.first(),
                 mapStyle = settingsManager.mapStyleFlow.first()?.name,
@@ -60,7 +60,7 @@ class ExportRepository(
 
     private suspend fun importSettings(settings: ExportSettings?) {
         if (settings == null) return
-        settingsManager.setIsUsingCrosshairs(settings.useCrosshairs)
+        settingsManager.setMockControlState(settingsManager.mockControlStateFlow.first().copy(isUsingCrosshairs = settings.useCrosshairs))
         settingsManager.setClearRouteOnStop(settings.clearRouteOnStop)
         settingsManager.setIsCameraFollowingMockedLocation(settings.cameraFollowsMockedLocation)
         settingsManager.setMapStyle(getMapStyleByName(settings.mapStyle ?: ""))

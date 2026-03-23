@@ -45,7 +45,8 @@ fun SettingsScreen(
     viewModel: MockLocationsViewModel,
     navController: NavController
 ) {
-    val isUsingCrosshairs by viewModel.isUsingCrosshairs.collectAsState()
+    val mockControlState by viewModel.mockControlState.collectAsState()
+    val isUsingCrosshairs = mockControlState.isUsingCrosshairs
     val clearPointsOnStop by viewModel.clearRouteOnStop.collectAsState()
     var isShowingMapStylesDialog by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
