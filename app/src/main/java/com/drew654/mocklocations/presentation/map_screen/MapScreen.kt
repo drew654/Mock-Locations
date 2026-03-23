@@ -295,7 +295,7 @@ fun MapScreen(
                             return@MapControlButtons
                         }
 
-                        if (isCameraFollowingMockedLocation) {
+                        if (isCameraFollowingMockedLocation && (locationTarget is LocationTarget.Route || locationTarget is LocationTarget.SavedRoute)) {
                             viewModel.setIsCameraCurrentlyFollowingMockedLocation(true)
                             cameraPositionState.move(CameraUpdateFactory.zoomTo(15f))
                         }
