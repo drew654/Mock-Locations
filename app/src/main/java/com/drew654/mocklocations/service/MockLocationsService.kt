@@ -169,6 +169,7 @@ class MockLocationService : Service() {
         startRouteMocking(
             routePoints = routePoints,
             startIndex = 0,
+            isStartedPaused = false,
             startedMessage = "Route Mocking Started"
         )
     }
@@ -183,6 +184,7 @@ class MockLocationService : Service() {
         startRouteMocking(
             routePoints = routePoints,
             startIndex = startIndex,
+            isStartedPaused = isPaused,
             startedMessage = "Route Mocking Restored"
         )
     }
@@ -207,6 +209,7 @@ class MockLocationService : Service() {
     private fun startRouteMocking(
         routePoints: List<RoutePoint>,
         startIndex: Int,
+        isStartedPaused: Boolean,
         startedMessage: String
     ) {
         mockJob?.cancel()
@@ -233,6 +236,26 @@ class MockLocationService : Service() {
                 var index = startIndex
                 var distanceAccumulator = 0.0
                 var lastBroadcastLocation: Location? = null
+
+                if (isStartedPaused) {
+                    val routePoint = routePoints.getOrNull(index) ?: return@launch
+
+                    val location = Location(providerName).apply {
+                        latitude = routePoint.latLng.latitude
+                        longitude = routePoint.latLng.longitude
+                        bearing = routePoint.bearing
+                        speed = currentSpeed.toFloat()
+                        time = System.currentTimeMillis()
+                        elapsedRealtimeNanos = SystemClock.elapsedRealtimeNanos()
+                        accuracy = 3f
+                    }
+
+                    lastBroadcastLocation = location
+                    locationManager.setTestProviderLocation(providerName, location)
+                    settingsManager.setCurrentMockedLocation(routePoint)
+
+                    delay(updateIntervalMs)
+                }
 
                 while (index < routePoints.size && isActive) {
                     if (isPaused) {
