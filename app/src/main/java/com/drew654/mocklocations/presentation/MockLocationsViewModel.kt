@@ -112,8 +112,12 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         ContextCompat.registerReceiver(application, object : BroadcastReceiver() {
             override fun onReceive(p0: Context?, p1: Intent?) {
                 viewModelScope.launch {
-                    if (clearRouteOnStop.value) {
-                        clearLocationTarget()
+                    updateMockControlState {
+                        it.copy(
+                            isMocking = false,
+                            isPaused = false,
+                            activeLocationTarget = if (clearRouteOnStop.value) LocationTarget.Empty else (it.activeLocationTarget)
+                        )
                     }
                 }
             }
@@ -190,13 +194,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         _controlsAreExpanded.value = expanded
     }
 
-    fun setMockControlState(mockControlState: MockControlState) {
-        viewModelScope.launch {
-            settingsManager.setMockControlState(mockControlState)
-        }
-    }
-
-    private suspend fun updateControlState(transform: (MockControlState) -> MockControlState) {
+    private suspend fun updateMockControlState(transform: (MockControlState) -> MockControlState) {
         val currentState = settingsManager.mockControlStateFlow.first()
         val newState = transform(currentState)
         settingsManager.setMockControlState(newState)
@@ -204,23 +202,23 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
 
     fun togglePause() {
         viewModelScope.launch {
-            updateControlState { it.copy(isPaused = !it.isPaused) }
+            updateMockControlState { it.copy(isPaused = !it.isPaused) }
         }
     }
 
     suspend fun pushPoint(point: LatLng) {
-        updateControlState { it.copy(activeLocationTarget = LocationTarget.create(it.activeLocationTarget.points + point)) }
+        updateMockControlState { it.copy(activeLocationTarget = LocationTarget.create(it.activeLocationTarget.points + point)) }
     }
 
     fun popPoint() {
         viewModelScope.launch {
-            updateControlState { it.copy(activeLocationTarget = LocationTarget.create(it.activeLocationTarget.points.dropLast(1))) }
+            updateMockControlState { it.copy(activeLocationTarget = LocationTarget.create(it.activeLocationTarget.points.dropLast(1))) }
         }
     }
 
     fun clearLocationTarget() {
         viewModelScope.launch {
-            updateControlState { it.copy(activeLocationTarget = LocationTarget.Empty) }
+            updateMockControlState { it.copy(activeLocationTarget = LocationTarget.Empty) }
         }
     }
 
@@ -230,7 +228,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
 
     fun startMockLocation(context: Context, pushPoint: LatLng? = null) {
         viewModelScope.launch {
-            updateControlState { state ->
+            updateMockControlState { state ->
                 val target = if (pushPoint == null) {
                     state.activeLocationTarget
                 } else {
@@ -247,11 +245,15 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     }
 
     fun stopMockLocation() {
-        setMockControlState(mockControlState.value.copy(
-            isMocking = false,
-            isPaused = false,
-            activeLocationTarget = if (clearRouteOnStop.value) LocationTarget.Empty else mockControlState.value.activeLocationTarget
-        ))
+        viewModelScope.launch {
+            updateMockControlState {
+                it.copy(
+                    isMocking = false,
+                    isPaused = false,
+                    activeLocationTarget = if (clearRouteOnStop.value) LocationTarget.Empty else (it.activeLocationTarget)
+                )
+            }
+        }
         val intent = Intent(getApplication(), MockLocationService::class.java).apply {
             action = MockLocationService.ACTION_STOP_MOCKING
         }
@@ -288,7 +290,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
 
     fun loadSavedRoute(route: LocationTarget.SavedRoute) {
         viewModelScope.launch {
-            updateControlState { it.copy(activeLocationTarget = route) }
+            updateMockControlState { it.copy(activeLocationTarget = route) }
         }
     }
 
@@ -306,7 +308,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
 
     fun setIsUsingCrosshairs(enabled: Boolean) {
         viewModelScope.launch {
-            updateControlState { it.copy(isUsingCrosshairs = enabled) }
+            updateMockControlState { it.copy(isUsingCrosshairs = enabled) }
         }
     }
 

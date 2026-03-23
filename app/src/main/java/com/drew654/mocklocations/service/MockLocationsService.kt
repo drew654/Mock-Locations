@@ -465,6 +465,11 @@ class MockLocationService : Service() {
     private suspend fun stopMockingInternal() {
         tearDownTestProvider()
         settingsManager.setCurrentMockedLocation(null)
+
+        if (isClearRouteOnStopState.value) {
+            sendBroadcast(Intent(ACTION_ROUTE_FINISHED).setPackage(packageName))
+        }
+
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
