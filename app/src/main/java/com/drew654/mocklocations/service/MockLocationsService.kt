@@ -245,7 +245,7 @@ class MockLocationService : Service() {
                         latitude = routePoint.latLng.latitude
                         longitude = routePoint.latLng.longitude
                         bearing = routePoint.bearing
-                        speed = currentSpeed.toFloat()
+                        speed = currentSpeedMetersPerSec.toFloat()
                         time = System.currentTimeMillis()
                         elapsedRealtimeNanos = SystemClock.elapsedRealtimeNanos()
                         accuracy = 3f
