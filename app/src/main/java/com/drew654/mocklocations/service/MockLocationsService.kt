@@ -262,7 +262,7 @@ class MockLocationService : Service() {
         startRouteMocking(
             routePoints = routePoints,
             startIndex = startIndex,
-            isStartedPaused = isPaused,
+            isStartedPaused = mockControlState.value.isPaused,
             startedMessage = "Route Mocking Restored"
         )
     }
