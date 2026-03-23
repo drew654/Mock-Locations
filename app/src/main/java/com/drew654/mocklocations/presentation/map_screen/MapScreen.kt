@@ -28,6 +28,8 @@ import androidx.navigation.NavController
 import com.drew654.mocklocations.R
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.Permission
+import com.drew654.mocklocations.domain.model.getEnabledActions
+import com.drew654.mocklocations.domain.model.getVisibleActions
 import com.drew654.mocklocations.domain.model.isGranted
 import com.drew654.mocklocations.presentation.MockLocationsViewModel
 import com.drew654.mocklocations.presentation.components.PermissionsDialog
@@ -59,9 +61,11 @@ fun MapScreen(
     val context = LocalContext.current
     val systemInDarkTheme = isSystemInDarkTheme()
     val scope = rememberCoroutineScope()
-    val locationTarget by viewModel.activeLocationTarget.collectAsState()
-    val isMocking by viewModel.isMocking.collectAsState()
-    val isPaused by viewModel.isPaused.collectAsState()
+    val mockControlState by viewModel.mockControlState.collectAsState()
+    val locationTarget = mockControlState.activeLocationTarget
+    val isMocking = mockControlState.isMocking
+    val isPaused = mockControlState.isPaused
+    val isUsingCrosshairs = mockControlState.isUsingCrosshairs
     val speedUnitValue by viewModel.speedUnitValue.collectAsState()
     var hasLocationPermission by remember {
         mutableStateOf(Permission.FineLocation.isGranted(context))
@@ -93,7 +97,6 @@ fun MapScreen(
     var isShowingSavedRoutesDialog by remember { mutableStateOf(false) }
     val savedRoutes by viewModel.savedRoutes.collectAsState()
     val controlsAreExpanded by viewModel.controlsAreExpanded.collectAsState()
-    val isUsingCrosshairs by viewModel.isUsingCrosshairs.collectAsState()
     val permissionsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { result ->
@@ -258,6 +261,8 @@ fun MapScreen(
                 }
                 MapControlButtons(
                     navController = navController,
+                    visibleMockControlActions = mockControlState.getVisibleActions(),
+                    enabledMockControlActions = mockControlState.getEnabledActions(),
                     cameraPositionState = cameraPositionState,
                     controlsAreExpanded = controlsAreExpanded,
                     setControlsAreExpanded = {
@@ -295,15 +300,15 @@ fun MapScreen(
                             return@MapControlButtons
                         }
 
-                        if (isCameraFollowingMockedLocation) {
+                        if (isCameraFollowingMockedLocation && (locationTarget is LocationTarget.Route || locationTarget is LocationTarget.SavedRoute)) {
                             viewModel.setIsCameraCurrentlyFollowingMockedLocation(true)
                             cameraPositionState.move(CameraUpdateFactory.zoomTo(15f))
                         }
                         scope.launch {
-                            if (isUsingCrosshairs && locationTarget is LocationTarget.Empty) {
-                                viewModel.pushPoint(cameraPositionState.position.target)
-                            }
-                            viewModel.startMockLocation(context)
+                            viewModel.startMockLocation(
+                                context = context,
+                                pushPoint = if (isUsingCrosshairs && locationTarget is LocationTarget.Empty) cameraPositionState.position.target else null
+                            )
                         }
                     },
                     onStop = {
@@ -321,8 +326,6 @@ fun MapScreen(
                             isNamingRoute = true
                         }
                     },
-                    locationTarget = locationTarget,
-                    isMocking = isMocking,
                     isPaused = isPaused,
                     isUsingCrosshairs = isUsingCrosshairs,
                     onAddCrosshairsPoint = {

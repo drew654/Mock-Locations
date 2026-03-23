@@ -2,8 +2,10 @@ package com.drew654.mocklocations.service
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.location.Location
 import android.location.LocationManager
 import android.location.provider.ProviderProperties
@@ -14,16 +16,23 @@ import androidx.core.app.NotificationCompat
 import com.drew654.mocklocations.R
 import com.drew654.mocklocations.domain.SettingsManager
 import com.drew654.mocklocations.domain.model.LocationTarget
+import com.drew654.mocklocations.domain.model.MockControlState
 import com.drew654.mocklocations.domain.model.RoutePoint
+import com.drew654.mocklocations.domain.model.isPauseVisible
+import com.drew654.mocklocations.domain.model.isResumeVisible
 import com.drew654.mocklocations.domain.model.toMetersPerSecond
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.getValue
@@ -31,21 +40,20 @@ import kotlin.getValue
 class MockLocationService : Service() {
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private val settingsManager by lazy { SettingsManager(applicationContext) }
-    private var mockJob: kotlinx.coroutines.Job? = null
+    private var mockJob: Job? = null
     private val locationManager by lazy { getSystemService(LOCATION_SERVICE) as LocationManager }
     private val providerName = LocationManager.GPS_PROVIDER
 
-    @Volatile
-    private var isPaused = false
-
-    @Volatile
-    private var isClearRouteOnStopEnabled = false
+    private lateinit var mockControlState: StateFlow<MockControlState>
+    private lateinit var isClearRouteOnStopState: StateFlow<Boolean>
 
     companion object {
         const val CHANNEL_ID = "mock_location_channel"
         const val NOTIFICATION_ID = 1
         const val ACTION_START_MOCKING = "ACTION_START_MOCKING"
         const val ACTION_STOP_MOCKING = "ACTION_STOP_MOCKING"
+        const val ACTION_STOP_MOCKING_NOTIFICATION = "ACTION_STOP_MOCKING_NOTIFICATION"
+        const val ACTION_PAUSE_MOCKING_NOTIFICATION = "ACTION_PAUSE_MOCKING_NOTIFICATION"
         const val ACTION_ROUTE_FINISHED = "ACTION_ROUTE_FINISHED"
         const val ACTION_RESTORE_STRAIGHT_LINE_MOCKING = "ACTION_RESTORE_STRAIGHT_LINE_MOCKING"
     }
@@ -54,15 +62,21 @@ class MockLocationService : Service() {
         super.onCreate()
         createNotificationChannel()
 
-        serviceScope.launch {
-            settingsManager.isPausedFlow.collect { paused ->
-                isPaused = paused
-            }
-        }
+        mockControlState = settingsManager.mockControlStateFlow.stateIn(
+            scope = serviceScope,
+            started = SharingStarted.Eagerly,
+            initialValue = MockControlState()
+        )
+
+        isClearRouteOnStopState = settingsManager.clearRouteOnStopFlow.stateIn(
+            scope = serviceScope,
+            started = SharingStarted.Eagerly,
+            initialValue = false
+        )
 
         serviceScope.launch {
-            settingsManager.clearRouteOnStopFlow.collect { enabled ->
-                isClearRouteOnStopEnabled = enabled
+            mockControlState.collect { mockControlState ->
+                updateNotification(mockControlState)
             }
         }
     }
@@ -78,19 +92,12 @@ class MockLocationService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Location Mocking Active")
-            .setContentText("Your location is currently being mocked.")
-            .setSmallIcon(R.drawable.baseline_my_location_24)
-            .setOngoing(true)
-            .build()
-
-        startForeground(NOTIFICATION_ID, notification)
+        updateNotification(mockControlState.value)
 
         when (intent?.action) {
             ACTION_START_MOCKING -> {
                 serviceScope.launch {
-                    val locationTarget = settingsManager.activeLocationTargetFlow.first()
+                    val locationTarget = settingsManager.mockControlStateFlow.first().activeLocationTarget
                     when (locationTarget) {
                         is LocationTarget.Empty -> stopMocking()
                         is LocationTarget.SinglePoint -> mockLocationSinglePoint(locationTarget.point)
@@ -105,9 +112,30 @@ class MockLocationService : Service() {
                 }
             }
 
+            ACTION_STOP_MOCKING_NOTIFICATION -> {
+                serviceScope.launch {
+                    settingsManager.setMockControlState(
+                        settingsManager.mockControlStateFlow.first().copy(
+                            isMocking = false,
+                            isPaused = false,
+                            activeLocationTarget = if (isClearRouteOnStopState.value) LocationTarget.Empty else settingsManager.mockControlStateFlow.first().activeLocationTarget
+                        )
+                    )
+
+                    stopMocking()
+                }
+            }
+
+            ACTION_PAUSE_MOCKING_NOTIFICATION -> {
+                serviceScope.launch {
+                    val current = settingsManager.mockControlStateFlow.first().isPaused
+                    settingsManager.setMockControlState(settingsManager.mockControlStateFlow.first().copy(isPaused = !current))
+                }
+            }
+
             ACTION_RESTORE_STRAIGHT_LINE_MOCKING -> {
                 serviceScope.launch {
-                    val locationTarget = settingsManager.activeLocationTargetFlow.first()
+                    val locationTarget = settingsManager.mockControlStateFlow.first().activeLocationTarget
                     val restoreMockingPoint = settingsManager.currentMockedLocationFlow.first()
                     if (locationTarget is LocationTarget.Route || locationTarget is LocationTarget.SavedRoute) {
                         restoreMockLocationStraightLineRoute(locationTarget, restoreMockingPoint!!)
@@ -121,13 +149,66 @@ class MockLocationService : Service() {
         return START_STICKY
     }
 
+    private fun updateNotification(mockControlState: MockControlState) {
+        val stopMockingIntent = PendingIntent.getService(
+            this,
+            0,
+            Intent(this, MockLocationService::class.java).apply {
+                action = ACTION_STOP_MOCKING_NOTIFICATION
+            },
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val pauseMockingIntent = PendingIntent.getService(
+            this,
+            0,
+            Intent(this, MockLocationService::class.java).apply {
+                action = ACTION_PAUSE_MOCKING_NOTIFICATION
+            },
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle("Location Mocking Active")
+            .setContentText("Your location is currently being mocked.")
+            .setSmallIcon(R.drawable.baseline_my_location_24)
+            .setOngoing(true)
+            .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
+            .addAction(
+                R.drawable.baseline_stop_24,
+                "Stop",
+                stopMockingIntent
+            )
+            .apply {
+                if (mockControlState.isPauseVisible()) {
+                    addAction(
+                        R.drawable.baseline_pause_24,
+                        "Pause",
+                        pauseMockingIntent
+                    )
+                } else if (mockControlState.isResumeVisible()) {
+                    addAction(
+                        R.drawable.baseline_play_arrow_24,
+                        "Resume",
+                        pauseMockingIntent
+                    )
+                }
+            }
+            .build()
+
+        startForeground(
+            NOTIFICATION_ID,
+            notification,
+            ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
+        )
+    }
+
     private fun mockLocationSinglePoint(point: LatLng) {
         mockJob?.cancel()
 
         mockJob = serviceScope.launch {
             try {
                 setUpTestProvider()
-                settingsManager.setIsMocking(true)
 
                 Toast.makeText(
                     this@MockLocationService,
@@ -161,15 +242,12 @@ class MockLocationService : Service() {
     }
 
     private fun mockLocationStraightLineRoute(locationTarget: LocationTarget) {
-        serviceScope.launch {
-            settingsManager.setIsPaused(false)
-        }
-
         val routePoints = buildRoutePoints(locationTarget.points)
 
         startRouteMocking(
             routePoints = routePoints,
             startIndex = 0,
+            isStartedPaused = false,
             startedMessage = "Route Mocking Started"
         )
     }
@@ -184,6 +262,7 @@ class MockLocationService : Service() {
         startRouteMocking(
             routePoints = routePoints,
             startIndex = startIndex,
+            isStartedPaused = mockControlState.value.isPaused,
             startedMessage = "Route Mocking Restored"
         )
     }
@@ -208,6 +287,7 @@ class MockLocationService : Service() {
     private fun startRouteMocking(
         routePoints: List<RoutePoint>,
         startIndex: Int,
+        isStartedPaused: Boolean,
         startedMessage: String
     ) {
         mockJob?.cancel()
@@ -215,7 +295,6 @@ class MockLocationService : Service() {
         mockJob = serviceScope.launch {
             try {
                 setUpTestProvider()
-                settingsManager.setIsMocking(true)
 
                 Toast.makeText(
                     this@MockLocationService,
@@ -235,8 +314,28 @@ class MockLocationService : Service() {
                 var distanceAccumulator = 0.0
                 var lastBroadcastLocation: Location? = null
 
+                if (isStartedPaused) {
+                    val routePoint = routePoints.getOrNull(index) ?: return@launch
+
+                    val location = Location(providerName).apply {
+                        latitude = routePoint.latLng.latitude
+                        longitude = routePoint.latLng.longitude
+                        bearing = routePoint.bearing
+                        speed = currentSpeedMetersPerSec.toFloat()
+                        time = System.currentTimeMillis()
+                        elapsedRealtimeNanos = SystemClock.elapsedRealtimeNanos()
+                        accuracy = 3f
+                    }
+
+                    lastBroadcastLocation = location
+                    locationManager.setTestProviderLocation(providerName, location)
+                    settingsManager.setCurrentMockedLocation(routePoint)
+
+                    delay(updateIntervalMs)
+                }
+
                 while (index < routePoints.size && isActive) {
-                    if (isPaused) {
+                    if (mockControlState.value.isPaused) {
                         lastBroadcastLocation?.let { loc ->
                             loc.time = System.currentTimeMillis()
                             loc.elapsedRealtimeNanos = SystemClock.elapsedRealtimeNanos()
@@ -365,14 +464,7 @@ class MockLocationService : Service() {
 
     private suspend fun stopMockingInternal() {
         tearDownTestProvider()
-        settingsManager.setIsMocking(false)
-        settingsManager.setIsPaused(false)
         settingsManager.setCurrentMockedLocation(null)
-
-        if (isClearRouteOnStopEnabled) {
-            sendBroadcast(Intent(ACTION_ROUTE_FINISHED).setPackage(packageName))
-        }
-
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
