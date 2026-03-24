@@ -116,6 +116,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
                         it.copy(
                             isMocking = false,
                             isPaused = false,
+                            isWaitingAtEndOfRoute = false,
                             activeLocationTarget = if (clearRouteOnStop.value) LocationTarget.Empty else (it.activeLocationTarget)
                         )
                     }
@@ -250,6 +251,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
                 it.copy(
                     isMocking = false,
                     isPaused = false,
+                    isWaitingAtEndOfRoute = false,
                     activeLocationTarget = if (clearRouteOnStop.value) LocationTarget.Empty else (it.activeLocationTarget)
                 )
             }

@@ -118,6 +118,7 @@ class MockLocationService : Service() {
                         settingsManager.mockControlStateFlow.first().copy(
                             isMocking = false,
                             isPaused = false,
+                            isWaitingAtEndOfRoute = false,
                             activeLocationTarget = if (isClearRouteOnStopState.value) LocationTarget.Empty else settingsManager.mockControlStateFlow.first().activeLocationTarget
                         )
                     )
@@ -375,6 +376,27 @@ class MockLocationService : Service() {
                     settingsManager.setCurrentMockedLocation(routePoint)
 
                     delay(updateIntervalMs)
+                }
+
+                if (settingsManager.isGoingToWaitAtRouteFinishFlow.first()) {
+                    settingsManager.setMockControlState(settingsManager.mockControlStateFlow.first().copy(
+                        isWaitingAtEndOfRoute = true
+                    ))
+
+                    while (mockControlState.value.isMocking) {
+                        lastBroadcastLocation?.let { loc ->
+                            loc.time = System.currentTimeMillis()
+                            loc.elapsedRealtimeNanos = SystemClock.elapsedRealtimeNanos()
+                            locationManager.setTestProviderLocation(providerName, loc)
+                            settingsManager.setCurrentMockedLocation(
+                                RoutePoint(
+                                    LatLng(loc.latitude, loc.longitude),
+                                    loc.bearing
+                                )
+                            )
+                        }
+                        delay(updateIntervalMs)
+                    }
                 }
 
                 Toast.makeText(

@@ -7,6 +7,7 @@ object MockControlActionRules {
     fun visibleActions(
         isMocking: Boolean,
         isPaused: Boolean,
+        isWaitingAtEndOfRoute: Boolean,
         locationTarget: LocationTarget,
         isUsingCrosshairs: Boolean
     ): Set<MockControlAction> {
@@ -21,7 +22,7 @@ object MockControlActionRules {
         val isRoute =
             locationTarget is LocationTarget.Route || locationTarget is LocationTarget.SavedRoute
 
-        if (isMocking && isRoute) {
+        if (isMocking && isRoute && !isWaitingAtEndOfRoute) {
             if (isPaused) {
                 actions.add(MockControlAction.RESUME)
             } else {
@@ -42,12 +43,14 @@ object MockControlActionRules {
     fun enabledActions(
         isMocking: Boolean,
         isPaused: Boolean,
+        isWaitingAtEndOfRoute: Boolean,
         locationTarget: LocationTarget,
         isUsingCrosshairs: Boolean
     ): Set<MockControlAction> {
         val actions = visibleActions(
             isMocking,
             isPaused,
+            isWaitingAtEndOfRoute,
             locationTarget,
             isUsingCrosshairs
         ).toMutableSet()
