@@ -38,6 +38,7 @@ import kotlinx.coroutines.launch
 import kotlin.getValue
 import kotlin.math.cos
 import kotlin.math.sin
+import kotlin.random.Random
 
 class MockLocationService : Service() {
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -211,7 +212,8 @@ class MockLocationService : Service() {
     private fun updateNoiseSmooth(accuracyMeters: Float) {
         val earthRadius = 6371000.0
 
-        val randomDistance = Math.random() * accuracyMeters
+        val noiseMeters = accuracyMeters * (0.3 + Random.nextDouble() * 0.4)
+        val randomDistance = Math.random() * noiseMeters
         val randomAngle = Math.random() * 2 * Math.PI
 
         val dLat = (randomDistance * cos(randomAngle)) / earthRadius
@@ -220,7 +222,7 @@ class MockLocationService : Service() {
         val randomLat = Math.toDegrees(dLat)
         val randomLng = Math.toDegrees(dLng)
 
-        val alpha = 0.1
+        val alpha = (accuracyMeters / 50f).coerceIn(0.05f, 0.4f)
 
         noiseLat = noiseLat * (1 - alpha) + randomLat * alpha
         noiseLng = noiseLng * (1 - alpha) + randomLng * alpha
@@ -239,7 +241,7 @@ class MockLocationService : Service() {
                     Toast.LENGTH_SHORT
                 ).show()
 
-                val accuracyMeters = 3f
+                val accuracyMeters = settingsManager.accuracyLevelFlow.first().meters
 
                 while (true) {
                     updateNoiseSmooth(accuracyMeters)
@@ -343,7 +345,7 @@ class MockLocationService : Service() {
                 var distanceAccumulator = 0.0
                 var lastBroadcastLocation: Location? = null
 
-                val accuracyMeters = 3f
+                val accuracyMeters = settingsManager.accuracyLevelFlow.first().meters
 
                 if (isStartedPaused) {
                     val routePoint = routePoints.getOrNull(index) ?: return@launch
