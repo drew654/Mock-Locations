@@ -260,7 +260,6 @@ class MockLocationService : Service() {
 
                 while (true) {
                     val currentAccuracyMeters = accuracyMetersState.value
-                    updateNoiseSmooth()
 
                     val noisyLat = point.latitude + noiseLat
                     val noisyLng = point.longitude + noiseLng
@@ -279,6 +278,7 @@ class MockLocationService : Service() {
                     }
                     locationManager.setTestProviderLocation(providerName, location)
                     delay(1000)
+                    updateNoiseSmooth()
                 }
             } catch (e: Exception) {
                 handleError(e)
@@ -384,8 +384,6 @@ class MockLocationService : Service() {
                 var pausedBaseLocation: Location? = null
 
                 while (index < routePoints.size && isActive) {
-                    updateNoiseSmooth()
-
                     if (mockControlState.value.isPaused) {
                         if (pausedBaseLocation == null) {
                             pausedBaseLocation = lastBroadcastLocation
@@ -414,6 +412,7 @@ class MockLocationService : Service() {
                         }
 
                         delay(updateIntervalMs)
+                        updateNoiseSmooth()
                         continue
                     } else {
                         pausedBaseLocation = null
@@ -445,6 +444,7 @@ class MockLocationService : Service() {
                     settingsManager.setCurrentMockedLocation(routePoint)
 
                     delay(updateIntervalMs)
+                    updateNoiseSmooth()
                 }
 
                 if (settingsManager.isGoingToWaitAtRouteFinishFlow.first()) {
@@ -453,8 +453,6 @@ class MockLocationService : Service() {
                     ))
 
                     while (mockControlState.value.isMocking) {
-                        updateNoiseSmooth()
-
                         if (pausedBaseLocation == null) {
                             pausedBaseLocation = lastBroadcastLocation
                         }
@@ -482,6 +480,7 @@ class MockLocationService : Service() {
                         }
 
                         delay(updateIntervalMs)
+                        updateNoiseSmooth()
                     }
                 }
 
