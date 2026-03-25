@@ -12,6 +12,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.drew654.mocklocations.data.repository.ExportRepository
 import com.drew654.mocklocations.domain.SettingsManager
+import com.drew654.mocklocations.domain.model.AccuracyLevel
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.MapStyle
 import com.drew654.mocklocations.domain.model.MockControlState
@@ -54,6 +55,11 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = null
+    )
+    val accuracyLevel: StateFlow<AccuracyLevel> = settingsManager.accuracyLevelFlow.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = AccuracyLevel.Perfect
     )
     val speedSliderLowerEnd: StateFlow<Int> = settingsManager.speedSliderLowerEndFlow.stateIn(
         scope = viewModelScope,
@@ -317,6 +323,12 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     fun setMapStyle(mapStyle: MapStyle?) {
         viewModelScope.launch {
             settingsManager.setMapStyle(mapStyle)
+        }
+    }
+
+    fun setAccuracyLevel(accuracyLevel: AccuracyLevel) {
+        viewModelScope.launch {
+            settingsManager.setAccuracyLevel(accuracyLevel)
         }
     }
 

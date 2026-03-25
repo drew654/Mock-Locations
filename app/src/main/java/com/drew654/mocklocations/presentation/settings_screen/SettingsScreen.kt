@@ -34,6 +34,7 @@ import androidx.navigation.NavController
 import com.drew654.mocklocations.R
 import com.drew654.mocklocations.presentation.MockLocationsViewModel
 import com.drew654.mocklocations.presentation.Screen
+import com.drew654.mocklocations.presentation.settings_screen.components.AccuracyLevelDialog
 import com.drew654.mocklocations.presentation.settings_screen.components.MapStyleDialog
 import com.drew654.mocklocations.presentation.settings_screen.components.ResetSettingsDialog
 import com.drew654.mocklocations.presentation.settings_screen.components.SwitchRow
@@ -49,8 +50,10 @@ fun SettingsScreen(
     val isUsingCrosshairs = mockControlState.isUsingCrosshairs
     val clearPointsOnStop by viewModel.clearRouteOnStop.collectAsState()
     var isShowingMapStylesDialog by remember { mutableStateOf(false) }
+    var isShowingAccuracyLevelDialog by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
     val mapStyle by viewModel.mapStyle.collectAsState()
+    val accuracyLevel by viewModel.accuracyLevel.collectAsState()
     val isCameraFollowingMockedLocation by viewModel.isCameraFollowingMockedLocation.collectAsState()
     val isGoingToWaitAtRouteFinish by viewModel.isGoingToWaitAtRouteFinish.collectAsState()
     val importLauncher = rememberLauncherForActivityResult(
@@ -132,6 +135,13 @@ fun SettingsScreen(
                 value = mapStyle?.name ?: "Default"
             )
             TextRow(
+                label = "Accuracy level",
+                onClick = {
+                    isShowingAccuracyLevelDialog = true
+                },
+                value = accuracyLevel.name
+            )
+            TextRow(
                 label = "Configure expanded controls",
                 onClick = {
                     navController.navigate(Screen.ExpandedControlsConfiguration.route)
@@ -187,6 +197,16 @@ fun SettingsScreen(
         onStyleSelected = {
             viewModel.setMapStyle(it)
             isShowingMapStylesDialog = false
+        }
+    )
+
+    AccuracyLevelDialog(
+        isVisible = isShowingAccuracyLevelDialog,
+        onDismiss = { isShowingAccuracyLevelDialog = false },
+        selectedLevel = accuracyLevel,
+        onLevelSelected = {
+            viewModel.setAccuracyLevel(it)
+            isShowingAccuracyLevelDialog = false
         }
     )
 
