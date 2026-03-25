@@ -32,6 +32,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -49,6 +50,7 @@ class MockLocationService : Service() {
 
     private lateinit var mockControlState: StateFlow<MockControlState>
     private lateinit var isClearRouteOnStopState: StateFlow<Boolean>
+    private lateinit var accuracyMetersState: StateFlow<Float>
     private var noiseLat = 0.0
     private var noiseLng = 0.0
 
@@ -78,6 +80,20 @@ class MockLocationService : Service() {
             started = SharingStarted.Eagerly,
             initialValue = false
         )
+
+        accuracyMetersState = settingsManager.accuracyLevelFlow
+            .map {
+                if (it.meters == 0f) {
+                    noiseLat = 0.0
+                    noiseLng = 0.0
+                }
+                it.meters
+            }
+            .stateIn(
+                scope = serviceScope,
+                started = SharingStarted.Eagerly,
+                initialValue = 0f
+            )
 
         serviceScope.launch {
             mockControlState.collect { mockControlState ->
@@ -209,10 +225,11 @@ class MockLocationService : Service() {
         )
     }
 
-    private fun updateNoiseSmooth(accuracyMeters: Float) {
+    private fun updateNoiseSmooth() {
+        val currentAccuracyMeters = accuracyMetersState.value
         val earthRadius = 6371000.0
 
-        val noiseMeters = accuracyMeters * (0.3 + Random.nextDouble() * 0.4)
+        val noiseMeters = currentAccuracyMeters * (0.3 + Random.nextDouble() * 0.4)
         val randomDistance = Math.random() * noiseMeters
         val randomAngle = Math.random() * 2 * Math.PI
 
@@ -222,7 +239,7 @@ class MockLocationService : Service() {
         val randomLat = Math.toDegrees(dLat)
         val randomLng = Math.toDegrees(dLng)
 
-        val alpha = (accuracyMeters / 50f).coerceIn(0.05f, 0.4f)
+        val alpha = (currentAccuracyMeters / 50f).coerceIn(0.05f, 0.4f)
 
         noiseLat = noiseLat * (1 - alpha) + randomLat * alpha
         noiseLng = noiseLng * (1 - alpha) + randomLng * alpha
@@ -241,10 +258,9 @@ class MockLocationService : Service() {
                     Toast.LENGTH_SHORT
                 ).show()
 
-                val accuracyMeters = settingsManager.accuracyLevelFlow.first().meters
-
                 while (true) {
-                    updateNoiseSmooth(accuracyMeters)
+                    val currentAccuracyMeters = accuracyMetersState.value
+                    updateNoiseSmooth()
 
                     val noisyLat = point.latitude + noiseLat
                     val noisyLng = point.longitude + noiseLng
@@ -255,7 +271,7 @@ class MockLocationService : Service() {
                         time = System.currentTimeMillis()
                         speed = 0.01f
                         bearing = 0.0f
-                        accuracy = accuracyMeters
+                        accuracy = currentAccuracyMeters
                         elapsedRealtimeNanos = SystemClock.elapsedRealtimeNanos()
                         bearingAccuracyDegrees = 0.1f
                         verticalAccuracyMeters = 0.1f
@@ -345,8 +361,6 @@ class MockLocationService : Service() {
                 var distanceAccumulator = 0.0
                 var lastBroadcastLocation: Location? = null
 
-                val accuracyMeters = settingsManager.accuracyLevelFlow.first().meters
-
                 if (isStartedPaused) {
                     val routePoint = routePoints.getOrNull(index) ?: return@launch
 
@@ -357,7 +371,7 @@ class MockLocationService : Service() {
                         speed = currentSpeedMetersPerSec.toFloat()
                         time = System.currentTimeMillis()
                         elapsedRealtimeNanos = SystemClock.elapsedRealtimeNanos()
-                        accuracy = accuracyMeters
+                        accuracy = accuracyMetersState.value
                     }
 
                     lastBroadcastLocation = location
@@ -370,7 +384,7 @@ class MockLocationService : Service() {
                 var pausedBaseLocation: Location? = null
 
                 while (index < routePoints.size && isActive) {
-                    updateNoiseSmooth(accuracyMeters)
+                    updateNoiseSmooth()
 
                     if (mockControlState.value.isPaused) {
                         if (pausedBaseLocation == null) {
@@ -423,7 +437,7 @@ class MockLocationService : Service() {
                         speed = currentSpeedMetersPerSec.toFloat()
                         time = System.currentTimeMillis()
                         elapsedRealtimeNanos = SystemClock.elapsedRealtimeNanos()
-                        accuracy = accuracyMeters
+                        accuracy = accuracyMetersState.value
                     }
 
                     lastBroadcastLocation = location
@@ -439,7 +453,7 @@ class MockLocationService : Service() {
                     ))
 
                     while (mockControlState.value.isMocking) {
-                        updateNoiseSmooth(accuracyMeters)
+                        updateNoiseSmooth()
 
                         if (pausedBaseLocation == null) {
                             pausedBaseLocation = lastBroadcastLocation
