@@ -105,7 +105,7 @@ fun RoutesListDialogBody(
                         onConfirm()
                     },
                     modifier = Modifier.padding(8.dp),
-                    enabled = locationTarget is LocationTarget.Route || locationTarget is LocationTarget.SavedRoute
+                    enabled = locationTarget.isRoute()
                 ) {
                     Text(text = "Save Route")
                 }

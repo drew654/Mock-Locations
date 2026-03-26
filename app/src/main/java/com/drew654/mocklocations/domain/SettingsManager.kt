@@ -5,9 +5,11 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.drew654.mocklocations.domain.model.AccuracyLevel
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.LocationTargetAdapter
 import com.drew654.mocklocations.domain.model.MapStyle
@@ -16,6 +18,7 @@ import com.drew654.mocklocations.domain.model.RoutePoint
 import com.drew654.mocklocations.domain.model.SpeedUnit
 import com.drew654.mocklocations.domain.model.SpeedUnitTypeAdapter
 import com.drew654.mocklocations.domain.model.SpeedUnitValue
+import com.drew654.mocklocations.domain.model.getAccuracyLevelByName
 import com.drew654.mocklocations.domain.model.getMapStyleByName
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -43,6 +46,9 @@ class SettingsManager(private val context: Context) {
         val SPEED_SLIDER_UPPER_END = intPreferencesKey("speed_slider_upper_end")
         val SPEED_SLIDER_LOWER_END = intPreferencesKey("speed_slider_lower_end")
         val IS_CAMERA_FOLLOWING_MOCKED_LOCATION = booleanPreferencesKey("is_camera_following_mocked_location")
+        val IS_GOING_TO_WAIT_AT_ROUTE_FINISH = booleanPreferencesKey("is_going_to_wait_at_route_finish")
+        val ACCURACY_LEVEL = stringPreferencesKey("accuracy_level")
+        val LOCATION_UPDATE_DELAY = floatPreferencesKey("location_update_delay")
     }
     val gson: Gson = GsonBuilder()
         .registerTypeAdapter(LocationTarget::class.java, LocationTargetAdapter())
@@ -50,7 +56,7 @@ class SettingsManager(private val context: Context) {
         .create()
 
     suspend fun resetToDefault() {
-        setIsUsingCrosshairs(false)
+        setIsUsingCrosshairs(true)
         context.dataStore.edit { preferences ->
             preferences.remove(CLEAR_ROUTE_ON_STOP)
             preferences.remove(MAP_STYLE)
@@ -58,6 +64,9 @@ class SettingsManager(private val context: Context) {
             preferences.remove(SPEED_SLIDER_UPPER_END)
             preferences.remove(SPEED_SLIDER_LOWER_END)
             preferences.remove(IS_CAMERA_FOLLOWING_MOCKED_LOCATION)
+            preferences.remove(IS_GOING_TO_WAIT_AT_ROUTE_FINISH)
+            preferences.remove(ACCURACY_LEVEL)
+            preferences.remove(LOCATION_UPDATE_DELAY)
         }
     }
 
@@ -223,6 +232,36 @@ class SettingsManager(private val context: Context) {
     suspend fun setIsCameraFollowingMockedLocation(value: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[IS_CAMERA_FOLLOWING_MOCKED_LOCATION] = value
+        }
+    }
+
+    val isGoingToWaitAtRouteFinishFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[IS_GOING_TO_WAIT_AT_ROUTE_FINISH] ?: false
+    }
+
+    suspend fun setIsGoingToWaitAtRouteFinish(value: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[IS_GOING_TO_WAIT_AT_ROUTE_FINISH] = value
+        }
+    }
+
+    val accuracyLevelFlow: Flow<AccuracyLevel> = context.dataStore.data.map { preferences ->
+        getAccuracyLevelByName(preferences[ACCURACY_LEVEL] ?: AccuracyLevel.Perfect.name)!!
+    }
+
+    suspend fun setAccuracyLevel(accuracyLevel: AccuracyLevel) {
+        context.dataStore.edit { preferences ->
+            preferences[ACCURACY_LEVEL] = accuracyLevel.name
+        }
+    }
+
+    val locationUpdateDelayFlow: Flow<Float> = context.dataStore.data.map { preferences ->
+        preferences[LOCATION_UPDATE_DELAY] ?: 1f
+    }
+
+    suspend fun setLocationUpdateDelay(value: Float) {
+        context.dataStore.edit { preferences ->
+            preferences[LOCATION_UPDATE_DELAY] = value
         }
     }
 }

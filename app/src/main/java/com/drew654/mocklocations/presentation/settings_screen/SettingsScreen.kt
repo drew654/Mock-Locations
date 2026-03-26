@@ -34,10 +34,13 @@ import androidx.navigation.NavController
 import com.drew654.mocklocations.R
 import com.drew654.mocklocations.presentation.MockLocationsViewModel
 import com.drew654.mocklocations.presentation.Screen
+import com.drew654.mocklocations.presentation.settings_screen.components.AccuracyLevelDialog
+import com.drew654.mocklocations.presentation.settings_screen.components.LocationUpdateDelayDialog
 import com.drew654.mocklocations.presentation.settings_screen.components.MapStyleDialog
 import com.drew654.mocklocations.presentation.settings_screen.components.ResetSettingsDialog
 import com.drew654.mocklocations.presentation.settings_screen.components.SwitchRow
 import com.drew654.mocklocations.presentation.settings_screen.components.TextRow
+import com.drew654.mocklocations.presentation.toTrimmedString
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,9 +52,14 @@ fun SettingsScreen(
     val isUsingCrosshairs = mockControlState.isUsingCrosshairs
     val clearPointsOnStop by viewModel.clearRouteOnStop.collectAsState()
     var isShowingMapStylesDialog by remember { mutableStateOf(false) }
+    var isShowingAccuracyLevelDialog by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
     val mapStyle by viewModel.mapStyle.collectAsState()
+    val accuracyLevel by viewModel.accuracyLevel.collectAsState()
+    val locationUpdateDelay by viewModel.locationUpdateDelay.collectAsState()
+    var isShowingLocationUpdateDelayDialog by remember { mutableStateOf(false) }
     val isCameraFollowingMockedLocation by viewModel.isCameraFollowingMockedLocation.collectAsState()
+    val isGoingToWaitAtRouteFinish by viewModel.isGoingToWaitAtRouteFinish.collectAsState()
     val importLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
@@ -116,12 +124,33 @@ fun SettingsScreen(
                     viewModel.setIsCameraFollowingMockedLocation(it)
                 }
             )
+            SwitchRow(
+                label = "Wait at the end of a route",
+                checked = isGoingToWaitAtRouteFinish,
+                onCheckedChange = {
+                    viewModel.setIsGoingToWaitAtRouteFinish(it)
+                }
+            )
             TextRow(
                 label = "Map style",
                 onClick = {
                     isShowingMapStylesDialog = true
                 },
                 value = mapStyle?.name ?: "Default"
+            )
+            TextRow(
+                label = "Accuracy level",
+                onClick = {
+                    isShowingAccuracyLevelDialog = true
+                },
+                value = accuracyLevel.name
+            )
+            TextRow(
+                label = "Location update delay",
+                onClick = {
+                    isShowingLocationUpdateDelayDialog = true
+                },
+                value = "${locationUpdateDelay.toTrimmedString()} s"
             )
             TextRow(
                 label = "Configure expanded controls",
@@ -179,6 +208,25 @@ fun SettingsScreen(
         onStyleSelected = {
             viewModel.setMapStyle(it)
             isShowingMapStylesDialog = false
+        }
+    )
+
+    AccuracyLevelDialog(
+        isVisible = isShowingAccuracyLevelDialog,
+        onDismiss = { isShowingAccuracyLevelDialog = false },
+        selectedLevel = accuracyLevel,
+        onLevelSelected = {
+            viewModel.setAccuracyLevel(it)
+            isShowingAccuracyLevelDialog = false
+        }
+    )
+
+    LocationUpdateDelayDialog(
+        isVisible = isShowingLocationUpdateDelayDialog,
+        onDismiss = { isShowingLocationUpdateDelayDialog = false },
+        locationUpdateDelay = locationUpdateDelay,
+        onLocationUpdateDelayChanged = {
+            viewModel.setLocationUpdateDelay(it)
         }
     )
 

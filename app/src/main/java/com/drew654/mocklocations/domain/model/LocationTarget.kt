@@ -62,4 +62,8 @@ sealed interface LocationTarget {
     ) : LocationTarget {
         fun getDistanceText(speedUnit: SpeedUnit): String = Route(points).getDistanceText(speedUnit)
     }
+
+    fun isRoute(): Boolean {
+        return this is Route || this is SavedRoute
+    }
 }

@@ -12,6 +12,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.drew654.mocklocations.data.repository.ExportRepository
 import com.drew654.mocklocations.domain.SettingsManager
+import com.drew654.mocklocations.domain.model.AccuracyLevel
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.MapStyle
 import com.drew654.mocklocations.domain.model.MockControlState
@@ -55,6 +56,11 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = null
     )
+    val accuracyLevel: StateFlow<AccuracyLevel> = settingsManager.accuracyLevelFlow.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = AccuracyLevel.Perfect
+    )
     val speedSliderLowerEnd: StateFlow<Int> = settingsManager.speedSliderLowerEndFlow.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -71,6 +77,11 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = true
         )
+    val isGoingToWaitAtRouteFinish: StateFlow<Boolean> = settingsManager.isGoingToWaitAtRouteFinishFlow.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = false
+    )
     private val _isCameraCurrentlyFollowingMockedLocation = MutableStateFlow(false)
     val isCameraCurrentlyFollowingMockedLocation =
         _isCameraCurrentlyFollowingMockedLocation.asStateFlow()
@@ -80,6 +91,11 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = null
         )
+    val locationUpdateDelay: StateFlow<Float> = settingsManager.locationUpdateDelayFlow.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = 1f
+    )
 
     init {
         viewModelScope.launch {
@@ -92,7 +108,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
             if (wasMocking) {
                 Intent(application, MockLocationService::class.java).apply {
                     action =
-                        if (activeLocationTarget is LocationTarget.Route || activeLocationTarget is LocationTarget.SavedRoute) {
+                        if (activeLocationTarget.isRoute()) {
                             ACTION_RESTORE_STRAIGHT_LINE_MOCKING
                         } else {
                             ACTION_START_MOCKING
@@ -111,6 +127,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
                         it.copy(
                             isMocking = false,
                             isPaused = false,
+                            isWaitingAtEndOfRoute = false,
                             activeLocationTarget = if (clearRouteOnStop.value) LocationTarget.Empty else (it.activeLocationTarget)
                         )
                     }
@@ -245,6 +262,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
                 it.copy(
                     isMocking = false,
                     isPaused = false,
+                    isWaitingAtEndOfRoute = false,
                     activeLocationTarget = if (clearRouteOnStop.value) LocationTarget.Empty else (it.activeLocationTarget)
                 )
             }
@@ -313,6 +331,12 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
+    fun setAccuracyLevel(accuracyLevel: AccuracyLevel) {
+        viewModelScope.launch {
+            settingsManager.setAccuracyLevel(accuracyLevel)
+        }
+    }
+
     fun setSpeedSliderLowerEnd(value: Int) {
         viewModelScope.launch {
             settingsManager.setSpeedSliderLowerEnd(value)
@@ -334,5 +358,17 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
 
     fun setIsCameraCurrentlyFollowingMockedLocation(value: Boolean) {
         _isCameraCurrentlyFollowingMockedLocation.value = value
+    }
+
+    fun setIsGoingToWaitAtRouteFinish(value: Boolean) {
+        viewModelScope.launch {
+            settingsManager.setIsGoingToWaitAtRouteFinish(value)
+        }
+    }
+
+    fun setLocationUpdateDelay(value: Float) {
+        viewModelScope.launch {
+            settingsManager.setLocationUpdateDelay(value)
+        }
     }
 }
