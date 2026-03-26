@@ -108,7 +108,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
             if (wasMocking) {
                 Intent(application, MockLocationService::class.java).apply {
                     action =
-                        if (activeLocationTarget is LocationTarget.Route || activeLocationTarget is LocationTarget.SavedRoute) {
+                        if (activeLocationTarget.isRoute()) {
                             ACTION_RESTORE_STRAIGHT_LINE_MOCKING
                         } else {
                             ACTION_START_MOCKING

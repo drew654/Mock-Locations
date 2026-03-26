@@ -159,7 +159,7 @@ class MockLocationService : Service() {
                 serviceScope.launch {
                     val locationTarget = settingsManager.mockControlStateFlow.first().activeLocationTarget
                     val restoreMockingPoint = settingsManager.currentMockedLocationFlow.first()
-                    if (locationTarget is LocationTarget.Route || locationTarget is LocationTarget.SavedRoute) {
+                    if (locationTarget.isRoute()) {
                         restoreMockLocationStraightLineRoute(locationTarget, restoreMockingPoint!!)
                     } else {
                         stopMocking()
