@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -47,6 +48,7 @@ class SettingsManager(private val context: Context) {
         val IS_CAMERA_FOLLOWING_MOCKED_LOCATION = booleanPreferencesKey("is_camera_following_mocked_location")
         val IS_GOING_TO_WAIT_AT_ROUTE_FINISH = booleanPreferencesKey("is_going_to_wait_at_route_finish")
         val ACCURACY_LEVEL = stringPreferencesKey("accuracy_level")
+        val LOCATION_UPDATE_DELAY = floatPreferencesKey("location_update_delay")
     }
     val gson: Gson = GsonBuilder()
         .registerTypeAdapter(LocationTarget::class.java, LocationTargetAdapter())
@@ -64,6 +66,7 @@ class SettingsManager(private val context: Context) {
             preferences.remove(IS_CAMERA_FOLLOWING_MOCKED_LOCATION)
             preferences.remove(IS_GOING_TO_WAIT_AT_ROUTE_FINISH)
             preferences.remove(ACCURACY_LEVEL)
+            preferences.remove(LOCATION_UPDATE_DELAY)
         }
     }
 
@@ -249,6 +252,16 @@ class SettingsManager(private val context: Context) {
     suspend fun setAccuracyLevel(accuracyLevel: AccuracyLevel) {
         context.dataStore.edit { preferences ->
             preferences[ACCURACY_LEVEL] = accuracyLevel.name
+        }
+    }
+
+    val locationUpdateDelayFlow: Flow<Float> = context.dataStore.data.map { preferences ->
+        preferences[LOCATION_UPDATE_DELAY] ?: 1f
+    }
+
+    suspend fun setLocationUpdateDelay(value: Float) {
+        context.dataStore.edit { preferences ->
+            preferences[LOCATION_UPDATE_DELAY] = value
         }
     }
 }

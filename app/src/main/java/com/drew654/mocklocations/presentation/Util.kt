@@ -4,6 +4,9 @@ import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
+import java.text.DecimalFormat
+import java.text.DecimalFormatSymbols
+import java.util.Locale
 
 class NoRippleInteractionSource : MutableInteractionSource {
     override val interactions: Flow<Interaction> = emptyFlow()
@@ -14,3 +17,11 @@ class NoRippleInteractionSource : MutableInteractionSource {
 fun mToMiles(m: Double) = m * 0.000621371
 
 fun mToKm(m: Double) = m / 1000.0
+
+fun Float.toTrimmedString(): String {
+    val symbols = DecimalFormatSymbols(Locale.ROOT)
+    val decimalFormat = DecimalFormat("#.##", symbols)
+    return decimalFormat.format(this)
+}
+
+fun Float.round(decimals: Int = 2): Float = "%.${decimals}f".format(this).toFloat()

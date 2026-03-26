@@ -35,10 +35,12 @@ import com.drew654.mocklocations.R
 import com.drew654.mocklocations.presentation.MockLocationsViewModel
 import com.drew654.mocklocations.presentation.Screen
 import com.drew654.mocklocations.presentation.settings_screen.components.AccuracyLevelDialog
+import com.drew654.mocklocations.presentation.settings_screen.components.LocationUpdateDelayDialog
 import com.drew654.mocklocations.presentation.settings_screen.components.MapStyleDialog
 import com.drew654.mocklocations.presentation.settings_screen.components.ResetSettingsDialog
 import com.drew654.mocklocations.presentation.settings_screen.components.SwitchRow
 import com.drew654.mocklocations.presentation.settings_screen.components.TextRow
+import com.drew654.mocklocations.presentation.toTrimmedString
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,6 +56,8 @@ fun SettingsScreen(
     val scrollState = rememberScrollState()
     val mapStyle by viewModel.mapStyle.collectAsState()
     val accuracyLevel by viewModel.accuracyLevel.collectAsState()
+    val locationUpdateDelay by viewModel.locationUpdateDelay.collectAsState()
+    var isShowingLocationUpdateDelayDialog by remember { mutableStateOf(false) }
     val isCameraFollowingMockedLocation by viewModel.isCameraFollowingMockedLocation.collectAsState()
     val isGoingToWaitAtRouteFinish by viewModel.isGoingToWaitAtRouteFinish.collectAsState()
     val importLauncher = rememberLauncherForActivityResult(
@@ -142,6 +146,13 @@ fun SettingsScreen(
                 value = accuracyLevel.name
             )
             TextRow(
+                label = "Location update delay",
+                onClick = {
+                    isShowingLocationUpdateDelayDialog = true
+                },
+                value = "${locationUpdateDelay.toTrimmedString()} s"
+            )
+            TextRow(
                 label = "Configure expanded controls",
                 onClick = {
                     navController.navigate(Screen.ExpandedControlsConfiguration.route)
@@ -207,6 +218,15 @@ fun SettingsScreen(
         onLevelSelected = {
             viewModel.setAccuracyLevel(it)
             isShowingAccuracyLevelDialog = false
+        }
+    )
+
+    LocationUpdateDelayDialog(
+        isVisible = isShowingLocationUpdateDelayDialog,
+        onDismiss = { isShowingLocationUpdateDelayDialog = false },
+        locationUpdateDelay = locationUpdateDelay,
+        onLocationUpdateDelayChanged = {
+            viewModel.setLocationUpdateDelay(it)
         }
     )
 

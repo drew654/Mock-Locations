@@ -91,6 +91,11 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = null
         )
+    val locationUpdateDelay: StateFlow<Float> = settingsManager.locationUpdateDelayFlow.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = 1f
+    )
 
     init {
         viewModelScope.launch {
@@ -358,6 +363,12 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     fun setIsGoingToWaitAtRouteFinish(value: Boolean) {
         viewModelScope.launch {
             settingsManager.setIsGoingToWaitAtRouteFinish(value)
+        }
+    }
+
+    fun setLocationUpdateDelay(value: Float) {
+        viewModelScope.launch {
+            settingsManager.setLocationUpdateDelay(value)
         }
     }
 }
