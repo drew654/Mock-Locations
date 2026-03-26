@@ -7,7 +7,7 @@ data class MockControlState(
     val isPaused: Boolean = false,
     val isWaitingAtEndOfRoute: Boolean = false,
     val activeLocationTarget: LocationTarget = LocationTarget.Empty,
-    val isUsingCrosshairs: Boolean = false
+    val isUsingCrosshairs: Boolean = true
 )
 
 fun MockControlState.getVisibleActions(): Set<MockControlAction> {

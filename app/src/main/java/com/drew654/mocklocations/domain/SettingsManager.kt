@@ -56,7 +56,7 @@ class SettingsManager(private val context: Context) {
         .create()
 
     suspend fun resetToDefault() {
-        setIsUsingCrosshairs(false)
+        setIsUsingCrosshairs(true)
         context.dataStore.edit { preferences ->
             preferences.remove(CLEAR_ROUTE_ON_STOP)
             preferences.remove(MAP_STYLE)
