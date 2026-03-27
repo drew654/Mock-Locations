@@ -352,9 +352,9 @@ class MockLocationService : Service() {
                     Toast.LENGTH_SHORT
                 ).show()
 
-                var currentSpeedMetersPerSec = 30.0
+                var currentSpeedMetersPerSec = settingsManager.speedUnitValueFlow.first().toMetersPerSecond()
                 launch {
-                    settingsManager.speedUnitValueFlow.collect { currentSpeedMetersPerSec = it.speedUnit.toMetersPerSecond(it.value) }
+                    settingsManager.speedUnitValueFlow.collect { currentSpeedMetersPerSec = it.toMetersPerSecond() }
                 }
 
                 val updateIntervalMs = 1000L
@@ -408,10 +408,7 @@ class MockLocationService : Service() {
                                 locationManager.setTestProviderLocation(providerName, loc)
 
                                 settingsManager.setCurrentMockedLocation(
-                                    RoutePoint(
-                                        LatLng(loc.latitude, loc.longitude),
-                                        loc.bearing
-                                    )
+                                    RoutePoint(LatLng(loc.latitude, loc.longitude), loc.bearing)
                                 )
                             }
 
@@ -420,13 +417,6 @@ class MockLocationService : Service() {
                             continue
                         } else {
                             pausedBaseLocation = null
-                        }
-
-                        distanceAccumulator += currentSpeedMetersPerSec * (updateIntervalMs / 1000.0)
-
-                        while (distanceAccumulator >= metersPerPoint && index < routePoints.size) {
-                            distanceAccumulator -= metersPerPoint
-                            index++
                         }
 
                         val routePoint = routePoints.getOrNull(index) ?: break
@@ -449,6 +439,12 @@ class MockLocationService : Service() {
 
                         delay(updateIntervalMs)
                         updateNoiseSmooth()
+
+                        distanceAccumulator += currentSpeedMetersPerSec * (updateIntervalMs / 1000.0)
+                        while (distanceAccumulator >= metersPerPoint && index < routePoints.size) {
+                            distanceAccumulator -= metersPerPoint
+                            index++
+                        }
                     }
                 }
 
@@ -506,6 +502,7 @@ class MockLocationService : Service() {
         points: List<LatLng>,
         stepMeters: Double = 1.0
     ): List<RoutePoint> {
+        if (points.isEmpty()) return emptyList()
         val result = mutableListOf<RoutePoint>()
 
         for (i in 0 until points.size - 1) {
@@ -513,30 +510,25 @@ class MockLocationService : Service() {
             val end = points[i + 1]
 
             val results = FloatArray(3)
-            Location.distanceBetween(
-                start.latitude, start.longitude,
-                end.latitude, end.longitude,
-                results
-            )
+            Location.distanceBetween(start.latitude, start.longitude, end.latitude, end.longitude, results)
 
             val totalDistance = results[0]
             val bearing = results[1]
 
             var distance = 0.0
-            while (distance <= totalDistance) {
+            while (distance < totalDistance) {
                 val fraction = distance / totalDistance
-
                 val lat = start.latitude + (end.latitude - start.latitude) * fraction
                 val lng = start.longitude + (end.longitude - start.longitude) * fraction
 
-                result += RoutePoint(
-                    latLng = LatLng(lat, lng),
-                    bearing = bearing
-                )
-
+                result += RoutePoint(latLng = LatLng(lat, lng), bearing = bearing)
                 distance += stepMeters
             }
         }
+
+        val finalPoint = points.last()
+        val finalBearing = result.lastOrNull()?.bearing ?: 0.0f
+        result += RoutePoint(latLng = finalPoint, bearing = finalBearing)
 
         return result
     }
