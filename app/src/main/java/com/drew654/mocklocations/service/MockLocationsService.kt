@@ -21,6 +21,7 @@ import com.drew654.mocklocations.domain.model.RoutePoint
 import com.drew654.mocklocations.domain.model.isPauseVisible
 import com.drew654.mocklocations.domain.model.isResumeVisible
 import com.drew654.mocklocations.domain.model.toMetersPerSecond
+import com.drew654.mocklocations.presentation.toRoutePoint
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -379,7 +380,7 @@ class MockLocationService : Service() {
 
                     lastBroadcastLocation = location
                     locationManager.setTestProviderLocation(providerName, location)
-                    settingsManager.setCurrentMockedLocation(routePoint)
+                    settingsManager.setCurrentMockedLocation(location.toRoutePoint())
 
                     delay(updateIntervalMs)
                 }
@@ -407,9 +408,7 @@ class MockLocationService : Service() {
                                 lastBroadcastLocation = loc
                                 locationManager.setTestProviderLocation(providerName, loc)
 
-                                settingsManager.setCurrentMockedLocation(
-                                    RoutePoint(LatLng(loc.latitude, loc.longitude), loc.bearing)
-                                )
+                                settingsManager.setCurrentMockedLocation(loc.toRoutePoint())
                             }
 
                             delay(updateIntervalMs)
@@ -435,7 +434,7 @@ class MockLocationService : Service() {
 
                         lastBroadcastLocation = location
                         locationManager.setTestProviderLocation(providerName, location)
-                        settingsManager.setCurrentMockedLocation(routePoint)
+                        settingsManager.setCurrentMockedLocation(location.toRoutePoint())
 
                         delay(updateIntervalMs)
                         updateNoiseSmooth()
@@ -444,6 +443,29 @@ class MockLocationService : Service() {
                         while (distanceAccumulator >= metersPerPoint && index < routePoints.size) {
                             distanceAccumulator -= metersPerPoint
                             index++
+                            if (index >= routePoints.size - 1) {
+                                index = routePoints.size - 1
+
+                                val finalPoint = routePoints[index]
+                                val finalLocation = Location(providerName).apply {
+                                    latitude = finalPoint.latLng.latitude + noiseLat
+                                    longitude = finalPoint.latLng.longitude + noiseLng
+                                    bearing = finalPoint.bearing
+                                    speed = 0f
+                                    time = System.currentTimeMillis()
+                                    elapsedRealtimeNanos = SystemClock.elapsedRealtimeNanos()
+                                    accuracy = accuracyMetersState.value
+                                }
+
+                                lastBroadcastLocation = finalLocation
+                                locationManager.setTestProviderLocation(providerName, finalLocation)
+                                settingsManager.setCurrentMockedLocation(finalLocation.toRoutePoint())
+
+                                delay(updateIntervalMs)
+
+                                index = routePoints.size
+                                break
+                            }
                         }
                     }
                 }
@@ -472,12 +494,7 @@ class MockLocationService : Service() {
                             lastBroadcastLocation = loc
                             locationManager.setTestProviderLocation(providerName, loc)
 
-                            settingsManager.setCurrentMockedLocation(
-                                RoutePoint(
-                                    LatLng(loc.latitude, loc.longitude),
-                                    loc.bearing
-                                )
-                            )
+                            settingsManager.setCurrentMockedLocation(loc.toRoutePoint())
                         }
 
                         delay(updateIntervalMs)

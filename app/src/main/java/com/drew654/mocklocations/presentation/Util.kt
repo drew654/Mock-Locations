@@ -1,7 +1,10 @@
 package com.drew654.mocklocations.presentation
 
+import android.location.Location
 import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import com.drew654.mocklocations.domain.model.RoutePoint
+import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import java.text.DecimalFormat
@@ -25,3 +28,10 @@ fun Float.toTrimmedString(): String {
 }
 
 fun Float.round(decimals: Int = 2): Float = "%.${decimals}f".format(this).toFloat()
+
+fun Location.toRoutePoint(): RoutePoint {
+    return RoutePoint(
+        latLng = LatLng(latitude, longitude),
+        bearing = bearing
+    )
+}
