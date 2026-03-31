@@ -7,7 +7,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.window.Dialog
 import com.drew654.mocklocations.domain.model.LocationTarget
@@ -28,7 +30,9 @@ fun SavedRoutesDialog(
     isMocking: Boolean,
     speedUnit: SpeedUnit
 ) {
-    var routeName by remember { mutableStateOf("") }
+    var routeName by rememberSaveable(stateSaver = TextFieldValue.Saver) {
+        mutableStateOf(TextFieldValue(""))
+    }
     var selectedRoutes by remember { mutableStateOf(emptyList<LocationTarget.SavedRoute>()) }
 
     if (isVisible) {
@@ -36,7 +40,7 @@ fun SavedRoutesDialog(
             onDismissRequest = {
                 onDismiss()
                 onSetIsNamingRoute(false)
-                routeName = ""
+                routeName = TextFieldValue("")
             }
         ) {
             Card {
@@ -49,13 +53,13 @@ fun SavedRoutesDialog(
                                 onDismiss()
                             }
                             onSetIsNamingRoute(false)
-                            routeName = ""
+                            routeName = TextFieldValue("")
                         },
                         onConfirm = {
-                            onRouteSaved(routeName)
+                            onRouteSaved(routeName.text)
                             onDismiss()
                             onSetIsNamingRoute(false)
-                            routeName = ""
+                            routeName = TextFieldValue("")
                         },
                         savedRoutes = savedRoutes
                     )
@@ -65,7 +69,7 @@ fun SavedRoutesDialog(
                         onDismiss = {
                             onDismiss()
                             onSetIsNamingRoute(false)
-                            routeName = ""
+                            routeName = TextFieldValue("")
                         },
                         locationTarget = locationTarget,
                         onConfirm = {

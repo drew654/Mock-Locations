@@ -17,6 +17,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
@@ -94,7 +95,7 @@ fun MapScreen(
     val hasCenteredOnUser by viewModel.hasCenteredOnUser.collectAsState()
     val cameraPositionState = rememberCameraPositionState()
     val lifecycleOwner = LocalLifecycleOwner.current
-    var isShowingSavedRoutesDialog by remember { mutableStateOf(false) }
+    var isShowingSavedRoutesDialog by rememberSaveable { mutableStateOf(false) }
     val savedRoutes by viewModel.savedRoutes.collectAsState()
     val controlsAreExpanded by viewModel.controlsAreExpanded.collectAsState()
     val permissionsLauncher = rememberLauncherForActivityResult(
@@ -106,7 +107,7 @@ fun MapScreen(
             permissionToBeRequested = Permission.FineLocation
         }
     }
-    var isNamingRoute by remember { mutableStateOf(false) }
+    var isNamingRoute by rememberSaveable { mutableStateOf(false) }
     val speedSliderLowerEnd by viewModel.speedSliderLowerEnd.collectAsState()
     val speedSliderUpperEnd by viewModel.speedSliderUpperEnd.collectAsState()
     val isCameraFollowingMockedLocation by viewModel.isCameraFollowingMockedLocation.collectAsState()
