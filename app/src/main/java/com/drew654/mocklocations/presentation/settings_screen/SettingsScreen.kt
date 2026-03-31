@@ -122,6 +122,7 @@ fun SettingsScreen(
                 checked = isCameraFollowingMockedLocation,
                 onCheckedChange = {
                     viewModel.setIsCameraFollowingMockedLocation(it)
+                    viewModel.setIsCameraCurrentlyFollowingMockedLocation(it)
                 }
             )
             SwitchRow(

@@ -47,6 +47,7 @@ class SettingsManager(private val context: Context) {
         val SPEED_SLIDER_LOWER_END = intPreferencesKey("speed_slider_lower_end")
         val IS_CAMERA_FOLLOWING_MOCKED_LOCATION = booleanPreferencesKey("is_camera_following_mocked_location")
         val IS_GOING_TO_WAIT_AT_ROUTE_FINISH = booleanPreferencesKey("is_going_to_wait_at_route_finish")
+        val IS_CAMERA_CURRENTLY_FOLLOWING_MOCKED_LOCATION = booleanPreferencesKey("is_camera_currently_following_mocked_location")
         val ACCURACY_LEVEL = stringPreferencesKey("accuracy_level")
         val LOCATION_UPDATE_DELAY = floatPreferencesKey("location_update_delay")
     }
@@ -242,6 +243,16 @@ class SettingsManager(private val context: Context) {
     suspend fun setIsGoingToWaitAtRouteFinish(value: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[IS_GOING_TO_WAIT_AT_ROUTE_FINISH] = value
+        }
+    }
+
+    val isCameraCurrentlyFollowingMockedLocationFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[IS_CAMERA_CURRENTLY_FOLLOWING_MOCKED_LOCATION] ?: false
+    }
+
+    suspend fun setIsCameraCurrentlyFollowingMockedLocation(value: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[IS_CAMERA_CURRENTLY_FOLLOWING_MOCKED_LOCATION] = value
         }
     }
 

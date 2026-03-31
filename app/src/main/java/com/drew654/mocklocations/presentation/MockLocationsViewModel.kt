@@ -82,9 +82,12 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = false
     )
-    private val _isCameraCurrentlyFollowingMockedLocation = MutableStateFlow(false)
-    val isCameraCurrentlyFollowingMockedLocation =
-        _isCameraCurrentlyFollowingMockedLocation.asStateFlow()
+    val isCameraCurrentlyFollowingMockedLocation: StateFlow<Boolean> =
+        settingsManager.isCameraCurrentlyFollowingMockedLocationFlow.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = false
+        )
     val currentMockedLocation: StateFlow<RoutePoint?> =
         settingsManager.currentMockedLocationFlow.stateIn(
             scope = viewModelScope,
@@ -350,14 +353,15 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     }
 
     fun setIsCameraFollowingMockedLocation(value: Boolean) {
-        _isCameraCurrentlyFollowingMockedLocation.value = value
         viewModelScope.launch {
             settingsManager.setIsCameraFollowingMockedLocation(value)
         }
     }
 
     fun setIsCameraCurrentlyFollowingMockedLocation(value: Boolean) {
-        _isCameraCurrentlyFollowingMockedLocation.value = value
+        viewModelScope.launch {
+            settingsManager.setIsCameraCurrentlyFollowingMockedLocation(value)
+        }
     }
 
     fun setIsGoingToWaitAtRouteFinish(value: Boolean) {
