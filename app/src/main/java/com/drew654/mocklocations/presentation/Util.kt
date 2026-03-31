@@ -35,3 +35,7 @@ fun Location.toRoutePoint(): RoutePoint {
         bearing = bearing
     )
 }
+
+fun Location.toLatLng(): LatLng {
+    return LatLng(latitude, longitude)
+}
