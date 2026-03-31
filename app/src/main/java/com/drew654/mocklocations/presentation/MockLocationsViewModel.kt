@@ -33,6 +33,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 class MockLocationsViewModel(application: Application) : AndroidViewModel(application) {
     private val _cameraPosition = MutableStateFlow<SavedCameraPosition?>(null)
@@ -49,55 +50,55 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     val mockControlState = settingsManager.mockControlStateFlow.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = MockControlState()
+        initialValue = runBlocking { settingsManager.mockControlStateFlow.first() }
     )
     val mapStyle: StateFlow<MapStyle?> = settingsManager.mapStyleFlow.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = null
+        initialValue = runBlocking { settingsManager.mapStyleFlow.first() }
     )
     val accuracyLevel: StateFlow<AccuracyLevel> = settingsManager.accuracyLevelFlow.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = AccuracyLevel.Perfect
+        initialValue = runBlocking { settingsManager.accuracyLevelFlow.first() }
     )
     val speedSliderLowerEnd: StateFlow<Int> = settingsManager.speedSliderLowerEndFlow.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = 0
+        initialValue = runBlocking { settingsManager.speedSliderLowerEndFlow.first() }
     )
     val speedSliderUpperEnd: StateFlow<Int> = settingsManager.speedSliderUpperEndFlow.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = 100
+        initialValue = runBlocking { settingsManager.speedSliderUpperEndFlow.first() }
     )
     val isCameraFollowingMockedLocation: StateFlow<Boolean> =
         settingsManager.isCameraFollowingMockedLocation.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = true
+            initialValue = runBlocking { settingsManager.isCameraFollowingMockedLocation.first() }
         )
     val isGoingToWaitAtRouteFinish: StateFlow<Boolean> = settingsManager.isGoingToWaitAtRouteFinishFlow.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = false
+        initialValue = runBlocking { settingsManager.isGoingToWaitAtRouteFinishFlow.first() }
     )
     val isCameraCurrentlyFollowingMockedLocation: StateFlow<Boolean> =
         settingsManager.isCameraCurrentlyFollowingMockedLocationFlow.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = false
+            initialValue = runBlocking { settingsManager.isCameraCurrentlyFollowingMockedLocationFlow.first() }
         )
     val currentMockedLocation: StateFlow<RoutePoint?> =
         settingsManager.currentMockedLocationFlow.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = null
+            initialValue = runBlocking { settingsManager.currentMockedLocationFlow.first() }
         )
     val locationUpdateDelay: StateFlow<Float> = settingsManager.locationUpdateDelayFlow.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = 1f
+        initialValue = runBlocking { settingsManager.locationUpdateDelayFlow.first() }
     )
 
     init {
