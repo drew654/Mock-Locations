@@ -79,7 +79,7 @@ fun MapControlButtons(
                             onUserLocationFocus()
                         }
                     )
-                    if (cameraPositionState.position.bearing != 0f) {
+                    if (cameraPositionState.position.bearing != 0f || cameraPositionState.position.tilt != 0f) {
                         Spacer(Modifier.height(4.dp))
                         CompassButton(
                             scope = scope,
