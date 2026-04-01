@@ -26,6 +26,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -51,8 +52,8 @@ fun SettingsScreen(
     val mockControlState by viewModel.mockControlState.collectAsState()
     val isUsingCrosshairs = mockControlState.isUsingCrosshairs
     val clearPointsOnStop by viewModel.clearRouteOnStop.collectAsState()
-    var isShowingMapStylesDialog by remember { mutableStateOf(false) }
-    var isShowingAccuracyLevelDialog by remember { mutableStateOf(false) }
+    var isShowingMapStylesDialog by rememberSaveable { mutableStateOf(false) }
+    var isShowingAccuracyLevelDialog by rememberSaveable { mutableStateOf(false) }
     val scrollState = rememberScrollState()
     val mapStyle by viewModel.mapStyle.collectAsState()
     val accuracyLevel by viewModel.accuracyLevel.collectAsState()
@@ -67,7 +68,7 @@ fun SettingsScreen(
             viewModel.importDataFromUri(it)
         }
     }
-    var isShowingResetSettingsDialog by remember { mutableStateOf(false) }
+    var isShowingResetSettingsDialog by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
         modifier = Modifier
