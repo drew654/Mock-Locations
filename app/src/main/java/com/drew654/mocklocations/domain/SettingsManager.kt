@@ -177,6 +177,22 @@ class SettingsManager(private val context: Context) {
         }
     }
 
+    suspend fun mergeRoutes(routes: List<LocationTarget.SavedRoute>) {
+        context.dataStore.edit { preferences ->
+            val existingJson = preferences[SAVED_ROUTES_JSON] ?: ""
+            if (existingJson.isEmpty()) {
+                preferences[SAVED_ROUTES_JSON] = gson.toJson(routes)
+            } else {
+                val type = object : TypeToken<MutableList<LocationTarget.SavedRoute>>() {}.type
+                val currentList = gson.fromJson<MutableList<LocationTarget.SavedRoute>>(existingJson, type)
+
+                currentList.addAll(routes)
+
+                preferences[SAVED_ROUTES_JSON] = gson.toJson(currentList)
+            }
+        }
+    }
+
     suspend fun replaceRoutes(routes: List<LocationTarget.SavedRoute>) {
         context.dataStore.edit { preferences ->
             preferences[SAVED_ROUTES_JSON] = gson.toJson(routes)

@@ -6,6 +6,7 @@ import com.drew654.mocklocations.domain.model.AccuracyLevel
 import com.drew654.mocklocations.domain.model.ExportData
 import com.drew654.mocklocations.domain.model.ExportMeta
 import com.drew654.mocklocations.domain.model.ExportSettings
+import com.drew654.mocklocations.domain.model.ImportRouteOption
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.getAccuracyLevelByName
 import com.drew654.mocklocations.domain.model.getMapStyleByName
@@ -56,11 +57,15 @@ class ExportRepository(
         return settingsManager.gson.toJson(exportData)
     }
 
-    suspend fun importFromJson(json: String) {
+    suspend fun importFromJson(json: String, importSettings: Boolean, importRouteOption: ImportRouteOption?) {
         val exportData = settingsManager.gson.fromJson(json, ExportData::class.java)
 
-        importSettings(exportData.settings)
-        importRoutes(exportData.routes)
+        if (importSettings) {
+            importSettings(exportData.settings)
+        }
+        if (importRouteOption != null) {
+            importRoutes(exportData.routes, importRouteOption)
+        }
     }
 
     private suspend fun importSettings(settings: ExportSettings?) {
@@ -77,8 +82,15 @@ class ExportRepository(
         settingsManager.setLocationUpdateDelay(settings.locationUpdateDelay)
     }
 
-    private suspend fun importRoutes(routes: List<LocationTarget.SavedRoute>?) {
+    private suspend fun importRoutes(routes: List<LocationTarget.SavedRoute>?, importOption: ImportRouteOption) {
         if (routes == null) return
-        settingsManager.replaceRoutes(routes)
+        when (importOption) {
+            ImportRouteOption.MERGE -> {
+                settingsManager.mergeRoutes(routes)
+            }
+            ImportRouteOption.REPLACE -> {
+                settingsManager.replaceRoutes(routes)
+            }
+        }
     }
 }

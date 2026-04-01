@@ -19,6 +19,7 @@ import com.drew654.mocklocations.presentation.MockLocationsViewModel
 import com.drew654.mocklocations.presentation.Screen
 import com.drew654.mocklocations.presentation.expanded_controls_configuration.ExpandedControlsConfigurationScreen
 import com.drew654.mocklocations.presentation.export_settings.ExportSettingsScreen
+import com.drew654.mocklocations.presentation.import_settings.ImportSettingsScreen
 import com.drew654.mocklocations.presentation.map_screen.MapScreen
 import com.drew654.mocklocations.presentation.settings_screen.SettingsScreen
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
@@ -57,6 +58,12 @@ class MainActivity : ComponentActivity() {
                         }
                         composable(Screen.ExportSettings.route) {
                             ExportSettingsScreen(
+                                viewModel = viewModel,
+                                navController = navController
+                            )
+                        }
+                        composable(Screen.ImportSettings.route) {
+                            ImportSettingsScreen(
                                 viewModel = viewModel,
                                 navController = navController
                             )

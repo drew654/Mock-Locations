@@ -13,6 +13,7 @@ import androidx.lifecycle.viewModelScope
 import com.drew654.mocklocations.data.repository.ExportRepository
 import com.drew654.mocklocations.domain.SettingsManager
 import com.drew654.mocklocations.domain.model.AccuracyLevel
+import com.drew654.mocklocations.domain.model.ImportRouteOption
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.MapStyle
 import com.drew654.mocklocations.domain.model.MockControlState
@@ -44,6 +45,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     val controlsAreExpanded: StateFlow<Boolean> = _controlsAreExpanded.asStateFlow()
     private val settingsManager = SettingsManager(application)
     val repository = ExportRepository(settingsManager)
+    private val _importUri = MutableStateFlow<Uri?>(null)
     private val _speedUnitValue =
         MutableStateFlow(SpeedUnitValue(value = 30.0, speedUnit = SpeedUnit.MilesPerHour))
     val speedUnitValue: StateFlow<SpeedUnitValue> = _speedUnitValue.asStateFlow()
@@ -161,18 +163,18 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
-    fun importDataFromUri(uri: Uri) {
+    fun importDataFromUri(importSettings: Boolean, importRouteOption: ImportRouteOption?) {
         viewModelScope.launch(Dispatchers.IO) {
             val context = getApplication<Application>().applicationContext
 
             try {
                 val json = context.contentResolver
-                    .openInputStream(uri)
+                    .openInputStream(_importUri.value!!)
                     ?.bufferedReader()
                     ?.use { it.readText() }
                     ?: throw IllegalStateException("Unable to read file")
 
-                repository.importFromJson(json)
+                repository.importFromJson(json, importSettings, importRouteOption)
                 _speedUnitValue.value = settingsManager.speedUnitValueFlow.first()
 
                 launch(Dispatchers.Main) {
@@ -236,6 +238,10 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         viewModelScope.launch {
             updateMockControlState { it.copy(activeLocationTarget = LocationTarget.Empty) }
         }
+    }
+
+    fun setImportUri(uri: Uri?) {
+        _importUri.value = uri
     }
 
     fun setSpeedUnitValue(speedUnitValue: SpeedUnitValue) {
