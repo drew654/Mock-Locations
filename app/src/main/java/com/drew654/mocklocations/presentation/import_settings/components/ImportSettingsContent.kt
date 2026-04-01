@@ -35,7 +35,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.R
 import com.drew654.mocklocations.domain.model.ImportRouteOption
-import com.drew654.mocklocations.presentation.expanded_controls_configuration.components.CheckboxRow
+import com.drew654.mocklocations.presentation.components.CheckboxRow
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 
 @OptIn(ExperimentalMaterial3Api::class)

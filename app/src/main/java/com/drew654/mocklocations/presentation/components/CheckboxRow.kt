@@ -1,4 +1,4 @@
-package com.drew654.mocklocations.presentation.expanded_controls_configuration.components
+package com.drew654.mocklocations.presentation.components
 
 import android.content.res.Configuration
 import androidx.compose.foundation.clickable
