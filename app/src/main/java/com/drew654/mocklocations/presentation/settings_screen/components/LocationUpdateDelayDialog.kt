@@ -19,6 +19,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -49,7 +50,10 @@ fun LocationUpdateDelayDialog(
         ) {
             val focusRequester = remember { FocusRequester() }
             val focusManager = LocalFocusManager.current
-            var textFieldValue by remember {
+            var textFieldValue by rememberSaveable(
+                locationUpdateDelay,
+                stateSaver = TextFieldValue.Saver
+            ) {
                 mutableStateOf(
                     TextFieldValue(
                         text = locationUpdateDelay.toTrimmedString(),
@@ -124,7 +128,7 @@ fun LocationUpdateDelayDialog(
                             modifier = Modifier.padding(8.dp),
                             enabled = isValid()
                         ) {
-                            Text(text = "Save Route")
+                            Text(text = "Save")
                         }
                     }
                 }

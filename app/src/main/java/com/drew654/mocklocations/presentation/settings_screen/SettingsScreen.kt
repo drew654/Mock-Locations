@@ -25,7 +25,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -58,7 +57,7 @@ fun SettingsScreen(
     val mapStyle by viewModel.mapStyle.collectAsState()
     val accuracyLevel by viewModel.accuracyLevel.collectAsState()
     val locationUpdateDelay by viewModel.locationUpdateDelay.collectAsState()
-    var isShowingLocationUpdateDelayDialog by remember { mutableStateOf(false) }
+    var isShowingLocationUpdateDelayDialog by rememberSaveable { mutableStateOf(false) }
     val isCameraFollowingMockedLocation by viewModel.isCameraFollowingMockedLocation.collectAsState()
     val isGoingToWaitAtRouteFinish by viewModel.isGoingToWaitAtRouteFinish.collectAsState()
     val importLauncher = rememberLauncherForActivityResult(
