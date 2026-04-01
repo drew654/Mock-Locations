@@ -1,6 +1,6 @@
 package com.drew654.mocklocations.domain.model
 
-enum class ImportRouteOption(val type: String) {
-    REPLACE("Replace"),
-    MERGE("Merge")
+enum class ImportRouteOption(val label: String) {
+    REPLACE("Replace current routes"),
+    MERGE("Merge with current routes")
 }

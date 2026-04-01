@@ -2,7 +2,6 @@ package com.drew654.mocklocations.presentation.export_settings.components
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -81,7 +80,6 @@ fun ExportSettingsContent(
                 .padding(innerPadding)
         ) {
             Column(
-                verticalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier
                     .weight(1f)
                     .verticalScroll(scrollState)

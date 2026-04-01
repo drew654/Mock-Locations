@@ -2,7 +2,6 @@ package com.drew654.mocklocations.presentation.import_settings.components
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -36,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.R
 import com.drew654.mocklocations.domain.model.ImportRouteOption
 import com.drew654.mocklocations.presentation.components.CheckboxRow
+import com.drew654.mocklocations.presentation.components.RadioButtonRow
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -47,6 +47,7 @@ fun ImportSettingsContent(
     val scrollState = rememberScrollState()
     var isImportingRoutes by remember { mutableStateOf(true) }
     var isImportingSettings by remember { mutableStateOf(true) }
+    var importRouteOption by remember { mutableStateOf<ImportRouteOption?>(ImportRouteOption.REPLACE) }
 
     Scaffold(
         modifier = Modifier
@@ -82,7 +83,6 @@ fun ImportSettingsContent(
                 .padding(innerPadding)
         ) {
             Column(
-                verticalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier
                     .weight(1f)
                     .verticalScroll(scrollState)
@@ -99,14 +99,28 @@ fun ImportSettingsContent(
                     checked = isImportingRoutes,
                     onCheckedChange = {
                         isImportingRoutes = it
+                        importRouteOption =
+                            if (isImportingRoutes) ImportRouteOption.REPLACE else null
+
                     }
                 )
+                if (isImportingRoutes) {
+                    ImportRouteOption.entries.forEach { option ->
+                        RadioButtonRow(
+                            label = option.label,
+                            selected = importRouteOption == option,
+                            onClick = {
+                                importRouteOption = option
+                            }
+                        )
+                    }
+                }
                 Spacer(Modifier.padding(bottom = 16.dp))
             }
 
             TextButton(
                 onClick = {
-                    onImport(isImportingSettings, if (isImportingRoutes) ImportRouteOption.REPLACE else null)
+                    onImport(isImportingSettings, importRouteOption)
                 },
                 modifier = Modifier
                     .fillMaxWidth()
