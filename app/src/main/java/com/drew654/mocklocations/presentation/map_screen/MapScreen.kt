@@ -33,7 +33,7 @@ import com.drew654.mocklocations.domain.model.getEnabledActions
 import com.drew654.mocklocations.domain.model.getVisibleActions
 import com.drew654.mocklocations.domain.model.isGranted
 import com.drew654.mocklocations.presentation.MockLocationsViewModel
-import com.drew654.mocklocations.presentation.components.PermissionsDialog
+import com.drew654.mocklocations.presentation.map_screen.components.PermissionsDialog
 import com.drew654.mocklocations.presentation.map_screen.components.ExpandedControls
 import com.drew654.mocklocations.presentation.map_screen.components.MapControlButtons
 import com.drew654.mocklocations.presentation.map_screen.components.SavedRoutesDialog
