@@ -32,7 +32,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.listSaver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -45,9 +46,20 @@ import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.R
 import com.drew654.mocklocations.domain.model.SpeedUnit
 import com.drew654.mocklocations.domain.model.SpeedUnitValue
+import com.drew654.mocklocations.domain.model.getSpeedUnitByName
 import com.drew654.mocklocations.presentation.settings_screen.components.SpeedUnitDialog
 import com.drew654.mocklocations.presentation.settings_screen.components.TextRow
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
+
+val SpeedUnitValueSaver = listSaver<SpeedUnitValue, Any>(
+    save = { listOf(it.value, it.speedUnit.name) },
+    restore = {
+        SpeedUnitValue(
+            value = it[0] as Double,
+            speedUnit = getSpeedUnitByName(it[1] as String)
+        )
+    }
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,14 +73,14 @@ fun ExpandedControlsConfigurationContent(
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
     val scrollState = rememberScrollState()
-    var isShowingSpeedUnitDialog by remember { mutableStateOf(false) }
-    var speedUnitValue by remember(originalSpeedUnitValue) {
+    var isShowingSpeedUnitDialog by rememberSaveable { mutableStateOf(false) }
+    var speedUnitValue by rememberSaveable(originalSpeedUnitValue, stateSaver = SpeedUnitValueSaver) {
         mutableStateOf(originalSpeedUnitValue)
     }
-    var speedSliderLowerEnd by remember(originalSpeedSliderLowerEnd) {
+    var speedSliderLowerEnd by rememberSaveable(originalSpeedSliderLowerEnd) {
         mutableStateOf(originalSpeedSliderLowerEnd.toString())
     }
-    var speedSliderUpperEnd by remember(originalSpeedSliderUpperEnd) {
+    var speedSliderUpperEnd by rememberSaveable(originalSpeedSliderUpperEnd) {
         mutableStateOf(originalSpeedSliderUpperEnd.toString())
     }
 

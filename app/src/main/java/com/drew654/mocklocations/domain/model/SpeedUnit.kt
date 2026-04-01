@@ -13,3 +13,12 @@ fun SpeedUnit.toMetersPerSecond(speed: Double): Double {
         SpeedUnit.MilesPerHour -> speed * 0.44704
     }
 }
+
+fun getSpeedUnitByName(name: String): SpeedUnit {
+    return when (name) {
+        SpeedUnit.MetersPerSecond.name -> SpeedUnit.MetersPerSecond
+        SpeedUnit.KilometersPerHour.name -> SpeedUnit.KilometersPerHour
+        SpeedUnit.MilesPerHour.name -> SpeedUnit.MilesPerHour
+        else -> throw IllegalArgumentException("Unknown SpeedUnit: $name")
+    }
+}
