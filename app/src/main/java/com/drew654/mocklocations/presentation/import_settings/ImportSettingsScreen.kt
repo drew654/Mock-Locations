@@ -10,6 +10,8 @@ fun ImportSettingsScreen(
     viewModel: MockLocationsViewModel,
     navController: NavController
 ) {
+    val isWithSettingsToImport = viewModel.getIsWithSettingsToImport()
+    val routesToImport = viewModel.getRouteCountFromImportUri()
     ImportSettingsContent(
         onBack = {
             navController.popBackStack()
@@ -18,6 +20,8 @@ fun ImportSettingsScreen(
         onImport = { importSettings, importRouteOption ->
             viewModel.importDataFromUri(importSettings = importSettings, importRouteOption = importRouteOption)
             navController.popBackStack()
-        }
+        },
+        isWithSettingsToImport = isWithSettingsToImport,
+        routesToImport = routesToImport
     )
 }

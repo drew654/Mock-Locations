@@ -189,6 +189,44 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
+    fun getRouteCountFromImportUri(): Int {
+        var count = 0
+        viewModelScope.launch {
+            val context = getApplication<Application>().applicationContext
+            try {
+                val json = context.contentResolver
+                    .openInputStream(_importUri.value!!)
+                    ?.bufferedReader()
+                    ?.use { it.readText() }
+                    ?: throw IllegalStateException("Unable to read file")
+
+                count = repository.getRouteCountFromJson(json)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+        return count
+    }
+
+    fun getIsWithSettingsToImport(): Boolean {
+        var isWithSettingsToImport = false
+        viewModelScope.launch {
+            val context = getApplication<Application>().applicationContext
+            try {
+                val json = context.contentResolver
+                    .openInputStream(_importUri.value!!)
+                    ?.bufferedReader()
+                    ?.use { it.readText() }
+                    ?: throw IllegalStateException("Unable to read file")
+
+                isWithSettingsToImport = repository.isWithSettingsToImport(json)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+        return isWithSettingsToImport
+    }
+
     fun resetSettingsToDefault() {
         viewModelScope.launch {
             settingsManager.resetToDefault()

@@ -42,7 +42,9 @@ import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 @Composable
 fun ImportSettingsContent(
     onBack: () -> Unit,
-    onImport: (Boolean, ImportRouteOption?) -> Unit
+    onImport: (Boolean, ImportRouteOption?) -> Unit,
+    isWithSettingsToImport: Boolean,
+    routesToImport: Int
 ) {
     val scrollState = rememberScrollState()
     var isImportingRoutes by remember { mutableStateOf(true) }
@@ -87,32 +89,37 @@ fun ImportSettingsContent(
                     .weight(1f)
                     .verticalScroll(scrollState)
             ) {
-                CheckboxRow(
-                    label = "Import settings",
-                    checked = isImportingSettings,
-                    onCheckedChange = {
-                        isImportingSettings = it
-                    }
-                )
-                CheckboxRow(
-                    label = "Import routes",
-                    checked = isImportingRoutes,
-                    onCheckedChange = {
-                        isImportingRoutes = it
-                        importRouteOption =
-                            if (isImportingRoutes) ImportRouteOption.REPLACE else null
-
-                    }
-                )
-                if (isImportingRoutes) {
-                    ImportRouteOption.entries.forEach { option ->
-                        RadioButtonRow(
-                            label = option.label,
-                            selected = importRouteOption == option,
-                            onClick = {
-                                importRouteOption = option
+                if (isWithSettingsToImport) {
+                    CheckboxRow(
+                        label = "Import settings",
+                        checked = isImportingSettings,
+                        onCheckedChange = {
+                            isImportingSettings = it
+                        }
+                    )
+                }
+                if (routesToImport > 0) {
+                    if (isWithSettingsToImport) {
+                        CheckboxRow(
+                            label = "Import $routesToImport routes",
+                            checked = isImportingRoutes,
+                            onCheckedChange = {
+                                isImportingRoutes = it
+                                importRouteOption =
+                                    if (isImportingRoutes) ImportRouteOption.REPLACE else null
                             }
                         )
+                    }
+                    if (isImportingRoutes) {
+                        ImportRouteOption.entries.forEach { option ->
+                            RadioButtonRow(
+                                label = option.label,
+                                selected = importRouteOption == option,
+                                onClick = {
+                                    importRouteOption = option
+                                }
+                            )
+                        }
                     }
                 }
                 Spacer(Modifier.padding(bottom = 16.dp))
@@ -143,12 +150,37 @@ fun ImportSettingsContent(
     showBackground = true
 )
 @Composable
-fun ImportSettingsContentPreview() {
+private fun ImportSettingsContentPreview1() {
     MockLocationsTheme {
         Surface {
             ImportSettingsContent(
                 onBack = { },
-                onImport = { _, _ -> }
+                onImport = { _, _ -> },
+                isWithSettingsToImport = true,
+                routesToImport = 5
+            )
+        }
+    }
+}
+
+@Preview(
+    name = "Light Mode",
+    showBackground = true
+)
+@Preview(
+    name = "Dark Mode",
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+    showBackground = true
+)
+@Composable
+private fun ImportSettingsContentPreview2() {
+    MockLocationsTheme {
+        Surface {
+            ImportSettingsContent(
+                onBack = { },
+                onImport = { _, _ -> },
+                isWithSettingsToImport = false,
+                routesToImport = 5
             )
         }
     }

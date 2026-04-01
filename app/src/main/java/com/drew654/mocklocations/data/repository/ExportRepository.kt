@@ -68,6 +68,16 @@ class ExportRepository(
         }
     }
 
+    fun getRouteCountFromJson(json: String): Int {
+        val exportData = settingsManager.gson.fromJson(json, ExportData::class.java)
+        return exportData.routes?.size ?: 0
+    }
+
+    fun isWithSettingsToImport(json: String): Boolean {
+        val exportData = settingsManager.gson.fromJson(json, ExportData::class.java)
+        return exportData.settings != null
+    }
+
     private suspend fun importSettings(settings: ExportSettings?) {
         if (settings == null) return
         settingsManager.setMockControlState(settingsManager.mockControlStateFlow.first().copy(isUsingCrosshairs = settings.useCrosshairs))
