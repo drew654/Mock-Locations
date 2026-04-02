@@ -11,6 +11,7 @@ import android.location.LocationManager
 import android.location.provider.ProviderProperties
 import android.os.IBinder
 import android.os.SystemClock
+import android.util.Log
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import com.drew654.mocklocations.R
@@ -23,6 +24,8 @@ import com.drew654.mocklocations.domain.model.isResumeVisible
 import com.drew654.mocklocations.domain.model.toMetersPerSecond
 import com.drew654.mocklocations.presentation.toLatLng
 import com.drew654.mocklocations.presentation.toRoutePoint
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -38,7 +41,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlin.getValue
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.random.Random
@@ -48,7 +50,8 @@ class MockLocationService : Service() {
     private val settingsManager by lazy { SettingsManager(applicationContext) }
     private var mockJob: Job? = null
     private val locationManager by lazy { getSystemService(LOCATION_SERVICE) as LocationManager }
-    private val providerName = LocationManager.GPS_PROVIDER
+    private val providers = listOf(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER, LocationManager.FUSED_PROVIDER)
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     private lateinit var mockControlState: StateFlow<MockControlState>
     private lateinit var isClearRouteOnStopState: StateFlow<Boolean>
@@ -70,6 +73,7 @@ class MockLocationService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         createNotificationChannel()
 
         mockControlState = settingsManager.mockControlStateFlow.stateIn(
@@ -461,19 +465,36 @@ class MockLocationService : Service() {
         bearing: Float,
         speed: Float
     ) {
-        val location = Location(providerName).apply {
+        val now = System.currentTimeMillis()
+        val elapsedNanos = SystemClock.elapsedRealtimeNanos()
+        val currentAccuracy = accuracyMetersState.value
+
+        val mockLocation = Location(LocationManager.GPS_PROVIDER).apply {
             latitude = latLng.latitude + noiseLat
             longitude = latLng.longitude + noiseLng
             this.bearing = bearing
             this.speed = speed
-            time = System.currentTimeMillis()
-            elapsedRealtimeNanos = SystemClock.elapsedRealtimeNanos()
-            accuracy = accuracyMetersState.value
+            time = now
+            elapsedRealtimeNanos = elapsedNanos
+            accuracy = currentAccuracy
+            altitude = 0.0
+            verticalAccuracyMeters = 0f
+            isMock = true
         }
 
-        lastBroadcastLocation = location
-        locationManager.setTestProviderLocation(providerName, location)
-        settingsManager.setCurrentMockedLocation(location.toRoutePoint())
+        try {
+            fusedLocationClient.setMockLocation(mockLocation)
+        } catch (e: SecurityException) {
+            Log.e("MockLocationService", "SecurityException: Cannot disable mock mode", e)
+        }
+
+        providers.forEach { name ->
+            val providerLoc = Location(mockLocation).apply { provider = name }
+            locationManager.setTestProviderLocation(name, providerLoc)
+        }
+
+        lastBroadcastLocation = mockLocation
+        settingsManager.setCurrentMockedLocation(mockLocation.toRoutePoint())
     }
 
     private fun buildRoutePoints(
@@ -513,22 +534,47 @@ class MockLocationService : Service() {
 
     private fun setUpTestProvider() {
         try {
-            locationManager.removeTestProvider(providerName)
-        } catch (_: Exception) {
+            fusedLocationClient.setMockMode(true)
+                .addOnFailureListener { e ->
+                    Log.e("MockLocationService", "Failed to set mock mode", e)
+                }
+        } catch (e: SecurityException) {
+            Log.e("MockLocationService", "SecurityException: Cannot enable mock mode", e)
         }
+        providers.forEach { name ->
+            try {
+                locationManager.removeTestProvider(name)
+            } catch (_ : Exception) {
+            }
 
-        locationManager.addTestProvider(
-            providerName, false, false, false, false, false, true, true,
-            ProviderProperties.POWER_USAGE_LOW, ProviderProperties.ACCURACY_FINE
-        )
-        locationManager.setTestProviderEnabled(providerName, true)
+            val properties = ProviderProperties.Builder()
+                .setHasAltitudeSupport(true)
+                .setHasSpeedSupport(true)
+                .setHasBearingSupport(true)
+                .setPowerUsage(ProviderProperties.POWER_USAGE_LOW)
+                .setAccuracy(ProviderProperties.ACCURACY_FINE)
+                .build()
+
+            locationManager.addTestProvider(name, properties)
+            locationManager.setTestProviderEnabled(name, true)
+        }
     }
 
     private fun tearDownTestProvider() {
         try {
-            locationManager.setTestProviderEnabled(providerName, false)
-            locationManager.removeTestProvider(providerName)
-        } catch (_: Exception) {
+            fusedLocationClient.setMockMode(false)
+                .addOnFailureListener { e ->
+                    Log.e("MockLocationService", "Failed to set mock mode", e)
+                }
+        } catch (e: SecurityException) {
+            Log.e("MockLocationService", "SecurityException: Cannot disable mock mode", e)
+        }
+        providers.forEach { name ->
+            try {
+                locationManager.setTestProviderEnabled(name, false)
+                locationManager.removeTestProvider(name)
+            } catch (_: Exception) {
+            }
         }
     }
 
