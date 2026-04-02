@@ -56,6 +56,7 @@ class MockLocationService : Service() {
     private lateinit var mockControlState: StateFlow<MockControlState>
     private lateinit var isClearRouteOnStopState: StateFlow<Boolean>
     private lateinit var accuracyMetersState: StateFlow<Float>
+    private lateinit var locationUpdateDelayState: StateFlow<Long>
     private var lastBroadcastLocation: Location? = null
     private var noiseLat = 0.0
     private var noiseLng = 0.0
@@ -101,6 +102,12 @@ class MockLocationService : Service() {
                 started = SharingStarted.Eagerly,
                 initialValue = 0f
             )
+
+        locationUpdateDelayState = settingsManager.locationUpdateDelayFlow.map { (it * 1000).toLong() }.stateIn(
+            scope = serviceScope,
+            started = SharingStarted.Eagerly,
+            initialValue = 1000
+        )
 
         serviceScope.launch {
             mockControlState.collect { mockControlState ->
@@ -271,7 +278,7 @@ class MockLocationService : Service() {
                         bearing = 0f,
                         speed = 0f
                     )
-                    delay(1000)
+                    delay(locationUpdateDelayState.value)
                     updateNoiseSmooth()
                 }
             } catch (e: Exception) {
@@ -351,7 +358,6 @@ class MockLocationService : Service() {
                     settingsManager.speedUnitValueFlow.collect { currentSpeedMetersPerSec = it.toMetersPerSecond() }
                 }
 
-                val updateIntervalMs = 1000L
                 val metersPerPoint = 1.0
 
                 var index = startIndex
@@ -364,7 +370,7 @@ class MockLocationService : Service() {
                         bearing = routePoint.bearing,
                         speed = 0f
                     )
-                    delay(updateIntervalMs)
+                    delay(locationUpdateDelayState.value)
                 }
 
                 var pausedBaseLocation: Location? = null
@@ -384,7 +390,7 @@ class MockLocationService : Service() {
                                 )
                             }
 
-                            delay(updateIntervalMs)
+                            delay(locationUpdateDelayState.value)
                             updateNoiseSmooth()
                             continue
                         } else {
@@ -399,6 +405,7 @@ class MockLocationService : Service() {
                             speed = currentSpeedMetersPerSec.toFloat()
                         )
 
+                        val updateIntervalMs = locationUpdateDelayState.value
                         delay(updateIntervalMs)
                         updateNoiseSmooth()
 
@@ -442,7 +449,7 @@ class MockLocationService : Service() {
                             )
                         }
 
-                        delay(updateIntervalMs)
+                        delay(locationUpdateDelayState.value)
                         updateNoiseSmooth()
                     }
                 }
