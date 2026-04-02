@@ -177,6 +177,20 @@ class SettingsManager(private val context: Context) {
         }
     }
 
+    private fun generateUniqueRouteName(
+        baseName: String,
+        existingNames: Set<String>
+    ): String {
+        if (baseName !in existingNames) return baseName
+
+        var index = 1
+        while (true) {
+            val newName = "$baseName ($index)"
+            if (newName !in existingNames) return newName
+            index++
+        }
+    }
+
     suspend fun mergeRoutes(routes: List<LocationTarget.SavedRoute>) {
         context.dataStore.edit { preferences ->
             val existingJson = preferences[SAVED_ROUTES_JSON] ?: ""
@@ -186,7 +200,14 @@ class SettingsManager(private val context: Context) {
                 val type = object : TypeToken<MutableList<LocationTarget.SavedRoute>>() {}.type
                 val currentList = gson.fromJson<MutableList<LocationTarget.SavedRoute>>(existingJson, type)
 
-                currentList.addAll(routes)
+                val existingNames = currentList.map { it.name }.toMutableSet()
+                val updatedRoutes = routes.map { route ->
+                    val uniqueName = generateUniqueRouteName(route.name, existingNames)
+                    existingNames.add(uniqueName)
+                    route.copy(name = uniqueName)
+                }
+
+                currentList.addAll(updatedRoutes)
 
                 preferences[SAVED_ROUTES_JSON] = gson.toJson(currentList)
             }
