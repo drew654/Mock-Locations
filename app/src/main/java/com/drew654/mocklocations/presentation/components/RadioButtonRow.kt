@@ -50,7 +50,7 @@ fun RadioButtonRow(
     showBackground = true
 )
 @Composable
-fun RadioButtonRowPreview() {
+private fun RadioButtonRowPreview() {
     MockLocationsTheme {
         Surface {
             RadioButtonRow(

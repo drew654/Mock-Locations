@@ -208,7 +208,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         return count
     }
 
-    fun getIsWithSettingsToImport(): Boolean {
+    fun getIsWithSettingsToImportFromImportUri(): Boolean {
         var isWithSettingsToImport = false
         viewModelScope.launch {
             val context = getApplication<Application>().applicationContext

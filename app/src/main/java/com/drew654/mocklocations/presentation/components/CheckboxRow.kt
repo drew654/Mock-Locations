@@ -87,7 +87,7 @@ private fun CheckboxRowPreview1() {
     showBackground = true
 )
 @Composable
-fun CheckboxRowPreview2() {
+private fun CheckboxRowPreview2() {
     MockLocationsTheme {
         Surface {
             CheckboxRow(

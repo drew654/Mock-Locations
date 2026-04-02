@@ -10,7 +10,7 @@ fun ImportSettingsScreen(
     viewModel: MockLocationsViewModel,
     navController: NavController
 ) {
-    val isWithSettingsToImport = viewModel.getIsWithSettingsToImport()
+    val isWithSettingsToImport = viewModel.getIsWithSettingsToImportFromImportUri()
     val routesToImport = viewModel.getRouteCountFromImportUri()
     ImportSettingsContent(
         onBack = {
