@@ -26,7 +26,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -47,9 +47,9 @@ fun ImportSettingsContent(
     routesToImport: Int
 ) {
     val scrollState = rememberScrollState()
-    var isImportingRoutes by remember { mutableStateOf(routesToImport > 0) }
-    var isImportingSettings by remember { mutableStateOf(isWithSettingsToImport) }
-    var importRouteOption by remember { mutableStateOf<ImportRouteOption?>(ImportRouteOption.REPLACE) }
+    var isImportingRoutes by rememberSaveable { mutableStateOf(routesToImport > 0) }
+    var isImportingSettings by rememberSaveable { mutableStateOf(isWithSettingsToImport) }
+    var importRouteOption by rememberSaveable { mutableStateOf<ImportRouteOption?>(ImportRouteOption.REPLACE) }
 
     Scaffold(
         modifier = Modifier
