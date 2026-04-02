@@ -40,10 +40,11 @@ import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 @Composable
 fun ExportSettingsContent(
     onBack: () -> Unit,
-    onExport: (Boolean, Boolean) -> Unit
+    onExport: (Boolean, Boolean) -> Unit,
+    routesToExport: Int
 ) {
     val scrollState = rememberScrollState()
-    var isExportingRoutes by remember { mutableStateOf(true) }
+    var isExportingRoutes by remember { mutableStateOf(routesToExport > 0) }
     var isExportingSettings by remember { mutableStateOf(true) }
 
     Scaffold(
@@ -92,11 +93,12 @@ fun ExportSettingsContent(
                     }
                 )
                 CheckboxRow(
-                    label = "Export routes",
+                    label = "Export $routesToExport routes",
                     checked = isExportingRoutes,
                     onCheckedChange = {
                         isExportingRoutes = it
-                    }
+                    },
+                    enabled = routesToExport > 0
                 )
                 Spacer(Modifier.padding(bottom = 16.dp))
             }
@@ -126,12 +128,35 @@ fun ExportSettingsContent(
     showBackground = true
 )
 @Composable
-fun ExportSettingsContentPreview() {
+private fun ExportSettingsContentPreview1() {
     MockLocationsTheme {
         Surface {
             ExportSettingsContent(
                 onBack = { },
-                onExport = { _, _ -> }
+                onExport = { _, _ -> },
+                routesToExport = 5
+            )
+        }
+    }
+}
+
+@Preview(
+    name = "Light Mode",
+    showBackground = true
+)
+@Preview(
+    name = "Dark Mode",
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+    showBackground = true
+)
+@Composable
+private fun ExportSettingsContentPreview2() {
+    MockLocationsTheme {
+        Surface {
+            ExportSettingsContent(
+                onBack = { },
+                onExport = { _, _ -> },
+                routesToExport = 0
             )
         }
     }
