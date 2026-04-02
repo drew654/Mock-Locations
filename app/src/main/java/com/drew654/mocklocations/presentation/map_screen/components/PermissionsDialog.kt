@@ -1,4 +1,4 @@
-package com.drew654.mocklocations.presentation.components
+package com.drew654.mocklocations.presentation.map_screen.components
 
 import android.content.Context
 import android.content.Intent

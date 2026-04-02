@@ -64,7 +64,8 @@ fun SettingsScreen(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
         uri?.let {
-            viewModel.importDataFromUri(it)
+            viewModel.setImportUri(it)
+            navController.navigate(Screen.ImportSettings.route)
         }
     }
     var isShowingResetSettingsDialog by rememberSaveable { mutableStateOf(false) }
