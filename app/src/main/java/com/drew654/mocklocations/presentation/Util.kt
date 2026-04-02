@@ -3,6 +3,7 @@ package com.drew654.mocklocations.presentation
 import android.location.Location
 import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.ui.Modifier
 import com.drew654.mocklocations.domain.model.RoutePoint
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.flow.Flow
@@ -38,4 +39,12 @@ fun Location.toRoutePoint(): RoutePoint {
 
 fun Location.toLatLng(): LatLng {
     return LatLng(latitude, longitude)
+}
+
+fun Modifier.conditional(condition: Boolean, modifier: Modifier.() -> Modifier): Modifier {
+    return if (condition) {
+        then(modifier(Modifier))
+    } else {
+        this
+    }
 }

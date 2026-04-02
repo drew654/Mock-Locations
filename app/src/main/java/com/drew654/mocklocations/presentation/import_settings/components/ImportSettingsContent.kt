@@ -47,8 +47,8 @@ fun ImportSettingsContent(
     routesToImport: Int
 ) {
     val scrollState = rememberScrollState()
-    var isImportingRoutes by remember { mutableStateOf(true) }
-    var isImportingSettings by remember { mutableStateOf(true) }
+    var isImportingRoutes by remember { mutableStateOf(routesToImport > 0) }
+    var isImportingSettings by remember { mutableStateOf(isWithSettingsToImport) }
     var importRouteOption by remember { mutableStateOf<ImportRouteOption?>(ImportRouteOption.REPLACE) }
 
     Scaffold(
@@ -89,37 +89,33 @@ fun ImportSettingsContent(
                     .weight(1f)
                     .verticalScroll(scrollState)
             ) {
-                if (isWithSettingsToImport) {
-                    CheckboxRow(
-                        label = "Import settings",
-                        checked = isImportingSettings,
-                        onCheckedChange = {
-                            isImportingSettings = it
-                        }
-                    )
-                }
-                if (routesToImport > 0) {
-                    if (isWithSettingsToImport) {
-                        CheckboxRow(
-                            label = "Import $routesToImport routes",
-                            checked = isImportingRoutes,
-                            onCheckedChange = {
-                                isImportingRoutes = it
-                                importRouteOption =
-                                    if (isImportingRoutes) ImportRouteOption.REPLACE else null
+                CheckboxRow(
+                    label = "Import settings",
+                    checked = isImportingSettings,
+                    onCheckedChange = {
+                        isImportingSettings = it
+                    },
+                    enabled = isWithSettingsToImport
+                )
+                CheckboxRow(
+                    label = "Import $routesToImport routes",
+                    checked = isImportingRoutes,
+                    onCheckedChange = {
+                        isImportingRoutes = it
+                        importRouteOption =
+                            if (isImportingRoutes) ImportRouteOption.REPLACE else null
+                    },
+                    enabled = isWithSettingsToImport && routesToImport > 0
+                )
+                if (isImportingRoutes) {
+                    ImportRouteOption.entries.forEach { option ->
+                        RadioButtonRow(
+                            label = option.label,
+                            selected = importRouteOption == option,
+                            onClick = {
+                                importRouteOption = option
                             }
                         )
-                    }
-                    if (isImportingRoutes) {
-                        ImportRouteOption.entries.forEach { option ->
-                            RadioButtonRow(
-                                label = option.label,
-                                selected = importRouteOption == option,
-                                onClick = {
-                                    importRouteOption = option
-                                }
-                            )
-                        }
                     }
                 }
                 Spacer(Modifier.padding(bottom = 16.dp))
@@ -181,6 +177,29 @@ private fun ImportSettingsContentPreview2() {
                 onImport = { _, _ -> },
                 isWithSettingsToImport = false,
                 routesToImport = 5
+            )
+        }
+    }
+}
+
+@Preview(
+    name = "Light Mode",
+    showBackground = true
+)
+@Preview(
+    name = "Dark Mode",
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+    showBackground = true
+)
+@Composable
+private fun ImportSettingsContentPreview3() {
+    MockLocationsTheme {
+        Surface {
+            ImportSettingsContent(
+                onBack = { },
+                onImport = { _, _ -> },
+                isWithSettingsToImport = true,
+                routesToImport = 0
             )
         }
     }
