@@ -21,7 +21,7 @@ Other apps may be able to detect that a mock location provider is being used.
 
 - Android 12 (API 31) or later
 - Developer Options enabled
-- This app set as the system **Mock Location App**
+- This app set as the system mock location app
 - Location permission granted
 - Notification permission (Android 13+ recommended)
 
@@ -44,8 +44,8 @@ When attempting to perform an action for the first time that requires permission
 
 <img src="images/screenshots/location_permission_prompt.png" alt="Location permission prompt" width="400" >
 <img src="images/screenshots/notification_permission_prompt.png" alt="Notification permission prompt" width="400" >
-<img src="images/screenshots/mock_location_app_prompt.png" alt="Mock location prompt" width="400" >
 <img src="images/screenshots/developer_options_prompt.png" alt="Developer options prompt" width="400" >
+<img src="images/screenshots/mock_location_app_prompt.png" alt="Mock location prompt" width="400" >
 
 <br />
 
@@ -95,10 +95,10 @@ Opens expanded controls section.
 
 # Location mocking
 
-Mocking a point keeps your location in the same place until it is stopped. If the notification permission is granted, a notification is shown as long as the mocking service is running. The mocking continues if the app is dismissed, but in the event that the service is stopped unexpectedly, the mocking is resumed in the same place when the app is opened again.
+Mocking a point keeps your location in the same place until it is stopped. If the notification permission is granted, a notification is shown as long as the mocking service is running. The notification has a button to stop mocking your location. The mocking continues if the app is dismissed, but in the event that the service is stopped unexpectedly, the mocking is resumed in the same place when the app is opened again.
 
 <img src="images/screenshots/mocking_point.png" alt="Mocking point" width="400" >
-<img src="images/screenshots/mocking_notification.png" alt="Mocking notification" width="400" >
+<img src="images/screenshots/mocking_point_notification.png" alt="Mocking notification" width="400" >
 
 <br />
 
