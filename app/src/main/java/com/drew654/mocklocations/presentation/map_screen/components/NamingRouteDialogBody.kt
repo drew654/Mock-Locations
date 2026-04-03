@@ -25,6 +25,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.domain.model.LocationTarget
@@ -33,8 +34,8 @@ import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 
 @Composable
 fun NamingRouteDialogBody(
-    routeName: String,
-    onRouteNameChange: (String) -> Unit,
+    routeName: TextFieldValue,
+    onRouteNameChange: (TextFieldValue) -> Unit,
     onBack: () -> Unit,
     onConfirm: () -> Unit,
     savedRoutes: List<LocationTarget.SavedRoute>
@@ -78,7 +79,7 @@ fun NamingRouteDialogBody(
             ),
             keyboardActions = KeyboardActions(
                 onDone = {
-                    if (routeName.isNotBlank()) {
+                    if (routeName.text.isNotBlank()) {
                         onConfirm()
                     }
                 }
@@ -99,7 +100,7 @@ fun NamingRouteDialogBody(
                     onConfirm()
                 },
                 modifier = Modifier.padding(8.dp),
-                enabled = routeName.isNotBlank() && savedRoutes.none { it.name == routeName }
+                enabled = routeName.text.isNotBlank() && savedRoutes.none { it.name == routeName.text }
             ) {
                 Text(text = "Save Route")
             }
@@ -117,12 +118,12 @@ fun NamingRouteDialogBody(
     showBackground = true
 )
 @Composable
-fun NamingRouteDialogBodyPreview() {
+private fun NamingRouteDialogBodyPreview() {
     MockLocationsTheme {
         Surface {
             Card {
                 NamingRouteDialogBody(
-                    routeName = "Route 1",
+                    routeName = TextFieldValue("Route 1"),
                     onRouteNameChange = { },
                     onBack = { },
                     onConfirm = { },

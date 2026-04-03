@@ -4,13 +4,23 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
-import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.floatPreferencesKey
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.drew654.mocklocations.domain.model.AccuracyLevel
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.LocationTargetAdapter
+import com.drew654.mocklocations.domain.model.MapStyle
+import com.drew654.mocklocations.domain.model.MockControlState
 import com.drew654.mocklocations.domain.model.RoutePoint
+import com.drew654.mocklocations.domain.model.SpeedUnit
+import com.drew654.mocklocations.domain.model.SpeedUnitTypeAdapter
+import com.drew654.mocklocations.domain.model.SpeedUnitValue
+import com.drew654.mocklocations.domain.model.getAccuracyLevelByName
+import com.drew654.mocklocations.domain.model.getMapStyleByName
+import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.flow.Flow
@@ -20,56 +30,67 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "se
 
 class SettingsManager(private val context: Context) {
     companion object {
-        val ACTIVE_LOCATION_TARGET_JSON = stringPreferencesKey("active_location_target_json")
-        val IS_MOCKING = booleanPreferencesKey("is_mocking")
-        val IS_PAUSED = booleanPreferencesKey("is_paused")
-        val CURRENT_MOCKED_LOCATION_JSON = stringPreferencesKey("current_mocked_location_json")
-        val CLEAR_ROUTE_ON_STOP = booleanPreferencesKey("clear_route_on_stop")
-        val SPEED_METERS_PER_SEC = doublePreferencesKey("speed_meters_per_sec")
-        val SAVED_ROUTES_JSON = stringPreferencesKey("saved_routes_json")
-        val IS_USING_CROSSHAIRS = booleanPreferencesKey("is_using_crosshairs")
-    }
+        // Affects UI
+        val MOCK_CONTROL_STATE_JSON = stringPreferencesKey("mock_control_state_json")
 
-    private val gson = GsonBuilder()
+        // App data and status
+        val CURRENT_MOCKED_LOCATION_JSON = stringPreferencesKey("current_mocked_location_json")
+
+        // Saved routes
+        val SAVED_ROUTES_JSON = stringPreferencesKey("saved_routes_json")
+
+        // User preferences
+        val CLEAR_ROUTE_ON_STOP = booleanPreferencesKey("clear_route_on_stop")
+        val MAP_STYLE = stringPreferencesKey("map_style")
+        val SPEED_UNIT_VALUE_JSON = stringPreferencesKey("speed_unit_value_json")
+        val SPEED_SLIDER_UPPER_END = intPreferencesKey("speed_slider_upper_end")
+        val SPEED_SLIDER_LOWER_END = intPreferencesKey("speed_slider_lower_end")
+        val IS_CAMERA_FOLLOWING_MOCKED_LOCATION = booleanPreferencesKey("is_camera_following_mocked_location")
+        val IS_CAMERA_CURRENTLY_FOLLOWING_MOCKED_LOCATION = booleanPreferencesKey("is_camera_currently_following_mocked_location")
+        val IS_GOING_TO_WAIT_AT_ROUTE_FINISH = booleanPreferencesKey("is_going_to_wait_at_route_finish")
+        val ACCURACY_LEVEL = stringPreferencesKey("accuracy_level")
+        val LOCATION_UPDATE_DELAY = floatPreferencesKey("location_update_delay")
+    }
+    val gson: Gson = GsonBuilder()
         .registerTypeAdapter(LocationTarget::class.java, LocationTargetAdapter())
+        .registerTypeAdapter(SpeedUnit::class.java, SpeedUnitTypeAdapter())
         .create()
 
-    val activeLocationTargetFlow: Flow<LocationTarget> = context.dataStore.data.map { preferences ->
-        val json = preferences[ACTIVE_LOCATION_TARGET_JSON] ?: ""
-        if (json.isEmpty()) LocationTarget.Empty
-        else gson.fromJson(json, LocationTarget::class.java)
-    }
-
-    suspend fun setActiveLocationTarget(target: LocationTarget) {
-        context.dataStore.edit {
-            it[ACTIVE_LOCATION_TARGET_JSON] = gson.toJson(target, LocationTarget::class.java)
+    suspend fun resetToDefault() {
+        setIsUsingCrosshairs(true)
+        context.dataStore.edit { preferences ->
+            preferences.remove(CLEAR_ROUTE_ON_STOP)
+            preferences.remove(MAP_STYLE)
+            preferences.remove(SPEED_UNIT_VALUE_JSON)
+            preferences.remove(SPEED_SLIDER_UPPER_END)
+            preferences.remove(SPEED_SLIDER_LOWER_END)
+            preferences.remove(IS_CAMERA_FOLLOWING_MOCKED_LOCATION)
+            preferences.remove(IS_CAMERA_CURRENTLY_FOLLOWING_MOCKED_LOCATION)
+            preferences.remove(IS_GOING_TO_WAIT_AT_ROUTE_FINISH)
+            preferences.remove(ACCURACY_LEVEL)
+            preferences.remove(LOCATION_UPDATE_DELAY)
         }
     }
 
-    val isMockingFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
-        preferences[IS_MOCKING] ?: false
-    }
+    val mockControlStateFlow: Flow<MockControlState> =
+        context.dataStore.data.map { preferences ->
+            val json = preferences[MOCK_CONTROL_STATE_JSON] ?: ""
 
-    suspend fun setIsMocking(isMocking: Boolean) {
-        context.dataStore.edit { preferences ->
-            preferences[IS_MOCKING] = isMocking
+            if (json.isEmpty()) {
+                MockControlState()
+            } else {
+                try {
+                    gson.fromJson(json, MockControlState::class.java)
+                } catch (_: Exception) {
+                    MockControlState()
+                }
+            }
         }
-    }
 
-    val isPausedFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
-        preferences[IS_PAUSED] ?: false
-    }
-
-    suspend fun setIsPaused(isPaused: Boolean) {
+    suspend fun setMockControlState(state: MockControlState) {
         context.dataStore.edit { preferences ->
-            preferences[IS_PAUSED] = isPaused
-        }
-    }
-
-    suspend fun toggleIsPaused() {
-        context.dataStore.edit { preferences ->
-            val current = preferences[IS_PAUSED] ?: false
-            preferences[IS_PAUSED] = !current
+            preferences[MOCK_CONTROL_STATE_JSON] =
+                gson.toJson(state, MockControlState::class.java)
         }
     }
 
@@ -95,13 +116,15 @@ class SettingsManager(private val context: Context) {
         }
     }
 
-    val speedMetersPerSecFlow: Flow<Double> = context.dataStore.data.map { preferences ->
-        preferences[SPEED_METERS_PER_SEC] ?: 30.0
+    val speedUnitValueFlow: Flow<SpeedUnitValue> = context.dataStore.data.map { preferences ->
+        val json = preferences[SPEED_UNIT_VALUE_JSON] ?: ""
+        if (json.isEmpty()) SpeedUnitValue(value = 30.0, speedUnit = SpeedUnit.MilesPerHour)
+        else gson.fromJson(json, SpeedUnitValue::class.java)
     }
 
-    suspend fun setSpeedMetersPerSec(speed: Double) {
+    suspend fun setSpeedUnitValue(speedUnitValue: SpeedUnitValue) {
         context.dataStore.edit { preferences ->
-            preferences[SPEED_METERS_PER_SEC] = speed
+            preferences[SPEED_UNIT_VALUE_JSON] = gson.toJson(speedUnitValue)
         }
     }
 
@@ -155,13 +178,139 @@ class SettingsManager(private val context: Context) {
         }
     }
 
-    val isUsingCrosshairsFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
-        preferences[IS_USING_CROSSHAIRS] ?: true
+    private fun generateUniqueRouteName(
+        baseName: String,
+        existingNames: Set<String>
+    ): String {
+        if (baseName !in existingNames) return baseName
+
+        var index = 1
+        while (true) {
+            val newName = "$baseName ($index)"
+            if (newName !in existingNames) return newName
+            index++
+        }
     }
 
-    suspend fun setIsUsingCrosshairs(enabled: Boolean) {
+    suspend fun mergeRoutes(routes: List<LocationTarget.SavedRoute>) {
         context.dataStore.edit { preferences ->
-            preferences[IS_USING_CROSSHAIRS] = enabled
+            val existingJson = preferences[SAVED_ROUTES_JSON] ?: ""
+            if (existingJson.isEmpty()) {
+                preferences[SAVED_ROUTES_JSON] = gson.toJson(routes)
+            } else {
+                val type = object : TypeToken<MutableList<LocationTarget.SavedRoute>>() {}.type
+                val currentList = gson.fromJson<MutableList<LocationTarget.SavedRoute>>(existingJson, type)
+
+                val existingNames = currentList.map { it.name }.toMutableSet()
+                val updatedRoutes = routes.map { route ->
+                    val uniqueName = generateUniqueRouteName(route.name, existingNames)
+                    existingNames.add(uniqueName)
+                    route.copy(name = uniqueName)
+                }
+
+                currentList.addAll(updatedRoutes)
+
+                preferences[SAVED_ROUTES_JSON] = gson.toJson(currentList)
+            }
+        }
+    }
+
+    suspend fun replaceRoutes(routes: List<LocationTarget.SavedRoute>) {
+        context.dataStore.edit { preferences ->
+            preferences[SAVED_ROUTES_JSON] = gson.toJson(routes)
+        }
+    }
+
+    private suspend fun setIsUsingCrosshairs(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            val current = preferences[MOCK_CONTROL_STATE_JSON]
+                ?.let { gson.fromJson(it, MockControlState::class.java) }
+                ?: MockControlState()
+
+            val updated = current.copy(isUsingCrosshairs = enabled)
+
+            preferences[MOCK_CONTROL_STATE_JSON] =
+                gson.toJson(updated, MockControlState::class.java)
+        }
+    }
+
+    val mapStyleFlow: Flow<MapStyle?> = context.dataStore.data.map { preferences ->
+        getMapStyleByName(preferences[MAP_STYLE] ?: "")
+    }
+
+    suspend fun setMapStyle(mapStyle: MapStyle?) {
+        context.dataStore.edit { preferences ->
+            preferences[MAP_STYLE] = mapStyle?.name ?: ""
+        }
+    }
+
+    val speedSliderUpperEndFlow: Flow<Int> = context.dataStore.data.map { preferences ->
+        preferences[SPEED_SLIDER_UPPER_END] ?: 100
+    }
+
+    suspend fun setSpeedSliderUpperEnd(value: Int) {
+        context.dataStore.edit { preferences ->
+            preferences[SPEED_SLIDER_UPPER_END] = value
+        }
+    }
+
+    val speedSliderLowerEndFlow: Flow<Int> = context.dataStore.data.map { preferences ->
+        preferences[SPEED_SLIDER_LOWER_END] ?: 0
+    }
+
+    suspend fun setSpeedSliderLowerEnd(value: Int) {
+        context.dataStore.edit { preferences ->
+            preferences[SPEED_SLIDER_LOWER_END] = value
+        }
+    }
+
+    val isCameraFollowingMockedLocation: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[IS_CAMERA_FOLLOWING_MOCKED_LOCATION] ?: true
+    }
+
+    suspend fun setIsCameraFollowingMockedLocation(value: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[IS_CAMERA_FOLLOWING_MOCKED_LOCATION] = value
+        }
+    }
+
+    val isCameraCurrentlyFollowingMockedLocationFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[IS_CAMERA_CURRENTLY_FOLLOWING_MOCKED_LOCATION] ?: true
+    }
+
+    suspend fun setIsCameraCurrentlyFollowingMockedLocation(value: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[IS_CAMERA_CURRENTLY_FOLLOWING_MOCKED_LOCATION] = value
+        }
+    }
+
+    val isGoingToWaitAtRouteFinishFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[IS_GOING_TO_WAIT_AT_ROUTE_FINISH] ?: false
+    }
+
+    suspend fun setIsGoingToWaitAtRouteFinish(value: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[IS_GOING_TO_WAIT_AT_ROUTE_FINISH] = value
+        }
+    }
+
+    val accuracyLevelFlow: Flow<AccuracyLevel> = context.dataStore.data.map { preferences ->
+        getAccuracyLevelByName(preferences[ACCURACY_LEVEL] ?: AccuracyLevel.Perfect.name)!!
+    }
+
+    suspend fun setAccuracyLevel(accuracyLevel: AccuracyLevel) {
+        context.dataStore.edit { preferences ->
+            preferences[ACCURACY_LEVEL] = accuracyLevel.name
+        }
+    }
+
+    val locationUpdateDelayFlow: Flow<Float> = context.dataStore.data.map { preferences ->
+        preferences[LOCATION_UPDATE_DELAY] ?: 1f
+    }
+
+    suspend fun setLocationUpdateDelay(value: Float) {
+        context.dataStore.edit { preferences ->
+            preferences[LOCATION_UPDATE_DELAY] = value
         }
     }
 }

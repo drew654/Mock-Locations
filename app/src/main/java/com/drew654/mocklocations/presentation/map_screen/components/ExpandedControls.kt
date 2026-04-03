@@ -16,16 +16,21 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.drew654.mocklocations.domain.model.SpeedUnit
+import com.drew654.mocklocations.domain.model.SpeedUnitValue
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 
 @Composable
 fun ExpandedControls(
     isExpanded: Boolean,
-    speedMetersPerSec: Double,
+    speedUnitValue: SpeedUnitValue,
     onSpeedChanged: (Double) -> Unit,
-    onSpeedChangeFinished: (Double) -> Unit
+    onSpeedChangeFinished: (SpeedUnitValue) -> Unit,
+    sliderLowerEnd: Int,
+    sliderUpperEnd: Int
 ) {
     if (isExpanded) {
         Row(
@@ -38,31 +43,42 @@ fun ExpandedControls(
             Box(
                 modifier = Modifier.width(116.dp)
             ) {
-                Text(
-                    text = "${speedMetersPerSec.toInt()} m/s",
+                Row(
                     modifier = Modifier
                         .background(
                             MaterialTheme.colorScheme.surfaceVariant,
                             shape = MaterialTheme.shapes.small
                         )
                         .padding(horizontal = 8.dp, vertical = 4.dp),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "${speedUnitValue.value.toInt()}",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.weight(1f, fill = false),
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = 1
+                    )
+                    Text(
+                        text = " ${speedUnitValue.speedUnit.name}",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1
+                    )
+                }
             }
             Spacer(modifier = Modifier.weight(1f))
             Slider(
-                value = speedMetersPerSec.toFloat(),
+                value = speedUnitValue.value.toFloat(),
                 onValueChange = {
                     onSpeedChanged(it.toDouble())
                 },
                 modifier = Modifier
                     .widthIn(max = 300.dp)
-                    .fillMaxWidth()
-                ,
+                    .fillMaxWidth(),
                 onValueChangeFinished = {
-                    onSpeedChangeFinished(speedMetersPerSec)
+                    onSpeedChangeFinished(speedUnitValue)
                 },
-                valueRange = 0f..100f
+                valueRange = sliderLowerEnd.toFloat()..sliderUpperEnd.toFloat()
             )
         }
     }
@@ -78,14 +94,19 @@ fun ExpandedControls(
     showBackground = true
 )
 @Composable
-fun ExpandedControlsPreview() {
+private fun ExpandedControlsPreview() {
     MockLocationsTheme {
         Surface {
             ExpandedControls(
                 isExpanded = true,
-                speedMetersPerSec = 30.0,
+                speedUnitValue = SpeedUnitValue(
+                    value = 30.0,
+                    speedUnit = SpeedUnit.MilesPerHour
+                ),
                 onSpeedChanged = { },
-                onSpeedChangeFinished = { }
+                onSpeedChangeFinished = { },
+                0,
+                100
             )
         }
     }

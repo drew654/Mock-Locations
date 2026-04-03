@@ -2,66 +2,116 @@ package com.drew654.mocklocations.service
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.location.Location
 import android.location.LocationManager
 import android.location.provider.ProviderProperties
 import android.os.IBinder
 import android.os.SystemClock
+import android.util.Log
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import com.drew654.mocklocations.R
 import com.drew654.mocklocations.domain.SettingsManager
 import com.drew654.mocklocations.domain.model.LocationTarget
+import com.drew654.mocklocations.domain.model.MockControlState
 import com.drew654.mocklocations.domain.model.RoutePoint
+import com.drew654.mocklocations.domain.model.isPauseVisible
+import com.drew654.mocklocations.domain.model.isResumeVisible
+import com.drew654.mocklocations.domain.model.toMetersPerSecond
+import com.drew654.mocklocations.presentation.toLatLng
+import com.drew654.mocklocations.presentation.toRoutePoint
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlin.getValue
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.random.Random
 
 class MockLocationService : Service() {
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private val settingsManager by lazy { SettingsManager(applicationContext) }
-    private var mockJob: kotlinx.coroutines.Job? = null
+    private var mockJob: Job? = null
     private val locationManager by lazy { getSystemService(LOCATION_SERVICE) as LocationManager }
-    private val providerName = LocationManager.GPS_PROVIDER
+    private val providers = listOf(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER, LocationManager.FUSED_PROVIDER)
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
 
-    @Volatile
-    private var isPaused = false
-
-    @Volatile
-    private var isClearRouteOnStopEnabled = false
+    private lateinit var mockControlState: StateFlow<MockControlState>
+    private lateinit var isClearRouteOnStopState: StateFlow<Boolean>
+    private lateinit var accuracyMetersState: StateFlow<Float>
+    private lateinit var locationUpdateDelayState: StateFlow<Long>
+    private var lastBroadcastLocation: Location? = null
+    private var noiseLat = 0.0
+    private var noiseLng = 0.0
 
     companion object {
         const val CHANNEL_ID = "mock_location_channel"
         const val NOTIFICATION_ID = 1
         const val ACTION_START_MOCKING = "ACTION_START_MOCKING"
         const val ACTION_STOP_MOCKING = "ACTION_STOP_MOCKING"
+        const val ACTION_STOP_MOCKING_NOTIFICATION = "ACTION_STOP_MOCKING_NOTIFICATION"
+        const val ACTION_PAUSE_MOCKING_NOTIFICATION = "ACTION_PAUSE_MOCKING_NOTIFICATION"
         const val ACTION_ROUTE_FINISHED = "ACTION_ROUTE_FINISHED"
         const val ACTION_RESTORE_STRAIGHT_LINE_MOCKING = "ACTION_RESTORE_STRAIGHT_LINE_MOCKING"
     }
 
     override fun onCreate() {
         super.onCreate()
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         createNotificationChannel()
 
-        serviceScope.launch {
-            settingsManager.isPausedFlow.collect { paused ->
-                isPaused = paused
+        mockControlState = settingsManager.mockControlStateFlow.stateIn(
+            scope = serviceScope,
+            started = SharingStarted.Eagerly,
+            initialValue = MockControlState()
+        )
+
+        isClearRouteOnStopState = settingsManager.clearRouteOnStopFlow.stateIn(
+            scope = serviceScope,
+            started = SharingStarted.Eagerly,
+            initialValue = false
+        )
+
+        accuracyMetersState = settingsManager.accuracyLevelFlow
+            .map {
+                if (it.meters == 0f) {
+                    noiseLat = 0.0
+                    noiseLng = 0.0
+                }
+                it.meters
             }
-        }
+            .stateIn(
+                scope = serviceScope,
+                started = SharingStarted.Eagerly,
+                initialValue = 0f
+            )
+
+        locationUpdateDelayState = settingsManager.locationUpdateDelayFlow.map { (it * 1000).toLong() }.stateIn(
+            scope = serviceScope,
+            started = SharingStarted.Eagerly,
+            initialValue = 1000
+        )
 
         serviceScope.launch {
-            settingsManager.clearRouteOnStopFlow.collect { enabled ->
-                isClearRouteOnStopEnabled = enabled
+            mockControlState.collect { mockControlState ->
+                updateNotification(mockControlState)
             }
         }
     }
@@ -77,19 +127,12 @@ class MockLocationService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Location Mocking Active")
-            .setContentText("Your location is currently being mocked.")
-            .setSmallIcon(R.drawable.baseline_my_location_24)
-            .setOngoing(true)
-            .build()
-
-        startForeground(NOTIFICATION_ID, notification)
+        updateNotification(mockControlState.value)
 
         when (intent?.action) {
             ACTION_START_MOCKING -> {
                 serviceScope.launch {
-                    val locationTarget = settingsManager.activeLocationTargetFlow.first()
+                    val locationTarget = settingsManager.mockControlStateFlow.first().activeLocationTarget
                     when (locationTarget) {
                         is LocationTarget.Empty -> stopMocking()
                         is LocationTarget.SinglePoint -> mockLocationSinglePoint(locationTarget.point)
@@ -104,11 +147,33 @@ class MockLocationService : Service() {
                 }
             }
 
+            ACTION_STOP_MOCKING_NOTIFICATION -> {
+                serviceScope.launch {
+                    settingsManager.setMockControlState(
+                        settingsManager.mockControlStateFlow.first().copy(
+                            isMocking = false,
+                            isPaused = false,
+                            isWaitingAtEndOfRoute = false,
+                            activeLocationTarget = if (isClearRouteOnStopState.value) LocationTarget.Empty else settingsManager.mockControlStateFlow.first().activeLocationTarget
+                        )
+                    )
+
+                    stopMocking()
+                }
+            }
+
+            ACTION_PAUSE_MOCKING_NOTIFICATION -> {
+                serviceScope.launch {
+                    val current = settingsManager.mockControlStateFlow.first().isPaused
+                    settingsManager.setMockControlState(settingsManager.mockControlStateFlow.first().copy(isPaused = !current))
+                }
+            }
+
             ACTION_RESTORE_STRAIGHT_LINE_MOCKING -> {
                 serviceScope.launch {
-                    val locationTarget = settingsManager.activeLocationTargetFlow.first()
+                    val locationTarget = settingsManager.mockControlStateFlow.first().activeLocationTarget
                     val restoreMockingPoint = settingsManager.currentMockedLocationFlow.first()
-                    if (locationTarget is LocationTarget.Route || locationTarget is LocationTarget.SavedRoute) {
+                    if (locationTarget.isRoute()) {
                         restoreMockLocationStraightLineRoute(locationTarget, restoreMockingPoint!!)
                     } else {
                         stopMocking()
@@ -120,13 +185,86 @@ class MockLocationService : Service() {
         return START_STICKY
     }
 
+    private fun updateNotification(mockControlState: MockControlState) {
+        val stopMockingIntent = PendingIntent.getService(
+            this,
+            0,
+            Intent(this, MockLocationService::class.java).apply {
+                action = ACTION_STOP_MOCKING_NOTIFICATION
+            },
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val pauseMockingIntent = PendingIntent.getService(
+            this,
+            0,
+            Intent(this, MockLocationService::class.java).apply {
+                action = ACTION_PAUSE_MOCKING_NOTIFICATION
+            },
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle("Location Mocking Active")
+            .setContentText("Your location is currently being mocked.")
+            .setSmallIcon(R.drawable.baseline_my_location_24)
+            .setOngoing(true)
+            .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
+            .addAction(
+                R.drawable.baseline_stop_24,
+                "Stop",
+                stopMockingIntent
+            )
+            .apply {
+                if (mockControlState.isPauseVisible()) {
+                    addAction(
+                        R.drawable.baseline_pause_24,
+                        "Pause",
+                        pauseMockingIntent
+                    )
+                } else if (mockControlState.isResumeVisible()) {
+                    addAction(
+                        R.drawable.baseline_play_arrow_24,
+                        "Resume",
+                        pauseMockingIntent
+                    )
+                }
+            }
+            .build()
+
+        startForeground(
+            NOTIFICATION_ID,
+            notification,
+            ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
+        )
+    }
+
+    private fun updateNoiseSmooth() {
+        val currentAccuracyMeters = accuracyMetersState.value
+        val earthRadius = 6371000.0
+
+        val noiseMeters = currentAccuracyMeters * (0.3 + Random.nextDouble() * 0.4)
+        val randomDistance = Math.random() * noiseMeters
+        val randomAngle = Math.random() * 2 * Math.PI
+
+        val dLat = (randomDistance * cos(randomAngle)) / earthRadius
+        val dLng = (randomDistance * sin(randomAngle)) / earthRadius
+
+        val randomLat = Math.toDegrees(dLat)
+        val randomLng = Math.toDegrees(dLng)
+
+        val alpha = (currentAccuracyMeters / 50f).coerceIn(0.05f, 0.4f)
+
+        noiseLat = noiseLat * (1 - alpha) + randomLat * alpha
+        noiseLng = noiseLng * (1 - alpha) + randomLng * alpha
+    }
+
     private fun mockLocationSinglePoint(point: LatLng) {
         mockJob?.cancel()
 
         mockJob = serviceScope.launch {
             try {
                 setUpTestProvider()
-                settingsManager.setIsMocking(true)
 
                 Toast.makeText(
                     this@MockLocationService,
@@ -135,21 +273,13 @@ class MockLocationService : Service() {
                 ).show()
 
                 while (true) {
-                    val location = Location(providerName).apply {
-                        latitude = point.latitude
-                        longitude = point.longitude
-                        altitude = 3.0
-                        time = System.currentTimeMillis()
-                        speed = 0.01f
-                        bearing = 0.0f
-                        accuracy = 3.0f
-                        elapsedRealtimeNanos = SystemClock.elapsedRealtimeNanos()
-                        bearingAccuracyDegrees = 0.1f
-                        verticalAccuracyMeters = 0.1f
-                        speedAccuracyMetersPerSecond = 0.01f
-                    }
-                    locationManager.setTestProviderLocation(providerName, location)
-                    delay(1000)
+                    broadcastLocation(
+                        latLng = point,
+                        bearing = 0f,
+                        speed = 0f
+                    )
+                    delay(locationUpdateDelayState.value)
+                    updateNoiseSmooth()
                 }
             } catch (e: Exception) {
                 handleError(e)
@@ -160,16 +290,13 @@ class MockLocationService : Service() {
     }
 
     private fun mockLocationStraightLineRoute(locationTarget: LocationTarget) {
-        serviceScope.launch {
-            settingsManager.setIsPaused(false)
-        }
-
         val routePoints = buildRoutePoints(locationTarget.points)
 
         startRouteMocking(
             routePoints = routePoints,
             startIndex = 0,
             isStartedPaused = false,
+            isStartedWaitingAtEndOfRoute = false,
             startedMessage = "Route Mocking Started"
         )
     }
@@ -184,7 +311,8 @@ class MockLocationService : Service() {
         startRouteMocking(
             routePoints = routePoints,
             startIndex = startIndex,
-            isStartedPaused = isPaused,
+            isStartedPaused = mockControlState.value.isPaused,
+            isStartedWaitingAtEndOfRoute = mockControlState.value.isWaitingAtEndOfRoute,
             startedMessage = "Route Mocking Restored"
         )
     }
@@ -210,6 +338,7 @@ class MockLocationService : Service() {
         routePoints: List<RoutePoint>,
         startIndex: Int,
         isStartedPaused: Boolean,
+        isStartedWaitingAtEndOfRoute: Boolean,
         startedMessage: String
     ) {
         mockJob?.cancel()
@@ -217,7 +346,6 @@ class MockLocationService : Service() {
         mockJob = serviceScope.launch {
             try {
                 setUpTestProvider()
-                settingsManager.setIsMocking(true)
 
                 Toast.makeText(
                     this@MockLocationService,
@@ -225,79 +353,105 @@ class MockLocationService : Service() {
                     Toast.LENGTH_SHORT
                 ).show()
 
-                var currentSpeed = 30.0
+                var currentSpeedMetersPerSec = settingsManager.speedUnitValueFlow.first().toMetersPerSecond()
                 launch {
-                    settingsManager.speedMetersPerSecFlow.collect { currentSpeed = it }
+                    settingsManager.speedUnitValueFlow.collect { currentSpeedMetersPerSec = it.toMetersPerSecond() }
                 }
 
-                val updateIntervalMs = 1000L
                 val metersPerPoint = 1.0
 
                 var index = startIndex
                 var distanceAccumulator = 0.0
-                var lastBroadcastLocation: Location? = null
 
                 if (isStartedPaused) {
                     val routePoint = routePoints.getOrNull(index) ?: return@launch
-
-                    val location = Location(providerName).apply {
-                        latitude = routePoint.latLng.latitude
-                        longitude = routePoint.latLng.longitude
-                        bearing = routePoint.bearing
-                        speed = currentSpeed.toFloat()
-                        time = System.currentTimeMillis()
-                        elapsedRealtimeNanos = SystemClock.elapsedRealtimeNanos()
-                        accuracy = 3f
-                    }
-
-                    lastBroadcastLocation = location
-                    locationManager.setTestProviderLocation(providerName, location)
-                    settingsManager.setCurrentMockedLocation(routePoint)
-
-                    delay(updateIntervalMs)
+                    broadcastLocation(
+                        latLng = routePoint.latLng,
+                        bearing = routePoint.bearing,
+                        speed = 0f
+                    )
+                    delay(locationUpdateDelayState.value)
                 }
 
-                while (index < routePoints.size && isActive) {
-                    if (isPaused) {
-                        lastBroadcastLocation?.let { loc ->
-                            loc.time = System.currentTimeMillis()
-                            loc.elapsedRealtimeNanos = SystemClock.elapsedRealtimeNanos()
-                            locationManager.setTestProviderLocation(providerName, loc)
-                            settingsManager.setCurrentMockedLocation(
-                                RoutePoint(
-                                    LatLng(loc.latitude, loc.longitude),
-                                    loc.bearing
+                var pausedBaseLocation: Location? = null
+
+                if (!isStartedWaitingAtEndOfRoute) {
+                    while (index < routePoints.size && isActive) {
+                        if (mockControlState.value.isPaused) {
+                            if (pausedBaseLocation == null) {
+                                pausedBaseLocation = lastBroadcastLocation
+                            }
+
+                            if (pausedBaseLocation != null) {
+                                broadcastLocation(
+                                    latLng = pausedBaseLocation.toLatLng(),
+                                    bearing = pausedBaseLocation.bearing,
+                                    speed = 0f
                                 )
+                            }
+
+                            delay(locationUpdateDelayState.value)
+                            updateNoiseSmooth()
+                            continue
+                        } else {
+                            pausedBaseLocation = null
+                        }
+
+                        val routePoint = routePoints.getOrNull(index) ?: break
+
+                        broadcastLocation(
+                            latLng = routePoint.latLng,
+                            bearing = routePoint.bearing,
+                            speed = currentSpeedMetersPerSec.toFloat()
+                        )
+
+                        val updateIntervalMs = locationUpdateDelayState.value
+                        delay(updateIntervalMs)
+                        updateNoiseSmooth()
+
+                        distanceAccumulator += currentSpeedMetersPerSec * (updateIntervalMs / 1000.0)
+                        while (distanceAccumulator >= metersPerPoint && index < routePoints.size) {
+                            distanceAccumulator -= metersPerPoint
+                            index++
+                            if (index >= routePoints.size - 1) {
+                                index = routePoints.size - 1
+
+                                val finalPoint = routePoints[index]
+                                broadcastLocation(
+                                    latLng = finalPoint.latLng,
+                                    bearing = finalPoint.bearing,
+                                    speed = 0f
+                                )
+
+                                delay(updateIntervalMs)
+                                index = routePoints.size
+                                break
+                            }
+                        }
+                    }
+                }
+
+                if (settingsManager.isGoingToWaitAtRouteFinishFlow.first()) {
+                    settingsManager.setMockControlState(settingsManager.mockControlStateFlow.first().copy(
+                        isWaitingAtEndOfRoute = true
+                    ))
+
+                    while (mockControlState.value.isMocking) {
+                        if (pausedBaseLocation == null) {
+                            pausedBaseLocation = lastBroadcastLocation
+                        }
+
+                        if (pausedBaseLocation != null) {
+                            broadcastLocation(
+                                latLng = pausedBaseLocation.toLatLng(),
+                                bearing = pausedBaseLocation.bearing,
+                                speed = 0f
                             )
                         }
-                        delay(updateIntervalMs)
-                        continue
+
+                        delay(locationUpdateDelayState.value)
+                        updateNoiseSmooth()
                     }
-
-                    distanceAccumulator += currentSpeed * (updateIntervalMs / 1000.0)
-
-                    while (distanceAccumulator >= metersPerPoint && index < routePoints.size) {
-                        distanceAccumulator -= metersPerPoint
-                        index++
-                    }
-
-                    val routePoint = routePoints.getOrNull(index) ?: break
-
-                    val location = Location(providerName).apply {
-                        latitude = routePoint.latLng.latitude
-                        longitude = routePoint.latLng.longitude
-                        bearing = routePoint.bearing
-                        speed = currentSpeed.toFloat()
-                        time = System.currentTimeMillis()
-                        elapsedRealtimeNanos = SystemClock.elapsedRealtimeNanos()
-                        accuracy = 3f
-                    }
-
-                    lastBroadcastLocation = location
-                    locationManager.setTestProviderLocation(providerName, location)
-                    settingsManager.setCurrentMockedLocation(routePoint)
-
-                    delay(updateIntervalMs)
                 }
 
                 Toast.makeText(
@@ -313,10 +467,48 @@ class MockLocationService : Service() {
         }
     }
 
+    private suspend fun broadcastLocation(
+        latLng: LatLng,
+        bearing: Float,
+        speed: Float
+    ) {
+        val now = System.currentTimeMillis()
+        val elapsedNanos = SystemClock.elapsedRealtimeNanos()
+        val currentAccuracy = accuracyMetersState.value
+
+        val mockLocation = Location(LocationManager.GPS_PROVIDER).apply {
+            latitude = latLng.latitude + noiseLat
+            longitude = latLng.longitude + noiseLng
+            this.bearing = bearing
+            this.speed = speed
+            time = now
+            elapsedRealtimeNanos = elapsedNanos
+            accuracy = currentAccuracy
+            altitude = 0.0
+            verticalAccuracyMeters = 0f
+            isMock = true
+        }
+
+        try {
+            fusedLocationClient.setMockLocation(mockLocation)
+        } catch (e: SecurityException) {
+            Log.e("MockLocationService", "SecurityException: Cannot disable mock mode", e)
+        }
+
+        providers.forEach { name ->
+            val providerLoc = Location(mockLocation).apply { provider = name }
+            locationManager.setTestProviderLocation(name, providerLoc)
+        }
+
+        lastBroadcastLocation = mockLocation
+        settingsManager.setCurrentMockedLocation(mockLocation.toRoutePoint())
+    }
+
     private fun buildRoutePoints(
         points: List<LatLng>,
         stepMeters: Double = 1.0
     ): List<RoutePoint> {
+        if (points.isEmpty()) return emptyList()
         val result = mutableListOf<RoutePoint>()
 
         for (i in 0 until points.size - 1) {
@@ -324,52 +516,72 @@ class MockLocationService : Service() {
             val end = points[i + 1]
 
             val results = FloatArray(3)
-            Location.distanceBetween(
-                start.latitude, start.longitude,
-                end.latitude, end.longitude,
-                results
-            )
+            Location.distanceBetween(start.latitude, start.longitude, end.latitude, end.longitude, results)
 
             val totalDistance = results[0]
             val bearing = results[1]
 
             var distance = 0.0
-            while (distance <= totalDistance) {
+            while (distance < totalDistance) {
                 val fraction = distance / totalDistance
-
                 val lat = start.latitude + (end.latitude - start.latitude) * fraction
                 val lng = start.longitude + (end.longitude - start.longitude) * fraction
 
-                result += RoutePoint(
-                    latLng = LatLng(lat, lng),
-                    bearing = bearing
-                )
-
+                result += RoutePoint(latLng = LatLng(lat, lng), bearing = bearing)
                 distance += stepMeters
             }
         }
+
+        val finalPoint = points.last()
+        val finalBearing = result.lastOrNull()?.bearing ?: 0.0f
+        result += RoutePoint(latLng = finalPoint, bearing = finalBearing)
 
         return result
     }
 
     private fun setUpTestProvider() {
         try {
-            locationManager.removeTestProvider(providerName)
-        } catch (_: Exception) {
+            fusedLocationClient.setMockMode(true)
+                .addOnFailureListener { e ->
+                    Log.e("MockLocationService", "Failed to set mock mode", e)
+                }
+        } catch (e: SecurityException) {
+            Log.e("MockLocationService", "SecurityException: Cannot enable mock mode", e)
         }
+        providers.forEach { name ->
+            try {
+                locationManager.removeTestProvider(name)
+            } catch (_ : Exception) {
+            }
 
-        locationManager.addTestProvider(
-            providerName, false, false, false, false, true, true, true,
-            ProviderProperties.POWER_USAGE_LOW, ProviderProperties.ACCURACY_FINE
-        )
-        locationManager.setTestProviderEnabled(providerName, true)
+            val properties = ProviderProperties.Builder()
+                .setHasAltitudeSupport(true)
+                .setHasSpeedSupport(true)
+                .setHasBearingSupport(true)
+                .setPowerUsage(ProviderProperties.POWER_USAGE_LOW)
+                .setAccuracy(ProviderProperties.ACCURACY_FINE)
+                .build()
+
+            locationManager.addTestProvider(name, properties)
+            locationManager.setTestProviderEnabled(name, true)
+        }
     }
 
     private fun tearDownTestProvider() {
         try {
-            locationManager.setTestProviderEnabled(providerName, false)
-            locationManager.removeTestProvider(providerName)
-        } catch (_: Exception) {
+            fusedLocationClient.setMockMode(false)
+                .addOnFailureListener { e ->
+                    Log.e("MockLocationService", "Failed to set mock mode", e)
+                }
+        } catch (e: SecurityException) {
+            Log.e("MockLocationService", "SecurityException: Cannot disable mock mode", e)
+        }
+        providers.forEach { name ->
+            try {
+                locationManager.setTestProviderEnabled(name, false)
+                locationManager.removeTestProvider(name)
+            } catch (_: Exception) {
+            }
         }
     }
 
@@ -387,11 +599,10 @@ class MockLocationService : Service() {
 
     private suspend fun stopMockingInternal() {
         tearDownTestProvider()
-        settingsManager.setIsMocking(false)
-        settingsManager.setIsPaused(false)
         settingsManager.setCurrentMockedLocation(null)
+        lastBroadcastLocation = null
 
-        if (isClearRouteOnStopEnabled) {
+        if (isClearRouteOnStopState.value) {
             sendBroadcast(Intent(ACTION_ROUTE_FINISHED).setPackage(packageName))
         }
 

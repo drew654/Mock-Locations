@@ -5,17 +5,28 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.net.Uri
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.drew654.mocklocations.data.repository.ExportRepository
 import com.drew654.mocklocations.domain.SettingsManager
+import com.drew654.mocklocations.domain.model.AccuracyLevel
+import com.drew654.mocklocations.domain.model.ImportRouteOption
 import com.drew654.mocklocations.domain.model.LocationTarget
+import com.drew654.mocklocations.domain.model.MapStyle
+import com.drew654.mocklocations.domain.model.MockControlState
+import com.drew654.mocklocations.domain.model.RoutePoint
 import com.drew654.mocklocations.domain.model.SavedCameraPosition
+import com.drew654.mocklocations.domain.model.SpeedUnit
+import com.drew654.mocklocations.domain.model.SpeedUnitValue
 import com.drew654.mocklocations.service.MockLocationService
 import com.drew654.mocklocations.service.MockLocationService.Companion.ACTION_RESTORE_STRAIGHT_LINE_MOCKING
 import com.drew654.mocklocations.service.MockLocationService.Companion.ACTION_START_MOCKING
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -23,6 +34,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 class MockLocationsViewModel(application: Application) : AndroidViewModel(application) {
     private val _cameraPosition = MutableStateFlow<SavedCameraPosition?>(null)
@@ -32,43 +44,77 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     private val _controlsAreExpanded = MutableStateFlow(false)
     val controlsAreExpanded: StateFlow<Boolean> = _controlsAreExpanded.asStateFlow()
     private val settingsManager = SettingsManager(application)
-    private val _speedMetersPerSec = MutableStateFlow(30.0)
-    val speedMetersPerSec: StateFlow<Double> = _speedMetersPerSec.asStateFlow()
-    val activeLocationTarget =
-        settingsManager.activeLocationTargetFlow
-            .stateIn(
-                viewModelScope,
-                SharingStarted.WhileSubscribed(5_000),
-                LocationTarget.Empty
-            )
-    val isMocking = settingsManager.isMockingFlow.stateIn(
+    val repository = ExportRepository(settingsManager)
+    private val _importUri = MutableStateFlow<Uri?>(null)
+    private val _speedUnitValue =
+        MutableStateFlow(SpeedUnitValue(value = 30.0, speedUnit = SpeedUnit.MilesPerHour))
+    val speedUnitValue: StateFlow<SpeedUnitValue> = _speedUnitValue.asStateFlow()
+    val mockControlState = settingsManager.mockControlStateFlow.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = false
+        initialValue = runBlocking { settingsManager.mockControlStateFlow.first() }
     )
-    val isPaused = settingsManager.isPausedFlow.stateIn(
+    val mapStyle: StateFlow<MapStyle?> = settingsManager.mapStyleFlow.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = false
+        initialValue = runBlocking { settingsManager.mapStyleFlow.first() }
     )
-    val isUsingCrosshairs = settingsManager.isUsingCrosshairsFlow.stateIn(
+    val accuracyLevel: StateFlow<AccuracyLevel> = settingsManager.accuracyLevelFlow.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = true
+        initialValue = runBlocking { settingsManager.accuracyLevelFlow.first() }
+    )
+    val speedSliderLowerEnd: StateFlow<Int> = settingsManager.speedSliderLowerEndFlow.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = runBlocking { settingsManager.speedSliderLowerEndFlow.first() }
+    )
+    val speedSliderUpperEnd: StateFlow<Int> = settingsManager.speedSliderUpperEndFlow.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = runBlocking { settingsManager.speedSliderUpperEndFlow.first() }
+    )
+    val isCameraFollowingMockedLocation: StateFlow<Boolean> =
+        settingsManager.isCameraFollowingMockedLocation.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = runBlocking { settingsManager.isCameraFollowingMockedLocation.first() }
+        )
+    val isGoingToWaitAtRouteFinish: StateFlow<Boolean> = settingsManager.isGoingToWaitAtRouteFinishFlow.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = runBlocking { settingsManager.isGoingToWaitAtRouteFinishFlow.first() }
+    )
+    val isCameraCurrentlyFollowingMockedLocation: StateFlow<Boolean> =
+        settingsManager.isCameraCurrentlyFollowingMockedLocationFlow.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = runBlocking { settingsManager.isCameraCurrentlyFollowingMockedLocationFlow.first() }
+        )
+    val currentMockedLocation: StateFlow<RoutePoint?> =
+        settingsManager.currentMockedLocationFlow.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = runBlocking { settingsManager.currentMockedLocationFlow.first() }
+        )
+    val locationUpdateDelay: StateFlow<Float> = settingsManager.locationUpdateDelayFlow.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = runBlocking { settingsManager.locationUpdateDelayFlow.first() }
     )
 
     init {
         viewModelScope.launch {
-            _speedMetersPerSec.value = settingsManager.speedMetersPerSecFlow.first()
+            _speedUnitValue.value = settingsManager.speedUnitValueFlow.first()
         }
 
         viewModelScope.launch {
-            val wasMocking = settingsManager.isMockingFlow.first()
-            val activeLocationTarget = settingsManager.activeLocationTargetFlow.first()
+            val wasMocking = settingsManager.mockControlStateFlow.first().isMocking
+            val activeLocationTarget = settingsManager.mockControlStateFlow.first().activeLocationTarget
             if (wasMocking) {
                 Intent(application, MockLocationService::class.java).apply {
                     action =
-                        if (activeLocationTarget is LocationTarget.Route || activeLocationTarget is LocationTarget.SavedRoute) {
+                        if (activeLocationTarget.isRoute()) {
                             ACTION_RESTORE_STRAIGHT_LINE_MOCKING
                         } else {
                             ACTION_START_MOCKING
@@ -83,12 +129,109 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         ContextCompat.registerReceiver(application, object : BroadcastReceiver() {
             override fun onReceive(p0: Context?, p1: Intent?) {
                 viewModelScope.launch {
-                    if (clearRouteOnStop.value) {
-                        clearLocationTarget()
+                    updateMockControlState {
+                        it.copy(
+                            isMocking = false,
+                            isPaused = false,
+                            isWaitingAtEndOfRoute = false,
+                            activeLocationTarget = if (clearRouteOnStop.value) LocationTarget.Empty else (it.activeLocationTarget)
+                        )
                     }
                 }
             }
         }, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
+    }
+
+    fun exportDataToUri(uri: Uri, exportSettings: Boolean, exportRoutes: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val context = getApplication<Application>().applicationContext
+                val jsonString = repository.generateExportToJson(context, exportSettings, exportRoutes)
+                getApplication<Application>().contentResolver.openOutputStream(uri)?.use { outputStream ->
+                    outputStream.write(jsonString.toByteArray())
+                    outputStream.flush()
+                }
+                launch(Dispatchers.Main) {
+                    Toast.makeText(context, "Export successful", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                launch(Dispatchers.Main) {
+                    Toast.makeText(getApplication(), "Export failed", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    fun importDataFromUri(importSettings: Boolean, importRouteOption: ImportRouteOption?) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val context = getApplication<Application>().applicationContext
+
+            try {
+                val json = context.contentResolver
+                    .openInputStream(_importUri.value!!)
+                    ?.bufferedReader()
+                    ?.use { it.readText() }
+                    ?: throw IllegalStateException("Unable to read file")
+
+                repository.importFromJson(json, importSettings, importRouteOption)
+                _speedUnitValue.value = settingsManager.speedUnitValueFlow.first()
+
+                launch(Dispatchers.Main) {
+                    Toast.makeText(context, "Import successful", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                launch(Dispatchers.Main) {
+                    Toast.makeText(context, "Import failed", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    fun getRouteCountFromImportUri(): Int {
+        var count = 0
+        viewModelScope.launch {
+            val context = getApplication<Application>().applicationContext
+            try {
+                val json = context.contentResolver
+                    .openInputStream(_importUri.value!!)
+                    ?.bufferedReader()
+                    ?.use { it.readText() }
+                    ?: throw IllegalStateException("Unable to read file")
+
+                count = repository.getRouteCountFromJson(json)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+        return count
+    }
+
+    fun getIsWithSettingsToImportFromImportUri(): Boolean {
+        var isWithSettingsToImport = false
+        viewModelScope.launch {
+            val context = getApplication<Application>().applicationContext
+            try {
+                val json = context.contentResolver
+                    .openInputStream(_importUri.value!!)
+                    ?.bufferedReader()
+                    ?.use { it.readText() }
+                    ?: throw IllegalStateException("Unable to read file")
+
+                isWithSettingsToImport = repository.isWithSettingsToImport(json)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+        return isWithSettingsToImport
+    }
+
+    fun resetSettingsToDefault() {
+        viewModelScope.launch {
+            settingsManager.resetToDefault()
+            _speedUnitValue.value = settingsManager.speedUnitValueFlow.first()
+        }
     }
 
     fun updateCameraPosition(position: CameraPosition) {
@@ -107,42 +250,52 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         _controlsAreExpanded.value = expanded
     }
 
+    private suspend fun updateMockControlState(transform: (MockControlState) -> MockControlState) {
+        val currentState = settingsManager.mockControlStateFlow.first()
+        val newState = transform(currentState)
+        settingsManager.setMockControlState(newState)
+    }
+
     fun togglePause() {
         viewModelScope.launch {
-            settingsManager.toggleIsPaused()
+            updateMockControlState { it.copy(isPaused = !it.isPaused) }
         }
     }
 
     suspend fun pushPoint(point: LatLng) {
-        val current = activeLocationTarget.value
-        val updated = LocationTarget.create(current.points + point)
-        settingsManager.setActiveLocationTarget(updated)
+        updateMockControlState { it.copy(activeLocationTarget = LocationTarget.create(it.activeLocationTarget.points + point)) }
     }
 
     fun popPoint() {
         viewModelScope.launch {
-            val current = activeLocationTarget.value
-            val updated = LocationTarget.create(current.points.dropLast(1))
-            settingsManager.setActiveLocationTarget(updated)
+            updateMockControlState { it.copy(activeLocationTarget = LocationTarget.create(it.activeLocationTarget.points.dropLast(1))) }
         }
     }
 
     fun clearLocationTarget() {
         viewModelScope.launch {
-            settingsManager.setActiveLocationTarget(LocationTarget.Empty)
+            updateMockControlState { it.copy(activeLocationTarget = LocationTarget.Empty) }
         }
     }
 
-    fun setSpeedMetersPerSec(speed: Double) {
-        _speedMetersPerSec.value = speed
+    fun setImportUri(uri: Uri?) {
+        _importUri.value = uri
     }
 
-    fun startMockLocation(context: Context) {
-        val target = activeLocationTarget.value
-        if (target is LocationTarget.Empty) return
+    fun setSpeedUnitValue(speedUnitValue: SpeedUnitValue) {
+        _speedUnitValue.value = speedUnitValue
+    }
 
+    fun startMockLocation(context: Context, pushPoint: LatLng? = null) {
         viewModelScope.launch {
-            settingsManager.setActiveLocationTarget(target)
+            updateMockControlState { state ->
+                val target = if (pushPoint == null) {
+                    state.activeLocationTarget
+                } else {
+                    LocationTarget.create(state.activeLocationTarget.points + pushPoint)
+                }
+                state.copy(isMocking = true, activeLocationTarget = target)
+            }
 
             val intent = Intent(getApplication(), MockLocationService::class.java).apply {
                 action = ACTION_START_MOCKING
@@ -152,6 +305,16 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     }
 
     fun stopMockLocation() {
+        viewModelScope.launch {
+            updateMockControlState {
+                it.copy(
+                    isMocking = false,
+                    isPaused = false,
+                    isWaitingAtEndOfRoute = false,
+                    activeLocationTarget = if (clearRouteOnStop.value) LocationTarget.Empty else (it.activeLocationTarget)
+                )
+            }
+        }
         val intent = Intent(getApplication(), MockLocationService::class.java).apply {
             action = MockLocationService.ACTION_STOP_MOCKING
         }
@@ -177,7 +340,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     )
 
     fun saveCurrentRoute(name: String) {
-        val current = activeLocationTarget.value
+        val current = mockControlState.value.activeLocationTarget
         if (current.points.isNotEmpty()) {
             val routeToSave = LocationTarget.SavedRoute(name, current.points)
             viewModelScope.launch {
@@ -188,7 +351,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
 
     fun loadSavedRoute(route: LocationTarget.SavedRoute) {
         viewModelScope.launch {
-            settingsManager.setActiveLocationTarget(route)
+            updateMockControlState { it.copy(activeLocationTarget = route) }
         }
     }
 
@@ -198,15 +361,63 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
-    fun saveSpeedMetersPerSec(speed: Double) {
+    fun saveSpeedUnitValue(speedUnitValue: SpeedUnitValue) {
         viewModelScope.launch {
-            settingsManager.setSpeedMetersPerSec(speed)
+            settingsManager.setSpeedUnitValue(speedUnitValue)
         }
     }
 
     fun setIsUsingCrosshairs(enabled: Boolean) {
         viewModelScope.launch {
-            settingsManager.setIsUsingCrosshairs(enabled)
+            updateMockControlState { it.copy(isUsingCrosshairs = enabled) }
+        }
+    }
+
+    fun setMapStyle(mapStyle: MapStyle?) {
+        viewModelScope.launch {
+            settingsManager.setMapStyle(mapStyle)
+        }
+    }
+
+    fun setAccuracyLevel(accuracyLevel: AccuracyLevel) {
+        viewModelScope.launch {
+            settingsManager.setAccuracyLevel(accuracyLevel)
+        }
+    }
+
+    fun setSpeedSliderLowerEnd(value: Int) {
+        viewModelScope.launch {
+            settingsManager.setSpeedSliderLowerEnd(value)
+        }
+    }
+
+    fun setSpeedSliderUpperEnd(value: Int) {
+        viewModelScope.launch {
+            settingsManager.setSpeedSliderUpperEnd(value)
+        }
+    }
+
+    fun setIsCameraFollowingMockedLocation(value: Boolean) {
+        viewModelScope.launch {
+            settingsManager.setIsCameraFollowingMockedLocation(value)
+        }
+    }
+
+    fun setIsCameraCurrentlyFollowingMockedLocation(value: Boolean) {
+        viewModelScope.launch {
+            settingsManager.setIsCameraCurrentlyFollowingMockedLocation(value)
+        }
+    }
+
+    fun setIsGoingToWaitAtRouteFinish(value: Boolean) {
+        viewModelScope.launch {
+            settingsManager.setIsGoingToWaitAtRouteFinish(value)
+        }
+    }
+
+    fun setLocationUpdateDelay(value: Float) {
+        viewModelScope.launch {
+            settingsManager.setLocationUpdateDelay(value)
         }
     }
 }

@@ -44,7 +44,7 @@ fun CompassButton(
                                 .target(currentPos.target)
                                 .zoom(currentPos.zoom)
                                 .bearing(0f)
-                                .tilt(currentPos.tilt)
+                                .tilt(0f)
                                 .build()
                         )
                     )

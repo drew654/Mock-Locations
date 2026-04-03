@@ -20,13 +20,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.drew654.mocklocations.R
-import com.drew654.mocklocations.domain.model.LocationTarget
+import com.drew654.mocklocations.domain.model.MockControlAction
 import com.drew654.mocklocations.presentation.Screen
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 import com.google.maps.android.compose.CameraPositionState
@@ -34,6 +35,8 @@ import com.google.maps.android.compose.CameraPositionState
 @Composable
 fun MapControlButtons(
     navController: NavController,
+    visibleMockControlActions: Set<MockControlAction>,
+    enabledMockControlActions: Set<MockControlAction>,
     cameraPositionState: CameraPositionState,
     controlsAreExpanded: Boolean,
     setControlsAreExpanded: (Boolean) -> Unit,
@@ -43,12 +46,11 @@ fun MapControlButtons(
     onPopPoint: () -> Unit,
     onTogglePause: () -> Unit,
     onSaveLocationTarget: () -> Unit,
-    locationTarget: LocationTarget,
-    isMocking: Boolean,
     isPaused: Boolean,
-    isUsingCrosshairs: Boolean,
     onAddCrosshairsPoint: () -> Unit,
-    onUserLocationFocus: () -> Unit
+    onUserLocationFocus: () -> Unit,
+    isCameraCurrentlyFollowingMockedLocation: Boolean,
+    crosshairsColor: Color
 ) {
     val scope = rememberCoroutineScope()
 
@@ -78,7 +80,7 @@ fun MapControlButtons(
                             onUserLocationFocus()
                         }
                     )
-                    if (cameraPositionState.position.bearing != 0f) {
+                    if (cameraPositionState.position.bearing != 0f || cameraPositionState.position.tilt != 0f) {
                         Spacer(Modifier.height(4.dp))
                         CompassButton(
                             scope = scope,
@@ -90,6 +92,7 @@ fun MapControlButtons(
                 MapZoomButtons(
                     cameraPositionState = cameraPositionState,
                     scope = scope,
+                    isCameraCurrentlyFollowingMockedLocation = isCameraCurrentlyFollowingMockedLocation,
                     modifier = Modifier
                         .padding(12.dp)
                         .padding(bottom = 32.dp)
@@ -123,6 +126,8 @@ fun MapControlButtons(
                 .fillMaxSize()
         ) {
             MockLocationControls(
+                visibleMockControlActions = visibleMockControlActions,
+                enabledMockControlActions = enabledMockControlActions,
                 onClearLocationTarget = {
                     onClearLocationTarget()
                 },
@@ -145,10 +150,6 @@ fun MapControlButtons(
                 onSaveLocationTarget = {
                     onSaveLocationTarget()
                 },
-                locationTarget = locationTarget,
-                isMocking = isMocking,
-                isPaused = isPaused,
-                isUsingCrosshairs = isUsingCrosshairs,
                 onAddCrosshairsPoint = {
                     onAddCrosshairsPoint()
                 },
@@ -163,8 +164,8 @@ fun MapControlButtons(
             modifier = Modifier
                 .fillMaxSize()
         ) {
-            if (isUsingCrosshairs) {
-                Crosshairs(modifier = Modifier.align(Alignment.Center))
+            if (MockControlAction.ADD_POINT in visibleMockControlActions) {
+                Crosshairs(color = crosshairsColor, modifier = Modifier.align(Alignment.Center))
             }
         }
     }
@@ -185,6 +186,14 @@ fun MapControlButtonsPreview() {
         Surface {
             MapControlButtons(
                 navController = NavController(LocalContext.current),
+                visibleMockControlActions = setOf(
+                    MockControlAction.START,
+                    MockControlAction.ADD_POINT
+                ),
+                enabledMockControlActions = setOf(
+                    MockControlAction.START,
+                    MockControlAction.ADD_POINT
+                ),
                 cameraPositionState = CameraPositionState(),
                 controlsAreExpanded = false,
                 setControlsAreExpanded = { },
@@ -194,12 +203,11 @@ fun MapControlButtonsPreview() {
                 onPopPoint = { },
                 onTogglePause = { },
                 onSaveLocationTarget = { },
-                locationTarget = LocationTarget.Empty,
-                isMocking = false,
                 isPaused = false,
-                isUsingCrosshairs = true,
                 onAddCrosshairsPoint = { },
-                onUserLocationFocus = { }
+                onUserLocationFocus = { },
+                isCameraCurrentlyFollowingMockedLocation = false,
+                crosshairsColor = MaterialTheme.colorScheme.onSurface
             )
         }
     }

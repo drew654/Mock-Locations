@@ -1,14 +1,19 @@
-package com.drew654.mocklocations.presentation.components
+package com.drew654.mocklocations.presentation.map_screen.components
 
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.net.Uri
 import android.provider.Settings
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import com.drew654.mocklocations.domain.model.Permission
+import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 
 @Composable
 fun PermissionsDialog(
@@ -88,4 +93,28 @@ fun PermissionsDialog(
             }
         }
     )
+}
+
+@Preview(
+    name = "Light Mode",
+    showBackground = true
+)
+@Preview(
+    name = "Dark Mode",
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+    showBackground = true
+)
+@Composable
+private fun PermissionsDialogPreview() {
+    val context = LocalContext.current
+    MockLocationsTheme {
+        Surface {
+            PermissionsDialog(
+                permission = Permission.FineLocation,
+                setShowMockLocationDialog = { },
+                onDismiss = { },
+                context = context
+            )
+        }
+    }
 }

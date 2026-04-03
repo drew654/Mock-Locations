@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -28,7 +29,8 @@ fun SwitchRow(
             .clickable {
                 onCheckedChange(!checked)
             }
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 16.dp)
+            .height(64.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(text = label)

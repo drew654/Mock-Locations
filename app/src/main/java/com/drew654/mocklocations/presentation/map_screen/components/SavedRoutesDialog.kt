@@ -7,10 +7,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.window.Dialog
 import com.drew654.mocklocations.domain.model.LocationTarget
+import com.drew654.mocklocations.domain.model.SpeedUnit
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 
 @Composable
@@ -24,9 +27,12 @@ fun SavedRoutesDialog(
     locationTarget: LocationTarget,
     onRouteLoaded: (LocationTarget.SavedRoute) -> Unit,
     onRouteDeleted: (LocationTarget.SavedRoute) -> Unit,
-    isMocking: Boolean
+    isMocking: Boolean,
+    speedUnit: SpeedUnit
 ) {
-    var routeName by remember { mutableStateOf("") }
+    var routeName by rememberSaveable(stateSaver = TextFieldValue.Saver) {
+        mutableStateOf(TextFieldValue(""))
+    }
     var selectedRoutes by remember { mutableStateOf(emptyList<LocationTarget.SavedRoute>()) }
 
     if (isVisible) {
@@ -34,7 +40,7 @@ fun SavedRoutesDialog(
             onDismissRequest = {
                 onDismiss()
                 onSetIsNamingRoute(false)
-                routeName = ""
+                routeName = TextFieldValue("")
             }
         ) {
             Card {
@@ -47,13 +53,13 @@ fun SavedRoutesDialog(
                                 onDismiss()
                             }
                             onSetIsNamingRoute(false)
-                            routeName = ""
+                            routeName = TextFieldValue("")
                         },
                         onConfirm = {
-                            onRouteSaved(routeName)
+                            onRouteSaved(routeName.text)
                             onDismiss()
                             onSetIsNamingRoute(false)
-                            routeName = ""
+                            routeName = TextFieldValue("")
                         },
                         savedRoutes = savedRoutes
                     )
@@ -63,7 +69,7 @@ fun SavedRoutesDialog(
                         onDismiss = {
                             onDismiss()
                             onSetIsNamingRoute(false)
-                            routeName = ""
+                            routeName = TextFieldValue("")
                         },
                         locationTarget = locationTarget,
                         onConfirm = {
@@ -90,7 +96,8 @@ fun SavedRoutesDialog(
                                 onRouteDeleted(route)
                             }
                             selectedRoutes = emptyList()
-                        }
+                        },
+                        speedUnit = speedUnit
                     )
                 }
             }
@@ -108,7 +115,7 @@ fun SavedRoutesDialog(
     showBackground = true
 )
 @Composable
-fun SavedRoutesDialogPreview() {
+private fun SavedRoutesDialogPreview() {
     MockLocationsTheme {
         Surface {
             SavedRoutesDialog(
@@ -121,7 +128,8 @@ fun SavedRoutesDialogPreview() {
                 locationTarget = LocationTarget.Empty,
                 onRouteLoaded = { },
                 onRouteDeleted = { },
-                isMocking = false
+                isMocking = false,
+                speedUnit = SpeedUnit.MilesPerHour
             )
         }
     }

@@ -17,6 +17,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
@@ -28,11 +29,13 @@ import androidx.navigation.NavController
 import com.drew654.mocklocations.R
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.Permission
+import com.drew654.mocklocations.domain.model.getEnabledActions
+import com.drew654.mocklocations.domain.model.getVisibleActions
 import com.drew654.mocklocations.domain.model.isGranted
 import com.drew654.mocklocations.presentation.MockLocationsViewModel
-import com.drew654.mocklocations.presentation.components.PermissionsDialog
 import com.drew654.mocklocations.presentation.map_screen.components.ExpandedControls
 import com.drew654.mocklocations.presentation.map_screen.components.MapControlButtons
+import com.drew654.mocklocations.presentation.map_screen.components.PermissionsDialog
 import com.drew654.mocklocations.presentation.map_screen.components.SavedRoutesDialog
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -40,6 +43,7 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.MapStyleOptions
+import com.google.maps.android.compose.CameraMoveStartedReason
 import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
@@ -58,25 +62,30 @@ fun MapScreen(
     val context = LocalContext.current
     val systemInDarkTheme = isSystemInDarkTheme()
     val scope = rememberCoroutineScope()
-    val locationTarget by viewModel.activeLocationTarget.collectAsState()
-    val isMocking by viewModel.isMocking.collectAsState()
-    val isPaused by viewModel.isPaused.collectAsState()
-    val speedMetersPerSec by viewModel.speedMetersPerSec.collectAsState()
+    val mockControlState by viewModel.mockControlState.collectAsState()
+    val locationTarget = mockControlState.activeLocationTarget
+    val isMocking = mockControlState.isMocking
+    val isPaused = mockControlState.isPaused
+    val isUsingCrosshairs = mockControlState.isUsingCrosshairs
+    val speedUnitValue by viewModel.speedUnitValue.collectAsState()
     var hasLocationPermission by remember {
         mutableStateOf(Permission.FineLocation.isGranted(context))
     }
     var permissionToBeRequested by remember { mutableStateOf<Permission?>(null) }
-    val mapProperties by remember(hasLocationPermission) {
-        mutableStateOf(
-            MapProperties(
-                isMyLocationEnabled = hasLocationPermission,
-                mapStyleOptions = MapStyleOptions.loadRawResourceStyle(
-                    context,
-                    if (systemInDarkTheme) R.raw.map_style_night else R.raw.map_style_standard
-                )
-            )
+    val mapStyle by viewModel.mapStyle.collectAsState()
+    val mapProperties = MapProperties(
+        isMyLocationEnabled = hasLocationPermission,
+        isBuildingEnabled = true,
+        mapStyleOptions = MapStyleOptions.loadRawResourceStyle(
+            context,
+            mapStyle?.resourceId
+                ?: if (systemInDarkTheme) {
+                    R.raw.map_style_night
+                } else {
+                    R.raw.map_style_standard
+                }
         )
-    }
+    )
     val mapUiSettings = MapUiSettings(
         compassEnabled = false,
         myLocationButtonEnabled = false,
@@ -87,10 +96,9 @@ fun MapScreen(
     val hasCenteredOnUser by viewModel.hasCenteredOnUser.collectAsState()
     val cameraPositionState = rememberCameraPositionState()
     val lifecycleOwner = LocalLifecycleOwner.current
-    var isShowingSavedRoutesDialog by remember { mutableStateOf(false) }
+    var isShowingSavedRoutesDialog by rememberSaveable { mutableStateOf(false) }
     val savedRoutes by viewModel.savedRoutes.collectAsState()
     val controlsAreExpanded by viewModel.controlsAreExpanded.collectAsState()
-    val isUsingCrosshairs by viewModel.isUsingCrosshairs.collectAsState()
     val permissionsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { result ->
@@ -100,7 +108,12 @@ fun MapScreen(
             permissionToBeRequested = Permission.FineLocation
         }
     }
-    var isNamingRoute by remember { mutableStateOf(false) }
+    var isNamingRoute by rememberSaveable { mutableStateOf(false) }
+    val speedSliderLowerEnd by viewModel.speedSliderLowerEnd.collectAsState()
+    val speedSliderUpperEnd by viewModel.speedSliderUpperEnd.collectAsState()
+    val isCameraFollowingMockedLocation by viewModel.isCameraFollowingMockedLocation.collectAsState()
+    val isCameraCurrentlyFollowingMockedLocation by viewModel.isCameraCurrentlyFollowingMockedLocation.collectAsState()
+    val currentMockedLocation by viewModel.currentMockedLocation.collectAsState()
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -154,11 +167,23 @@ fun MapScreen(
 
     LaunchedEffect(cameraPositionState) {
         snapshotFlow {
-            cameraPositionState.isMoving to cameraPositionState.position
-        }.collect { (isMoving, position) ->
-            if (!isMoving) {
-                viewModel.updateCameraPosition(position)
+            cameraPositionState.isMoving to cameraPositionState.cameraMoveStartedReason
+        }.collect { (isMoving, reason) ->
+            if (isMoving && reason == CameraMoveStartedReason.GESTURE) {
+                viewModel.setIsCameraCurrentlyFollowingMockedLocation(false)
             }
+
+            if (!isMoving) {
+                viewModel.updateCameraPosition(cameraPositionState.position)
+            }
+        }
+    }
+
+    LaunchedEffect(currentMockedLocation, isCameraFollowingMockedLocation) {
+        if (isMocking && isCameraCurrentlyFollowingMockedLocation && currentMockedLocation != null) {
+            cameraPositionState.move(
+                CameraUpdateFactory.newLatLng(currentMockedLocation!!.latLng)
+            )
         }
     }
 
@@ -209,8 +234,8 @@ fun MapScreen(
                                     it.longitude
                                 )
                             },
-                            color = MaterialTheme.colorScheme.onBackground,
-                            width = 20f
+                            color = mapStyle?.polyLineStroke ?: MaterialTheme.colorScheme.onBackground,
+                            width = 8f * context.resources.displayMetrics.density
                         )
                     }
 
@@ -238,6 +263,8 @@ fun MapScreen(
                 }
                 MapControlButtons(
                     navController = navController,
+                    visibleMockControlActions = mockControlState.getVisibleActions(),
+                    enabledMockControlActions = mockControlState.getEnabledActions(),
                     cameraPositionState = cameraPositionState,
                     controlsAreExpanded = controlsAreExpanded,
                     setControlsAreExpanded = {
@@ -275,11 +302,15 @@ fun MapScreen(
                             return@MapControlButtons
                         }
 
+                        if (isCameraFollowingMockedLocation && locationTarget.isRoute()) {
+                            viewModel.setIsCameraCurrentlyFollowingMockedLocation(true)
+                            cameraPositionState.move(CameraUpdateFactory.zoomTo(15f))
+                        }
                         scope.launch {
-                            if (isUsingCrosshairs && locationTarget is LocationTarget.Empty) {
-                                viewModel.pushPoint(cameraPositionState.position.target)
-                            }
-                            viewModel.startMockLocation(context)
+                            viewModel.startMockLocation(
+                                context = context,
+                                pushPoint = if (isUsingCrosshairs && locationTarget is LocationTarget.Empty) cameraPositionState.position.target else null
+                            )
                         }
                     },
                     onStop = {
@@ -297,10 +328,7 @@ fun MapScreen(
                             isNamingRoute = true
                         }
                     },
-                    locationTarget = locationTarget,
-                    isMocking = isMocking,
                     isPaused = isPaused,
-                    isUsingCrosshairs = isUsingCrosshairs,
                     onAddCrosshairsPoint = {
                         scope.launch {
                             viewModel.pushPoint(cameraPositionState.position.target)
@@ -312,6 +340,10 @@ fun MapScreen(
                             return@MapControlButtons
                         }
 
+                        if (isCameraFollowingMockedLocation) {
+                            viewModel.setIsCameraCurrentlyFollowingMockedLocation(true)
+                            cameraPositionState.move(CameraUpdateFactory.zoomTo(15f))
+                        }
                         scope.launch {
                             val fusedLocationClient =
                                 LocationServices.getFusedLocationProviderClient(context)
@@ -331,18 +363,22 @@ fun MapScreen(
                             } catch (_: SecurityException) {
                             }
                         }
-                    }
+                    },
+                    isCameraCurrentlyFollowingMockedLocation = isCameraCurrentlyFollowingMockedLocation,
+                    crosshairsColor = mapStyle?.polyLineStroke ?: MaterialTheme.colorScheme.onBackground
                 )
             }
             ExpandedControls(
                 isExpanded = controlsAreExpanded,
-                speedMetersPerSec = speedMetersPerSec,
+                speedUnitValue = speedUnitValue,
                 onSpeedChanged = {
-                    viewModel.setSpeedMetersPerSec(it)
+                    viewModel.setSpeedUnitValue(speedUnitValue.copy(value = it))
                 },
                 onSpeedChangeFinished = {
-                    viewModel.saveSpeedMetersPerSec(speedMetersPerSec)
-                }
+                    viewModel.saveSpeedUnitValue(speedUnitValue)
+                },
+                sliderLowerEnd = speedSliderLowerEnd,
+                sliderUpperEnd = speedSliderUpperEnd
             )
         }
     }
@@ -369,7 +405,8 @@ fun MapScreen(
         onRouteDeleted = {
             viewModel.deleteSavedRoute(it)
         },
-        isMocking = isMocking
+        isMocking = isMocking,
+        speedUnit = speedUnitValue.speedUnit
     )
     permissionToBeRequested?.let { permission ->
         PermissionsDialog(

@@ -1,6 +1,8 @@
 package com.drew654.mocklocations.domain.model
 
 import android.location.Location
+import com.drew654.mocklocations.presentation.mToKm
+import com.drew654.mocklocations.presentation.mToMiles
 import com.google.android.gms.maps.model.LatLng
 
 sealed interface LocationTarget {
@@ -25,7 +27,7 @@ sealed interface LocationTarget {
     }
 
     data class Route(override val points: List<LatLng>) : LocationTarget {
-        fun getDistance(): Double {
+        fun getDistance(speedUnit: SpeedUnit): Double {
             var totalDistance = 0.0
             val results = FloatArray(1)
 
@@ -37,7 +39,20 @@ sealed interface LocationTarget {
                 )
                 totalDistance += results[0]
             }
-            return totalDistance
+            return if (speedUnit is SpeedUnit.MilesPerHour) {
+                mToMiles(totalDistance)
+            } else {
+                mToKm(totalDistance)
+            }
+        }
+
+        fun getDistanceText(speedUnit: SpeedUnit): String {
+            val distance = getDistance(speedUnit)
+            return if (speedUnit is SpeedUnit.MilesPerHour) {
+                "${"%.2f".format(distance)} mi"
+            } else {
+                "${"%.2f".format(distance)} km"
+            }
         }
     }
 
@@ -45,6 +60,10 @@ sealed interface LocationTarget {
         val name: String,
         override val points: List<LatLng>
     ) : LocationTarget {
-        fun getDistance(): Double = Route(points).getDistance()
+        fun getDistanceText(speedUnit: SpeedUnit): String = Route(points).getDistanceText(speedUnit)
+    }
+
+    fun isRoute(): Boolean {
+        return this is Route || this is SavedRoute
     }
 }

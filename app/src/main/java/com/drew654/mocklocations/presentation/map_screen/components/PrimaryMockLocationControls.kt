@@ -21,28 +21,19 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.R
-import com.drew654.mocklocations.domain.model.LocationTarget
+import com.drew654.mocklocations.domain.model.MockControlAction
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
-import com.google.android.gms.maps.model.LatLng
 
 @Composable
 fun PrimaryMockLocationControls(
+    visibleMockControlActions: Set<MockControlAction>,
+    enabledMockControlActions: Set<MockControlAction>,
     onStart: () -> Unit,
     onStop: () -> Unit,
     onTogglePause: () -> Unit,
-    isMocking: Boolean,
-    isPaused: Boolean,
-    locationTarget: LocationTarget,
-    isUsingCrosshairs: Boolean,
     onAddCrosshairsPoint: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val shouldShowStartButton = !isMocking
-    val shouldShowStopButton = isMocking
-    val shouldShowResumeButton = isMocking && isPaused && (locationTarget is LocationTarget.Route || locationTarget is LocationTarget.SavedRoute)
-    val shouldShowPauseButton = isMocking && !isPaused && (locationTarget is LocationTarget.Route || locationTarget is LocationTarget.SavedRoute)
-    val shouldShowAddPointButton = !isMocking && isUsingCrosshairs
-
     Box(
         modifier = modifier
             .padding(start = 12.dp)
@@ -56,7 +47,7 @@ fun PrimaryMockLocationControls(
         Row(
             verticalAlignment = Alignment.Bottom
         ) {
-            if (shouldShowAddPointButton) {
+            if (MockControlAction.ADD_POINT in visibleMockControlActions) {
                 DisableableFloatingActionButton(
                     onClick = { onAddCrosshairsPoint() },
                     enabled = true,
@@ -70,7 +61,7 @@ fun PrimaryMockLocationControls(
                 Spacer(Modifier.width(12.dp))
             }
 
-            if (shouldShowResumeButton) {
+            if (MockControlAction.RESUME in visibleMockControlActions) {
                 DisableableSmallFloatingActionButton(
                     onClick = { onTogglePause() },
                     enabled = true,
@@ -85,7 +76,7 @@ fun PrimaryMockLocationControls(
                 Spacer(Modifier.width(12.dp))
             }
 
-            if (shouldShowPauseButton) {
+            if (MockControlAction.PAUSE in visibleMockControlActions) {
                 DisableableSmallFloatingActionButton(
                     onClick = { onTogglePause() },
                     enabled = true,
@@ -100,12 +91,12 @@ fun PrimaryMockLocationControls(
                 Spacer(Modifier.width(12.dp))
             }
 
-            if (shouldShowStartButton) {
+            if (MockControlAction.START in visibleMockControlActions) {
                 DisableableFloatingActionButton(
                     onClick = {
                         onStart()
                     },
-                    enabled = isUsingCrosshairs || locationTarget !is LocationTarget.Empty,
+                    enabled = MockControlAction.START in enabledMockControlActions,
                     modifier = Modifier.padding(bottom = 12.dp, end = 12.dp)
                 ) {
                     Icon(
@@ -115,7 +106,7 @@ fun PrimaryMockLocationControls(
                 }
             }
 
-            if (shouldShowStopButton) {
+            if (MockControlAction.STOP in visibleMockControlActions) {
                 DisableableFloatingActionButton(
                     onClick = {
                         onStop()
@@ -143,18 +134,22 @@ fun PrimaryMockLocationControls(
     showBackground = true
 )
 @Composable
-fun PrimaryMockLocationControlsPreview() {
+private fun PrimaryMockLocationControlsPreview() {
     MockLocationsTheme {
         Surface {
             PrimaryMockLocationControls(
+                visibleMockControlActions = setOf(
+                    MockControlAction.START,
+                    MockControlAction.ADD_POINT
+                ),
+                enabledMockControlActions = setOf(
+                    MockControlAction.START,
+                    MockControlAction.ADD_POINT
+                ),
                 onStart = { },
                 onStop = { },
                 onTogglePause = { },
-                isMocking = false,
-                isPaused = true,
-                locationTarget = LocationTarget.Route(listOf(LatLng(0.0, 0.0), LatLng(0.0, 0.0))),
-                isUsingCrosshairs = true,
-                onAddCrosshairsPoint = { },
+                onAddCrosshairsPoint = { }
             )
         }
     }

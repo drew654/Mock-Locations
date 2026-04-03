@@ -17,6 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.domain.model.LocationTarget
+import com.drew654.mocklocations.domain.model.SpeedUnit
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 import com.google.android.gms.maps.model.LatLng
 
@@ -27,17 +28,14 @@ fun RouteListItem(
     shouldShowCheckbox: Boolean,
     route: LocationTarget.SavedRoute,
     onClick: (route: LocationTarget.SavedRoute) -> Unit,
-    onLongClick: (route: LocationTarget.SavedRoute) -> Unit
+    onLongClick: (route: LocationTarget.SavedRoute) -> Unit,
+    speedUnit: SpeedUnit
 ) {
     ListItem(
         headlineContent = { Text(route.name) },
         supportingContent = {
             Text(
-                "${route.points.size} points • ${
-                    "%.2f".format(
-                        route.getDistance() / 1000.0
-                    )
-                } km"
+                "${route.points.size} points • ${route.getDistanceText(speedUnit)}"
             )
         },
         modifier = Modifier
@@ -76,7 +74,7 @@ fun RouteListItem(
     showBackground = true
 )
 @Composable
-fun RouteListItemUnselectedPreview() {
+private fun RouteListItemUnselectedPreview() {
     MockLocationsTheme {
         Surface {
             RouteListItem(
@@ -90,7 +88,8 @@ fun RouteListItemUnselectedPreview() {
                 ),
                 onClick = { },
                 onLongClick = { },
-                shouldShowCheckbox = false
+                shouldShowCheckbox = false,
+                speedUnit = SpeedUnit.MilesPerHour
             )
         }
     }
@@ -106,7 +105,7 @@ fun RouteListItemUnselectedPreview() {
     showBackground = true
 )
 @Composable
-fun RouteListItemSelectedPreview() {
+private fun RouteListItemSelectedPreview() {
     MockLocationsTheme {
         Surface {
             RouteListItem(
@@ -120,7 +119,8 @@ fun RouteListItemSelectedPreview() {
                 ),
                 onClick = { },
                 onLongClick = { },
-                shouldShowCheckbox = true
+                shouldShowCheckbox = true,
+                speedUnit = SpeedUnit.MilesPerHour
             )
         }
     }

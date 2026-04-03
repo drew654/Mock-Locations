@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.domain.model.LocationTarget
+import com.drew654.mocklocations.domain.model.SpeedUnit
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 import com.google.android.gms.maps.model.LatLng
 
@@ -36,7 +37,8 @@ fun RoutesListDialogBody(
     onRouteSelected: (LocationTarget.SavedRoute) -> Unit,
     onRouteDeselected: (LocationTarget.SavedRoute) -> Unit,
     onClearSelectedRoutes: () -> Unit,
-    onDeleteSelectedRoutes: () -> Unit
+    onDeleteSelectedRoutes: () -> Unit,
+    speedUnit: SpeedUnit
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -80,7 +82,8 @@ fun RoutesListDialogBody(
                             onLongClick = {
                                 onRouteSelected(route)
                             },
-                            shouldShowCheckbox = selectedRoutes.isNotEmpty()
+                            shouldShowCheckbox = selectedRoutes.isNotEmpty(),
+                            speedUnit = speedUnit
                         )
                     }
                 }
@@ -102,7 +105,7 @@ fun RoutesListDialogBody(
                         onConfirm()
                     },
                     modifier = Modifier.padding(8.dp),
-                    enabled = locationTarget is LocationTarget.Route || locationTarget is LocationTarget.SavedRoute
+                    enabled = locationTarget.isRoute()
                 ) {
                     Text(text = "Save Route")
                 }
@@ -142,7 +145,7 @@ fun RoutesListDialogBody(
     showBackground = true
 )
 @Composable
-fun RoutesDialogBodyUnselectedPreview() {
+private fun RoutesDialogBodyUnselectedPreview() {
     val savedRoutes = listOf(
         LocationTarget.SavedRoute(
             name = "Route 1",
@@ -178,7 +181,8 @@ fun RoutesDialogBodyUnselectedPreview() {
                     onRouteSelected = { },
                     onRouteDeselected = { },
                     onClearSelectedRoutes = { },
-                    onDeleteSelectedRoutes = { }
+                    onDeleteSelectedRoutes = { },
+                    speedUnit = SpeedUnit.MilesPerHour
                 )
             }
         }
@@ -195,7 +199,7 @@ fun RoutesDialogBodyUnselectedPreview() {
     showBackground = true
 )
 @Composable
-fun RoutesDialogBodySelectedPreview() {
+private fun RoutesDialogBodySelectedPreview() {
     val savedRoutes = listOf(
         LocationTarget.SavedRoute(
             name = "Route 1",
@@ -231,7 +235,8 @@ fun RoutesDialogBodySelectedPreview() {
                     onRouteSelected = { },
                     onRouteDeselected = { },
                     onClearSelectedRoutes = { },
-                    onDeleteSelectedRoutes = { }
+                    onDeleteSelectedRoutes = { },
+                    speedUnit = SpeedUnit.MilesPerHour
                 )
             }
         }
