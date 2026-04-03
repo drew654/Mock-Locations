@@ -328,7 +328,6 @@ fun MapScreen(
                         }
                     },
                     isPaused = isPaused,
-                    isUsingCrosshairs = isUsingCrosshairs,
                     onAddCrosshairsPoint = {
                         scope.launch {
                             viewModel.pushPoint(cameraPositionState.position.target)

@@ -46,7 +46,6 @@ fun MapControlButtons(
     onTogglePause: () -> Unit,
     onSaveLocationTarget: () -> Unit,
     isPaused: Boolean,
-    isUsingCrosshairs: Boolean,
     onAddCrosshairsPoint: () -> Unit,
     onUserLocationFocus: () -> Unit,
     isCameraCurrentlyFollowingMockedLocation: Boolean
@@ -163,7 +162,7 @@ fun MapControlButtons(
             modifier = Modifier
                 .fillMaxSize()
         ) {
-            if (isUsingCrosshairs) {
+            if (MockControlAction.ADD_POINT in visibleMockControlActions) {
                 Crosshairs(modifier = Modifier.align(Alignment.Center))
             }
         }
@@ -203,7 +202,6 @@ fun MapControlButtonsPreview() {
                 onTogglePause = { },
                 onSaveLocationTarget = { },
                 isPaused = false,
-                isUsingCrosshairs = true,
                 onAddCrosshairsPoint = { },
                 onUserLocationFocus = { },
                 isCameraCurrentlyFollowingMockedLocation = false
