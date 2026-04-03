@@ -118,7 +118,7 @@ fun NamingRouteDialogBody(
     showBackground = true
 )
 @Composable
-fun NamingRouteDialogBodyPreview() {
+private fun NamingRouteDialogBodyPreview() {
     MockLocationsTheme {
         Surface {
             Card {

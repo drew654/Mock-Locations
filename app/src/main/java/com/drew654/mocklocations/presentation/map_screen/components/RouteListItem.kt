@@ -74,7 +74,7 @@ fun RouteListItem(
     showBackground = true
 )
 @Composable
-fun RouteListItemUnselectedPreview() {
+private fun RouteListItemUnselectedPreview() {
     MockLocationsTheme {
         Surface {
             RouteListItem(
@@ -105,7 +105,7 @@ fun RouteListItemUnselectedPreview() {
     showBackground = true
 )
 @Composable
-fun RouteListItemSelectedPreview() {
+private fun RouteListItemSelectedPreview() {
     MockLocationsTheme {
         Surface {
             RouteListItem(

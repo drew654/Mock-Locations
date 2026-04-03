@@ -145,7 +145,7 @@ fun RoutesListDialogBody(
     showBackground = true
 )
 @Composable
-fun RoutesDialogBodyUnselectedPreview() {
+private fun RoutesDialogBodyUnselectedPreview() {
     val savedRoutes = listOf(
         LocationTarget.SavedRoute(
             name = "Route 1",
@@ -199,7 +199,7 @@ fun RoutesDialogBodyUnselectedPreview() {
     showBackground = true
 )
 @Composable
-fun RoutesDialogBodySelectedPreview() {
+private fun RoutesDialogBodySelectedPreview() {
     val savedRoutes = listOf(
         LocationTarget.SavedRoute(
             name = "Route 1",

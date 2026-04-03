@@ -134,7 +134,7 @@ fun PrimaryMockLocationControls(
     showBackground = true
 )
 @Composable
-fun PrimaryMockLocationControlsPreview() {
+private fun PrimaryMockLocationControlsPreview() {
     MockLocationsTheme {
         Surface {
             PrimaryMockLocationControls(

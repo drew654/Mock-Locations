@@ -115,7 +115,7 @@ fun SavedRoutesDialog(
     showBackground = true
 )
 @Composable
-fun SavedRoutesDialogPreview() {
+private fun SavedRoutesDialogPreview() {
     MockLocationsTheme {
         Surface {
             SavedRoutesDialog(

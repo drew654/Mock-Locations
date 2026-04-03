@@ -94,7 +94,7 @@ fun ExpandedControls(
     showBackground = true
 )
 @Composable
-fun ExpandedControlsPreview() {
+private fun ExpandedControlsPreview() {
     MockLocationsTheme {
         Surface {
             ExpandedControls(

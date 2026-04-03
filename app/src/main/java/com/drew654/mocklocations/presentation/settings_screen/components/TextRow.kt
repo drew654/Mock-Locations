@@ -50,7 +50,7 @@ fun TextRow(
     showBackground = true
 )
 @Composable
-fun TextRowPreview1() {
+private fun TextRowPreview1() {
     MockLocationsTheme {
         Surface {
             TextRow(
@@ -71,7 +71,7 @@ fun TextRowPreview1() {
     showBackground = true
 )
 @Composable
-fun TextRowPreview2() {
+private fun TextRowPreview2() {
     MockLocationsTheme {
         Surface {
             TextRow(
