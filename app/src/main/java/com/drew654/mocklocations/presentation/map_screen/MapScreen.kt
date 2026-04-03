@@ -234,7 +234,7 @@ fun MapScreen(
                                 )
                             },
                             color = MaterialTheme.colorScheme.onBackground,
-                            width = 20f
+                            width = 8f * context.resources.displayMetrics.density
                         )
                     }
 
