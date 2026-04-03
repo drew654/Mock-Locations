@@ -33,9 +33,9 @@ import com.drew654.mocklocations.domain.model.getEnabledActions
 import com.drew654.mocklocations.domain.model.getVisibleActions
 import com.drew654.mocklocations.domain.model.isGranted
 import com.drew654.mocklocations.presentation.MockLocationsViewModel
-import com.drew654.mocklocations.presentation.map_screen.components.PermissionsDialog
 import com.drew654.mocklocations.presentation.map_screen.components.ExpandedControls
 import com.drew654.mocklocations.presentation.map_screen.components.MapControlButtons
+import com.drew654.mocklocations.presentation.map_screen.components.PermissionsDialog
 import com.drew654.mocklocations.presentation.map_screen.components.SavedRoutesDialog
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -233,7 +233,7 @@ fun MapScreen(
                                     it.longitude
                                 )
                             },
-                            color = MaterialTheme.colorScheme.onBackground,
+                            color = mapStyle?.polyLineStroke ?: MaterialTheme.colorScheme.onBackground,
                             width = 8f * context.resources.displayMetrics.density
                         )
                     }
@@ -363,7 +363,8 @@ fun MapScreen(
                             }
                         }
                     },
-                    isCameraCurrentlyFollowingMockedLocation = isCameraCurrentlyFollowingMockedLocation
+                    isCameraCurrentlyFollowingMockedLocation = isCameraCurrentlyFollowingMockedLocation,
+                    crosshairsColor = mapStyle?.polyLineStroke ?: MaterialTheme.colorScheme.onBackground
                 )
             }
             ExpandedControls(

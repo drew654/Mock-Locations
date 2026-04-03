@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -48,7 +49,8 @@ fun MapControlButtons(
     isPaused: Boolean,
     onAddCrosshairsPoint: () -> Unit,
     onUserLocationFocus: () -> Unit,
-    isCameraCurrentlyFollowingMockedLocation: Boolean
+    isCameraCurrentlyFollowingMockedLocation: Boolean,
+    crosshairsColor: Color
 ) {
     val scope = rememberCoroutineScope()
 
@@ -163,7 +165,7 @@ fun MapControlButtons(
                 .fillMaxSize()
         ) {
             if (MockControlAction.ADD_POINT in visibleMockControlActions) {
-                Crosshairs(modifier = Modifier.align(Alignment.Center))
+                Crosshairs(color = crosshairsColor, modifier = Modifier.align(Alignment.Center))
             }
         }
     }
@@ -204,7 +206,8 @@ fun MapControlButtonsPreview() {
                 isPaused = false,
                 onAddCrosshairsPoint = { },
                 onUserLocationFocus = { },
-                isCameraCurrentlyFollowingMockedLocation = false
+                isCameraCurrentlyFollowingMockedLocation = false,
+                crosshairsColor = MaterialTheme.colorScheme.onSurface
             )
         }
     }
