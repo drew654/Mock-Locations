@@ -75,6 +75,7 @@ fun MapScreen(
     val mapStyle by viewModel.mapStyle.collectAsState()
     val mapProperties = MapProperties(
         isMyLocationEnabled = hasLocationPermission,
+        isBuildingEnabled = true,
         mapStyleOptions = MapStyleOptions.loadRawResourceStyle(
             context,
             mapStyle?.resourceId
