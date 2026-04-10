@@ -89,7 +89,7 @@ class MockLocationService : Service() {
             initialValue = false
         )
 
-        accuracyMetersState = settingsManager.accuracyLevelFlow
+        accuracyMetersState = settingsManager.locationAccuracyLevelFlow
             .map {
                 if (it.meters == 0f) {
                     noiseLat = 0.0

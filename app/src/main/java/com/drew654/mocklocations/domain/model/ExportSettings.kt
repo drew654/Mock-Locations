@@ -9,6 +9,6 @@ data class ExportSettings(
     val expandedControlsSpeedSliderLowerEnd: Int,
     val expandedControlsSpeedSliderUpperEnd: Int,
     val waitAtRouteFinish: Boolean,
-    val accuracyLevel: String,
+    val locationAccuracyLevel: String,
     val locationUpdateDelay: Float
 )

@@ -2,13 +2,13 @@ package com.drew654.mocklocations.data.repository
 
 import android.content.Context
 import com.drew654.mocklocations.domain.SettingsManager
-import com.drew654.mocklocations.domain.model.AccuracyLevel
+import com.drew654.mocklocations.domain.model.LocationAccuracyLevel
 import com.drew654.mocklocations.domain.model.ExportData
 import com.drew654.mocklocations.domain.model.ExportMeta
 import com.drew654.mocklocations.domain.model.ExportSettings
 import com.drew654.mocklocations.domain.model.ImportRouteOption
 import com.drew654.mocklocations.domain.model.LocationTarget
-import com.drew654.mocklocations.domain.model.getAccuracyLevelByName
+import com.drew654.mocklocations.domain.model.getLocationAccuracyLevelByName
 import com.drew654.mocklocations.domain.model.getMapStyleByName
 import kotlinx.coroutines.flow.first
 import java.time.Instant
@@ -39,7 +39,7 @@ class ExportRepository(
                 expandedControlsSpeedSliderLowerEnd = settingsManager.speedSliderLowerEndFlow.first(),
                 expandedControlsSpeedSliderUpperEnd = settingsManager.speedSliderUpperEndFlow.first(),
                 waitAtRouteFinish = settingsManager.isGoingToWaitAtRouteFinishFlow.first(),
-                accuracyLevel = settingsManager.accuracyLevelFlow.first().name,
+                locationAccuracyLevel = settingsManager.locationAccuracyLevelFlow.first().name,
                 locationUpdateDelay = settingsManager.locationUpdateDelayFlow.first()
             )
         } else null
@@ -88,7 +88,7 @@ class ExportRepository(
         settingsManager.setSpeedSliderLowerEnd(settings.expandedControlsSpeedSliderLowerEnd)
         settingsManager.setSpeedSliderUpperEnd(settings.expandedControlsSpeedSliderUpperEnd)
         settingsManager.setIsGoingToWaitAtRouteFinish(settings.waitAtRouteFinish)
-        settingsManager.setAccuracyLevel(getAccuracyLevelByName(settings.accuracyLevel) ?: AccuracyLevel.Perfect)
+        settingsManager.setLocationAccuracyLevel(getLocationAccuracyLevelByName(settings.locationAccuracyLevel) ?: LocationAccuracyLevel.Perfect)
         settingsManager.setLocationUpdateDelay(settings.locationUpdateDelay)
     }
 

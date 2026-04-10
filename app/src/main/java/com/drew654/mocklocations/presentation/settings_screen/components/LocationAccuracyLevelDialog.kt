@@ -18,21 +18,21 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import com.drew654.mocklocations.domain.model.AccuracyLevel
+import com.drew654.mocklocations.domain.model.LocationAccuracyLevel
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 
 @Composable
-fun AccuracyLevelDialog(
+fun LocationAccuracyLevelDialog(
     isVisible: Boolean,
-    selectedLevel: AccuracyLevel,
-    onLevelSelected: (AccuracyLevel) -> Unit,
+    selectedLevel: LocationAccuracyLevel,
+    onLevelSelected: (LocationAccuracyLevel) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val accuracyLevels = listOf(
-        AccuracyLevel.Perfect,
-        AccuracyLevel.High,
-        AccuracyLevel.Medium,
-        AccuracyLevel.Low
+    val locationAccuracyLevels = listOf(
+        LocationAccuracyLevel.Perfect,
+        LocationAccuracyLevel.High,
+        LocationAccuracyLevel.Medium,
+        LocationAccuracyLevel.Low
     )
 
     if (isVisible) {
@@ -44,7 +44,7 @@ fun AccuracyLevelDialog(
                     modifier = Modifier
                         .padding(16.dp)
                 ) {
-                    accuracyLevels.forEach {
+                    locationAccuracyLevels.forEach {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -81,12 +81,12 @@ fun AccuracyLevelDialog(
     showBackground = true
 )
 @Composable
-private fun AccuracyLevelDialogPreview() {
+private fun LocationAccuracyLevelDialogPreview() {
     MockLocationsTheme {
         Surface {
-            AccuracyLevelDialog(
+            LocationAccuracyLevelDialog(
                 isVisible = true,
-                selectedLevel = AccuracyLevel.Perfect,
+                selectedLevel = LocationAccuracyLevel.Perfect,
                 onLevelSelected = { },
                 onDismiss = { }
             )

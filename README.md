@@ -139,7 +139,7 @@ The speed unit for mocking a route and range for the slider in the expanded cont
 <br />
 
 # Export and import settings
-From the main settings screen, there are options to export or import settings. This makes it easy for testing the same routes and keeping your preferences across multiple devices or between device resets. You have the option to export just the settings, just the routes, or both, as a JSON file. See an example JSON export file [here](docs/mock_locations_2026_04_03_02_42_10.json).
+From the main settings screen, there are options to export or import settings. This makes it easy for testing the same routes and keeping your preferences across multiple devices or between device resets. You have the option to export just the settings, just the routes, or both, as a JSON file. See an example JSON export file [here](docs/mock_locations_2026_04_10_13_32_57.json).
 
 <img src="docs/images/screenshots/export_screen_settings_and_routes.png" alt="Export screen with settings and routes selected" width="400" >
 <img src="docs/images/screenshots/import_screen_settings_and_routes.png" alt="Import screen with settings and routes selected" width="400" >
@@ -169,7 +169,7 @@ This is disabled by default. Similar to pausing in the middle of mocking a route
 ## Map style
 Options for different color themes for the map: Default (follows system theme), Aubergine, Dark, Night, Retro, Silver, Standard.
 
-## Accuracy level
+## Location accuracy level
 Options for adding noise to the location to be mocked: Perfect (0 m), High (5 m), Medium (10 m), Low (20 m). This distance represents how far off the mocked location is set from the point or route selected.
 
 ## Location update delay

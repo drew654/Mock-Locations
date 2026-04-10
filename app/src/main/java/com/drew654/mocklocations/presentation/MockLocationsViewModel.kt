@@ -12,7 +12,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.drew654.mocklocations.data.repository.ExportRepository
 import com.drew654.mocklocations.domain.SettingsManager
-import com.drew654.mocklocations.domain.model.AccuracyLevel
+import com.drew654.mocklocations.domain.model.LocationAccuracyLevel
 import com.drew654.mocklocations.domain.model.ImportRouteOption
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.MapStyle
@@ -59,10 +59,10 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = runBlocking { settingsManager.mapStyleFlow.first() }
     )
-    val accuracyLevel: StateFlow<AccuracyLevel> = settingsManager.accuracyLevelFlow.stateIn(
+    val locationAccuracyLevel: StateFlow<LocationAccuracyLevel> = settingsManager.locationAccuracyLevelFlow.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = runBlocking { settingsManager.accuracyLevelFlow.first() }
+        initialValue = runBlocking { settingsManager.locationAccuracyLevelFlow.first() }
     )
     val speedSliderLowerEnd: StateFlow<Int> = settingsManager.speedSliderLowerEndFlow.stateIn(
         scope = viewModelScope,
@@ -379,9 +379,9 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
-    fun setAccuracyLevel(accuracyLevel: AccuracyLevel) {
+    fun setLocationAccuracyLevel(locationAccuracyLevel: LocationAccuracyLevel) {
         viewModelScope.launch {
-            settingsManager.setAccuracyLevel(accuracyLevel)
+            settingsManager.setLocationAccuracyLevel(locationAccuracyLevel)
         }
     }
 
