@@ -1,8 +1,8 @@
 {
   "meta": {
-    "appVersionCode": 11,
-    "appVersionName": "0.3.0-alpha.1",
-    "exportedAt": "2026-04-03T07:42:23.922499Z"
+    "appVersionCode": 12,
+    "appVersionName": "0.3.0",
+    "exportedAt": "2026-04-10T18:32:58.426971Z"
   },
   "routes": [
     {
@@ -40,7 +40,6 @@
     }
   ],
   "settings": {
-    "accuracyLevel": "Perfect",
     "cameraFollowsMockedLocation": true,
     "clearRouteOnStop": false,
     "expandedControlsSpeedSliderLowerEnd": 0,
@@ -49,6 +48,7 @@
       "speedUnit": "mph",
       "value": 20.64767837524414
     },
+    "locationAccuracyLevel": "Perfect",
     "locationUpdateDelay": 1.0,
     "useCrosshairs": true,
     "waitAtRouteFinish": false

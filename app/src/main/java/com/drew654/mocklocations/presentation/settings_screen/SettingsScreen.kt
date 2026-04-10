@@ -34,7 +34,7 @@ import androidx.navigation.NavController
 import com.drew654.mocklocations.R
 import com.drew654.mocklocations.presentation.MockLocationsViewModel
 import com.drew654.mocklocations.presentation.Screen
-import com.drew654.mocklocations.presentation.settings_screen.components.AccuracyLevelDialog
+import com.drew654.mocklocations.presentation.settings_screen.components.LocationAccuracyLevelDialog
 import com.drew654.mocklocations.presentation.settings_screen.components.LocationUpdateDelayDialog
 import com.drew654.mocklocations.presentation.settings_screen.components.MapStyleDialog
 import com.drew654.mocklocations.presentation.settings_screen.components.ResetSettingsDialog
@@ -52,10 +52,10 @@ fun SettingsScreen(
     val isUsingCrosshairs = mockControlState.isUsingCrosshairs
     val clearPointsOnStop by viewModel.clearRouteOnStop.collectAsState()
     var isShowingMapStylesDialog by rememberSaveable { mutableStateOf(false) }
-    var isShowingAccuracyLevelDialog by rememberSaveable { mutableStateOf(false) }
+    var isShowingLocationAccuracyLevelDialog by rememberSaveable { mutableStateOf(false) }
     val scrollState = rememberScrollState()
     val mapStyle by viewModel.mapStyle.collectAsState()
-    val accuracyLevel by viewModel.accuracyLevel.collectAsState()
+    val locationAccuracyLevel by viewModel.locationAccuracyLevel.collectAsState()
     val locationUpdateDelay by viewModel.locationUpdateDelay.collectAsState()
     var isShowingLocationUpdateDelayDialog by rememberSaveable { mutableStateOf(false) }
     val isCameraFollowingMockedLocation by viewModel.isCameraFollowingMockedLocation.collectAsState()
@@ -141,11 +141,11 @@ fun SettingsScreen(
                 value = mapStyle?.name ?: "Default"
             )
             TextRow(
-                label = "Accuracy level",
+                label = "Location accuracy level",
                 onClick = {
-                    isShowingAccuracyLevelDialog = true
+                    isShowingLocationAccuracyLevelDialog = true
                 },
-                value = accuracyLevel.name
+                value = locationAccuracyLevel.name
             )
             TextRow(
                 label = "Location update delay",
@@ -213,13 +213,13 @@ fun SettingsScreen(
         }
     )
 
-    AccuracyLevelDialog(
-        isVisible = isShowingAccuracyLevelDialog,
-        onDismiss = { isShowingAccuracyLevelDialog = false },
-        selectedLevel = accuracyLevel,
+    LocationAccuracyLevelDialog(
+        isVisible = isShowingLocationAccuracyLevelDialog,
+        onDismiss = { isShowingLocationAccuracyLevelDialog = false },
+        selectedLevel = locationAccuracyLevel,
         onLevelSelected = {
-            viewModel.setAccuracyLevel(it)
-            isShowingAccuracyLevelDialog = false
+            viewModel.setLocationAccuracyLevel(it)
+            isShowingLocationAccuracyLevelDialog = false
         }
     )
 
