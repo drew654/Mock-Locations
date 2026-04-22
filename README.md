@@ -6,6 +6,10 @@ This is a tool for the testing and development of Android apps that use GPS. It 
 
 <br />
 
+# Download
+
+<a href="https://play.google.com/store/apps/details?id=com.drew654.mocklocations"><img alt="Get it on Google Play" height="80" src="docs/GetItOnGooglePlay_Badge_Web_color_English.png"/></a>
+
 # Intended Use
 
 This app is intended **for development and testing purposes only**.
