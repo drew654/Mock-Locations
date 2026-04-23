@@ -213,7 +213,18 @@ fun MapScreen(
     Box(modifier = Modifier.fillMaxSize()) {
         Column {
             if (isShowingSearch) {
-                SearchAddressSection()
+                SearchAddressSection(
+                    onSearchAddress = { address ->
+                        scope.launch {
+                            val latLng = viewModel.geocodeAddress(context, address)
+                            if (latLng != null) {
+                                cameraPositionState.animate(
+                                    CameraUpdateFactory.newLatLngZoom(latLng, 15f)
+                                )
+                            }
+                        }
+                    }
+                )
             }
             Box(
                 modifier = Modifier.weight(1f)

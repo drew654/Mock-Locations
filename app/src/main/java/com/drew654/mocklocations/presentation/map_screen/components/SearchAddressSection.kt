@@ -32,10 +32,12 @@ import com.drew654.mocklocations.R
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 
 @Composable
-fun SearchAddressSection() {
+fun SearchAddressSection(
+    onSearchAddress: (String) -> Unit
+) {
     val focusManager = LocalFocusManager.current
     val focusRequester = remember { FocusRequester() }
-    var searchAddress by rememberSaveable(stateSaver = TextFieldValue.Saver) {
+    var address by rememberSaveable(stateSaver = TextFieldValue.Saver) {
         mutableStateOf(TextFieldValue(""))
     }
 
@@ -49,9 +51,9 @@ fun SearchAddressSection() {
             .padding(16.dp)
     ) {
         TextField(
-            value = searchAddress,
+            value = address,
             onValueChange = {
-                searchAddress = it
+                address = it
             },
             label = { Text("Search address") },
             leadingIcon = {
@@ -61,10 +63,10 @@ fun SearchAddressSection() {
                 )
             },
             trailingIcon = {
-                if (searchAddress.text.isNotBlank()) {
+                if (address.text.isNotBlank()) {
                     IconButton(
                         onClick = {
-                            searchAddress = TextFieldValue("")
+                            address = TextFieldValue("")
                         }
                     ) {
                         Icon(
@@ -80,6 +82,7 @@ fun SearchAddressSection() {
             ),
             keyboardActions = KeyboardActions(
                 onSearch = {
+                    onSearchAddress(address.text)
                     focusManager.clearFocus()
                 }
             ),
@@ -105,7 +108,9 @@ fun SearchAddressSection() {
 private fun SearchAddressSectionPreview() {
     MockLocationsTheme {
         Surface {
-            SearchAddressSection()
+            SearchAddressSection(
+                onSearchAddress = { }
+            )
         }
     }
 }
