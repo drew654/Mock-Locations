@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -54,6 +55,7 @@ fun MapControlButtons(
     isCameraCurrentlyFollowingMockedLocation: Boolean,
     crosshairsColor: Color
 ) {
+    val focusManager = LocalFocusManager.current
     val scope = rememberCoroutineScope()
 
     Box(
@@ -107,6 +109,7 @@ fun MapControlButtons(
             ) {
                 SmallFloatingActionButton(
                     onClick = {
+                        focusManager.clearFocus()
                         navController.navigate(Screen.Settings.route)
                     },
                     modifier = Modifier

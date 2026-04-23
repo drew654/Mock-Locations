@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.domain.model.MockControlAction
@@ -38,6 +39,7 @@ fun MockLocationControls(
     setControlsAreExpanded: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val focusManager = LocalFocusManager.current
     val minWidth = 384.dp
     val scrollState = rememberScrollState()
 
@@ -97,6 +99,7 @@ fun MockLocationControls(
 
                     ExpandControlsButton(
                         onClick = {
+                            focusManager.clearFocus()
                             setControlsAreExpanded(!controlsAreExpanded)
                         },
                         controlsAreExpanded = controlsAreExpanded

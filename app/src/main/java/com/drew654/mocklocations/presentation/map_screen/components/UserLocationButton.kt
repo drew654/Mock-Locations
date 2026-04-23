@@ -6,6 +6,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.drew654.mocklocations.R
@@ -15,8 +16,11 @@ import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 fun UserLocationButton(
     onClick: () -> Unit
 ) {
+    val focusManager = LocalFocusManager.current
+
     SmallFloatingActionButton(
         onClick = {
+            focusManager.clearFocus()
             onClick()
         },
         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh

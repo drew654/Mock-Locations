@@ -4,6 +4,7 @@ import android.Manifest
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,6 +23,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -33,6 +35,7 @@ import com.drew654.mocklocations.domain.model.getEnabledActions
 import com.drew654.mocklocations.domain.model.getVisibleActions
 import com.drew654.mocklocations.domain.model.isGranted
 import com.drew654.mocklocations.presentation.MockLocationsViewModel
+import com.drew654.mocklocations.presentation.NoRippleInteractionSource
 import com.drew654.mocklocations.presentation.map_screen.components.ExpandedControls
 import com.drew654.mocklocations.presentation.map_screen.components.MapControlButtons
 import com.drew654.mocklocations.presentation.map_screen.components.PermissionsDialog
@@ -61,6 +64,7 @@ fun MapScreen(
     navController: NavController
 ) {
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
     val systemInDarkTheme = isSystemInDarkTheme()
     val scope = rememberCoroutineScope()
     val mockControlState by viewModel.mockControlState.collectAsState()
@@ -210,7 +214,16 @@ fun MapScreen(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .clickable(
+                interactionSource = NoRippleInteractionSource(),
+                indication = null
+            ) {
+                focusManager.clearFocus()
+            }
+    ) {
         Column {
             if (isShowingSearch) {
                 SearchAddressSection(
@@ -234,7 +247,11 @@ fun MapScreen(
                     cameraPositionState = cameraPositionState,
                     properties = mapProperties,
                     uiSettings = mapUiSettings,
+                    onMapClick = {
+                        focusManager.clearFocus()
+                    },
                     onMapLongClick = {
+                        focusManager.clearFocus()
                         if (!isMocking) {
                             scope.launch {
                                 viewModel.pushPoint(it)
