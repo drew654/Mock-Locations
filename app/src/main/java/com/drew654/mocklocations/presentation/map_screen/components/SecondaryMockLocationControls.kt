@@ -1,5 +1,6 @@
 package com.drew654.mocklocations.presentation.map_screen.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -13,12 +14,15 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.R
 import com.drew654.mocklocations.domain.model.MockControlAction
+import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 
 @Composable
 fun SecondaryMockLocationControls(
@@ -86,6 +90,33 @@ fun SecondaryMockLocationControls(
                     enabledTint
                 else
                     disabledTint
+            )
+        }
+    }
+}
+
+@Preview(
+    name = "Light Mode",
+    showBackground = true
+)
+@Preview(
+    name = "Dark Mode",
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+    showBackground = true
+)
+@Composable
+private fun SecondaryMockLocationControlsPreview() {
+    MockLocationsTheme {
+        Surface {
+            SecondaryMockLocationControls(
+                enabledMockControlActions = setOf(
+                    MockControlAction.STOP,
+                    MockControlAction.PAUSE
+                ),
+                onClearLocationTarget = { },
+                onSaveLocationTarget = { },
+                onPopPoint = { },
+                scrollState = ScrollState(0)
             )
         }
     }
