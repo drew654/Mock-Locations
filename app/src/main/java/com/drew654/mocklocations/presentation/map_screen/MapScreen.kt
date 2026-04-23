@@ -2,6 +2,7 @@ package com.drew654.mocklocations.presentation.map_screen
 
 import android.Manifest
 import android.os.Build
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
@@ -230,7 +231,9 @@ fun MapScreen(
                     onSearchAddress = { address ->
                         scope.launch {
                             val latLng = viewModel.geocodeAddress(context, address)
-                            if (latLng != null) {
+                            if (latLng == null) {
+                                Toast.makeText(context, "Address not found", Toast.LENGTH_SHORT).show()
+                            } else {
                                 cameraPositionState.animate(
                                     CameraUpdateFactory.newLatLngZoom(latLng, 15f)
                                 )
