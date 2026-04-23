@@ -30,6 +30,8 @@ fun SecondaryMockLocationControls(
     onClearLocationTarget: () -> Unit,
     onSaveLocationTarget: () -> Unit,
     onPopPoint: () -> Unit,
+    onToggleSearch: () -> Unit,
+    isShowingSearch: Boolean,
     scrollState: ScrollState,
     modifier: Modifier = Modifier
 ) {
@@ -48,6 +50,27 @@ fun SecondaryMockLocationControls(
             )
             .padding(bottom = 12.dp, end = 12.dp)
     ) {
+        DisableableSmallFloatingActionButton(
+            onClick = {
+                onToggleSearch()
+            },
+            enabled = true
+        ) {
+            if (isShowingSearch) {
+                Icon(
+                    painter = painterResource(id = R.drawable.baseline_search_off_24),
+                    contentDescription = "Close search",
+                    tint = enabledTint
+                )
+            } else {
+                Icon(
+                    painter = painterResource(id = R.drawable.baseline_search_24),
+                    contentDescription = "Search",
+                    tint = enabledTint
+                )
+            }
+        }
+        Spacer(Modifier.height(4.dp))
         DisableableSmallFloatingActionButton(
             onClick = {
                 onSaveLocationTarget()
@@ -116,6 +139,8 @@ private fun SecondaryMockLocationControlsPreview() {
                 onClearLocationTarget = { },
                 onSaveLocationTarget = { },
                 onPopPoint = { },
+                onToggleSearch = { },
+                isShowingSearch = false,
                 scrollState = ScrollState(0)
             )
         }

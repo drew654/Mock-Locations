@@ -32,6 +32,8 @@ fun MockLocationControls(
     onTogglePause: () -> Unit,
     onSaveLocationTarget: () -> Unit,
     onAddCrosshairsPoint: () -> Unit,
+    onToggleSearch: () -> Unit,
+    isShowingSearch: Boolean,
     controlsAreExpanded: Boolean,
     setControlsAreExpanded: (Boolean) -> Unit,
     modifier: Modifier = Modifier
@@ -55,6 +57,8 @@ fun MockLocationControls(
             onClearLocationTarget = onClearLocationTarget,
             onSaveLocationTarget = onSaveLocationTarget,
             onPopPoint = onPopPoint,
+            onToggleSearch = onToggleSearch,
+            isShowingSearch = isShowingSearch,
             scrollState = scrollState,
             modifier = Modifier.weight(1f, fill = false)
         )
@@ -142,6 +146,8 @@ private fun MockLocationControlsPreview1() {
                 onTogglePause = { },
                 onSaveLocationTarget = { },
                 onAddCrosshairsPoint = { },
+                onToggleSearch = { },
+                isShowingSearch = false,
                 controlsAreExpanded = false,
                 setControlsAreExpanded = { }
             )
@@ -178,6 +184,8 @@ private fun MockLocationControlsPreview2() {
                 onTogglePause = { },
                 onSaveLocationTarget = { },
                 onAddCrosshairsPoint = { },
+                onToggleSearch = { },
+                isShowingSearch = false,
                 controlsAreExpanded = false,
                 setControlsAreExpanded = { }
             )
@@ -216,6 +224,8 @@ private fun MockLocationControlsPreviewNarrow() {
                 onTogglePause = { },
                 onSaveLocationTarget = { },
                 onAddCrosshairsPoint = { },
+                onToggleSearch = { },
+                isShowingSearch = false,
                 controlsAreExpanded = false,
                 setControlsAreExpanded = { }
             )

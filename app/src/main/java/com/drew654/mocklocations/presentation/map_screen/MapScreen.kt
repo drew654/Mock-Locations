@@ -37,6 +37,7 @@ import com.drew654.mocklocations.presentation.map_screen.components.ExpandedCont
 import com.drew654.mocklocations.presentation.map_screen.components.MapControlButtons
 import com.drew654.mocklocations.presentation.map_screen.components.PermissionsDialog
 import com.drew654.mocklocations.presentation.map_screen.components.SavedRoutesDialog
+import com.drew654.mocklocations.presentation.map_screen.components.SearchAddressSection
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
@@ -99,6 +100,7 @@ fun MapScreen(
     var isShowingSavedRoutesDialog by rememberSaveable { mutableStateOf(false) }
     val savedRoutes by viewModel.savedRoutes.collectAsState()
     val controlsAreExpanded by viewModel.controlsAreExpanded.collectAsState()
+    var isShowingSearch by rememberSaveable { mutableStateOf(false) }
     val permissionsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { result ->
@@ -210,6 +212,9 @@ fun MapScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column {
+            if (isShowingSearch) {
+                SearchAddressSection()
+            }
             Box(
                 modifier = Modifier.weight(1f)
             ) {
@@ -364,6 +369,10 @@ fun MapScreen(
                             }
                         }
                     },
+                    onToggleSearch = {
+                        isShowingSearch = !isShowingSearch
+                    },
+                    isShowingSearch = isShowingSearch,
                     isCameraCurrentlyFollowingMockedLocation = isCameraCurrentlyFollowingMockedLocation,
                     crosshairsColor = mapStyle?.polyLineStroke ?: MaterialTheme.colorScheme.onBackground
                 )
