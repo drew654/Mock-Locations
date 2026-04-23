@@ -6,7 +6,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
@@ -28,6 +30,7 @@ fun MapStyleDialog(
     onStyleSelected: (MapStyle?) -> Unit,
     onDismiss: () -> Unit
 ) {
+    val scrollState = rememberScrollState()
     val mapStyles = listOf(
         MapStyle.Standard,
         MapStyle.Night,
@@ -48,6 +51,7 @@ fun MapStyleDialog(
                 Column(
                     modifier = Modifier
                         .padding(16.dp)
+                        .verticalScroll(scrollState)
                 ) {
                     Row(
                         modifier = Modifier
