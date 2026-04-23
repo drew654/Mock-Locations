@@ -29,12 +29,15 @@ fun MapStyleDialog(
     onDismiss: () -> Unit
 ) {
     val mapStyles = listOf(
+        MapStyle.Standard,
+        MapStyle.Night,
+        MapStyle.Satellite,
+        MapStyle.Hybrid,
+        MapStyle.Terrain,
         MapStyle.Aubergine,
         MapStyle.Dark,
-        MapStyle.Night,
         MapStyle.Retro,
-        MapStyle.Silver,
-        MapStyle.Standard
+        MapStyle.Silver
     )
 
     if (isVisible) {
@@ -63,7 +66,7 @@ fun MapStyleDialog(
                                 onDismiss()
                             }
                         )
-                        Text(text = "Default")
+                        Text(text = "Default (System)")
                     }
                     mapStyles.forEach {
                         Row(
