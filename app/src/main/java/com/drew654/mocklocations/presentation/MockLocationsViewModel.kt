@@ -51,6 +51,8 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     private val settingsManager = SettingsManager(application)
     val repository = ExportRepository(settingsManager)
     private val _importUri = MutableStateFlow<Uri?>(null)
+    private val _shouldFocusSearchBar = MutableStateFlow(false)
+    val shouldFocusSearchBar: StateFlow<Boolean> = _shouldFocusSearchBar.asStateFlow()
     private val _speedUnitValue =
         MutableStateFlow(SpeedUnitValue(value = 30.0, speedUnit = SpeedUnit.MilesPerHour))
     val speedUnitValue: StateFlow<SpeedUnitValue> = _speedUnitValue.asStateFlow()
@@ -285,6 +287,10 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
 
     fun setImportUri(uri: Uri?) {
         _importUri.value = uri
+    }
+
+    fun setShouldFocusSearchBar(value: Boolean) {
+        _shouldFocusSearchBar.value = value
     }
 
     fun setSpeedUnitValue(speedUnitValue: SpeedUnitValue) {

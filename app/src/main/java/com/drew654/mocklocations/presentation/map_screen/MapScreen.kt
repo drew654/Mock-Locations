@@ -121,6 +121,7 @@ fun MapScreen(
     val isCameraFollowingMockedLocation by viewModel.isCameraFollowingMockedLocation.collectAsState()
     val isCameraCurrentlyFollowingMockedLocation by viewModel.isCameraCurrentlyFollowingMockedLocation.collectAsState()
     val currentMockedLocation by viewModel.currentMockedLocation.collectAsState()
+    val shouldFocusSearchBar by viewModel.shouldFocusSearchBar.collectAsState()
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -239,7 +240,8 @@ fun MapScreen(
                                 )
                             }
                         }
-                    }
+                    },
+                    shouldFocusSearchBar = shouldFocusSearchBar
                 )
             }
             Box(
@@ -400,8 +402,9 @@ fun MapScreen(
                             }
                         }
                     },
-                    onToggleSearch = {
-                        isShowingSearch = !isShowingSearch
+                    setShowSearch = {
+                        viewModel.setShouldFocusSearchBar(it)
+                        isShowingSearch = it
                     },
                     isShowingSearch = isShowingSearch,
                     isCameraCurrentlyFollowingMockedLocation = isCameraCurrentlyFollowingMockedLocation,

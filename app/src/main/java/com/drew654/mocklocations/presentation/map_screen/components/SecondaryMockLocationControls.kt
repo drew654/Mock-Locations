@@ -30,7 +30,7 @@ fun SecondaryMockLocationControls(
     onClearLocationTarget: () -> Unit,
     onSaveLocationTarget: () -> Unit,
     onPopPoint: () -> Unit,
-    onToggleSearch: () -> Unit,
+    setShowSearch: (Boolean) -> Unit,
     isShowingSearch: Boolean,
     scrollState: ScrollState,
     modifier: Modifier = Modifier
@@ -52,7 +52,7 @@ fun SecondaryMockLocationControls(
     ) {
         DisableableSmallFloatingActionButton(
             onClick = {
-                onToggleSearch()
+                setShowSearch(!isShowingSearch)
             },
             enabled = true
         ) {
@@ -139,7 +139,7 @@ private fun SecondaryMockLocationControlsPreview() {
                 onClearLocationTarget = { },
                 onSaveLocationTarget = { },
                 onPopPoint = { },
-                onToggleSearch = { },
+                setShowSearch = { },
                 isShowingSearch = false,
                 scrollState = ScrollState(0)
             )

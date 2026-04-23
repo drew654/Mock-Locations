@@ -85,6 +85,7 @@ fun SettingsScreen(
                 navigationIcon = {
                     IconButton(
                         onClick = {
+                            viewModel.setShouldFocusSearchBar(false)
                             navController.popBackStack()
                         }
                     ) {

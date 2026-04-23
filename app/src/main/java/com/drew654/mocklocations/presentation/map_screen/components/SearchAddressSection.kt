@@ -33,16 +33,21 @@ import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 
 @Composable
 fun SearchAddressSection(
-    onSearchAddress: (String) -> Unit
+    onSearchAddress: (String) -> Unit,
+    shouldFocusSearchBar: Boolean
 ) {
     val focusManager = LocalFocusManager.current
     val focusRequester = remember { FocusRequester() }
+    var hasFocusBeenRequested by remember { mutableStateOf(!shouldFocusSearchBar) }
     var address by rememberSaveable(stateSaver = TextFieldValue.Saver) {
         mutableStateOf(TextFieldValue(""))
     }
 
     LaunchedEffect(Unit) {
-        focusRequester.requestFocus()
+        if (!hasFocusBeenRequested) {
+            focusRequester.requestFocus()
+            hasFocusBeenRequested = true
+        }
     }
 
     Box(
@@ -109,7 +114,8 @@ private fun SearchAddressSectionPreview() {
     MockLocationsTheme {
         Surface {
             SearchAddressSection(
-                onSearchAddress = { }
+                onSearchAddress = { },
+                shouldFocusSearchBar = true
             )
         }
     }

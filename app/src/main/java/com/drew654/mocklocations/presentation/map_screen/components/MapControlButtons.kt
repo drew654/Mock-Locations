@@ -50,7 +50,7 @@ fun MapControlButtons(
     isPaused: Boolean,
     onAddCrosshairsPoint: () -> Unit,
     onUserLocationFocus: () -> Unit,
-    onToggleSearch: () -> Unit,
+    setShowSearch: (Boolean) -> Unit,
     isShowingSearch: Boolean,
     isCameraCurrentlyFollowingMockedLocation: Boolean,
     crosshairsColor: Color
@@ -158,7 +158,7 @@ fun MapControlButtons(
                 onAddCrosshairsPoint = {
                     onAddCrosshairsPoint()
                 },
-                onToggleSearch = onToggleSearch,
+                setShowSearch = setShowSearch,
                 isShowingSearch = isShowingSearch,
                 controlsAreExpanded = controlsAreExpanded,
                 setControlsAreExpanded = {
@@ -213,7 +213,7 @@ fun MapControlButtonsPreview() {
                 isPaused = false,
                 onAddCrosshairsPoint = { },
                 onUserLocationFocus = { },
-                onToggleSearch = { },
+                setShowSearch = { },
                 isShowingSearch = false,
                 isCameraCurrentlyFollowingMockedLocation = false,
                 crosshairsColor = MaterialTheme.colorScheme.onSurface
