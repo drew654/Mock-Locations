@@ -164,17 +164,17 @@ This is enabled by default. Turning it off will remove the crosshairs marker tha
 ### Clear route on stop
 This is enabled by default. With it on, the route or point being mocked will be cleared when the stop button is pressed or the route is completed.
 
-## Camera follows mocked location
+### Camera follows mocked location
 This is enabled by default. With it on, the map's camera follows the current mocked location while mocking a route. This makes it so that the mocked location stays in the middle of the screen as it moves. Panning or zooming on the map while mocking with this option enabled prevents the camera from following the route, until another route is started.
 
-## Wait at the end of a route
+### Wait at the end of a route
 This is disabled by default. Similar to pausing in the middle of mocking a route, the location continues to be mocked at the final point on a route until the stop button is pressed.
 
-## Map style
-Options for different color themes for the map: Default (follows system theme), Aubergine, Dark, Night, Retro, Silver, Standard.
+### Map style
+Options for different styles and color themes for the map: Default (follows system theme), Standard (day), Night, Satellite, Hybrid (satellite with road names), Terrain, Aubergine, Dark, Retro, Silver.
 
-## Location accuracy level
+### Location accuracy level
 Options for adding noise to the location to be mocked: Perfect (0 m), High (5 m), Medium (10 m), Low (20 m). This distance represents how far off the mocked location is set from the point or route selected.
 
-## Location update delay
+### Location update delay
 The time in seconds between location updates sent by the mocking service.
