@@ -11,6 +11,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.drew654.mocklocations.data.repository.ExportRepository
+import com.drew654.mocklocations.data.repository.RouteRepository
 import com.drew654.mocklocations.domain.SettingsManager
 import com.drew654.mocklocations.domain.model.LocationAccuracyLevel
 import com.drew654.mocklocations.domain.model.ImportRouteOption
@@ -44,7 +45,8 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     private val _controlsAreExpanded = MutableStateFlow(false)
     val controlsAreExpanded: StateFlow<Boolean> = _controlsAreExpanded.asStateFlow()
     private val settingsManager = SettingsManager(application)
-    val repository = ExportRepository(settingsManager)
+    val exportRepository = ExportRepository(settingsManager)
+    val routeRepository = RouteRepository()
     private val _importUri = MutableStateFlow<Uri?>(null)
     private val _speedUnitValue =
         MutableStateFlow(SpeedUnitValue(value = 30.0, speedUnit = SpeedUnit.MilesPerHour))
@@ -146,7 +148,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val context = getApplication<Application>().applicationContext
-                val jsonString = repository.generateExportToJson(context, exportSettings, exportRoutes)
+                val jsonString = exportRepository.generateExportToJson(context, exportSettings, exportRoutes)
                 getApplication<Application>().contentResolver.openOutputStream(uri)?.use { outputStream ->
                     outputStream.write(jsonString.toByteArray())
                     outputStream.flush()
@@ -174,7 +176,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
                     ?.use { it.readText() }
                     ?: throw IllegalStateException("Unable to read file")
 
-                repository.importFromJson(json, importSettings, importRouteOption)
+                exportRepository.importFromJson(json, importSettings, importRouteOption)
                 _speedUnitValue.value = settingsManager.speedUnitValueFlow.first()
 
                 launch(Dispatchers.Main) {
@@ -200,7 +202,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
                     ?.use { it.readText() }
                     ?: throw IllegalStateException("Unable to read file")
 
-                count = repository.getRouteCountFromJson(json)
+                count = exportRepository.getRouteCountFromJson(json)
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -219,7 +221,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
                     ?.use { it.readText() }
                     ?: throw IllegalStateException("Unable to read file")
 
-                isWithSettingsToImport = repository.isWithSettingsToImport(json)
+                isWithSettingsToImport = exportRepository.isWithSettingsToImport(json)
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -263,7 +265,14 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     }
 
     suspend fun pushPoint(point: LatLng) {
-        updateMockControlState { it.copy(activeLocationTarget = LocationTarget.create(it.activeLocationTarget.points + point)) }
+        if (mockControlState.value.activeLocationTarget is LocationTarget.Empty) {
+            updateMockControlState { it.copy(activeLocationTarget = LocationTarget.create(it.activeLocationTarget.points + point)) }
+        } else {
+            fetchAndAppendRoute(
+                start = mockControlState.value.activeLocationTarget.points.last(),
+                end = point
+            )
+        }
     }
 
     fun popPoint() {
@@ -319,6 +328,17 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
             action = MockLocationService.ACTION_STOP_MOCKING
         }
         getApplication<Application>().startService(intent)
+    }
+
+    fun fetchAndAppendRoute(start: LatLng, end: LatLng) {
+        viewModelScope.launch {
+            val points = routeRepository.getRoutePoints(start, end)
+            if (points.isNotEmpty()) {
+                updateMockControlState { it.copy(activeLocationTarget = LocationTarget.create(it.activeLocationTarget.points + points)) }
+            } else {
+                Toast.makeText(getApplication(), "No route found", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     val clearRouteOnStop = settingsManager.clearRouteOnStopFlow.stateIn(
