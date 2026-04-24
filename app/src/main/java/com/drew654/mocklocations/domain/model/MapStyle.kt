@@ -12,21 +12,19 @@ sealed class MapStyle(
     val polyLineStroke: Color,
     val mapType: MapType
 ) {
-    object Standard :
-        MapStyle(
-            resourceId = R.raw.map_style_standard,
-            name = "Standard",
-            polyLineStroke = lightColorScheme().onSurface,
-            mapType = MapType.NORMAL
-        )
+    object Standard : MapStyle(
+        resourceId = R.raw.map_style_standard,
+        name = "Standard",
+        polyLineStroke = lightColorScheme().onSurface,
+        mapType = MapType.NORMAL
+    )
 
-    object Night :
-        MapStyle(
-            resourceId = R.raw.map_style_night,
-            name = "Night",
-            polyLineStroke = darkColorScheme().onSurface,
-            mapType = MapType.NORMAL
-        )
+    object Night : MapStyle(
+        resourceId = R.raw.map_style_night,
+        name = "Night",
+        polyLineStroke = darkColorScheme().onSurface,
+        mapType = MapType.NORMAL
+    )
 
     object Satellite : MapStyle(
         resourceId = R.raw.map_style_standard,
@@ -35,21 +33,19 @@ sealed class MapStyle(
         mapType = MapType.SATELLITE
     )
 
-    object Hybrid :
-        MapStyle(
-            resourceId = R.raw.map_style_standard,
-            name = "Hybrid",
-            polyLineStroke = darkColorScheme().onSurface,
-            mapType = MapType.HYBRID
-        )
+    object Hybrid : MapStyle(
+        resourceId = R.raw.map_style_standard,
+        name = "Hybrid",
+        polyLineStroke = darkColorScheme().onSurface,
+        mapType = MapType.HYBRID
+    )
 
-    object Terrain :
-        MapStyle(
-            resourceId = R.raw.map_style_standard,
-            name = "Terrain",
-            polyLineStroke = lightColorScheme().onSurface,
-            mapType = MapType.TERRAIN
-        )
+    object Terrain : MapStyle(
+        resourceId = R.raw.map_style_standard,
+        name = "Terrain",
+        polyLineStroke = lightColorScheme().onSurface,
+        mapType = MapType.TERRAIN
+    )
 
     object Aubergine : MapStyle(
         resourceId = R.raw.map_style_aubergine,
@@ -58,29 +54,26 @@ sealed class MapStyle(
         mapType = MapType.NORMAL
     )
 
-    object Dark :
-        MapStyle(
-            resourceId = R.raw.map_style_dark,
-            name = "Dark",
-            polyLineStroke = darkColorScheme().onSurface,
-            mapType = MapType.NORMAL
-        )
+    object Dark : MapStyle(
+        resourceId = R.raw.map_style_dark,
+        name = "Dark",
+        polyLineStroke = darkColorScheme().onSurface,
+        mapType = MapType.NORMAL
+    )
 
-    object Retro :
-        MapStyle(
-            resourceId = R.raw.map_style_retro,
-            name = "Retro",
-            polyLineStroke = lightColorScheme().onSurface,
-            mapType = MapType.NORMAL
-        )
+    object Retro : MapStyle(
+        resourceId = R.raw.map_style_retro,
+        name = "Retro",
+        polyLineStroke = lightColorScheme().onSurface,
+        mapType = MapType.NORMAL
+    )
 
-    object Silver :
-        MapStyle(
-            resourceId = R.raw.map_style_silver,
-            name = "Silver",
-            polyLineStroke = lightColorScheme().onSurface,
-            mapType = MapType.NORMAL
-        )
+    object Silver : MapStyle(
+        resourceId = R.raw.map_style_silver,
+        name = "Silver",
+        polyLineStroke = lightColorScheme().onSurface,
+        mapType = MapType.NORMAL
+    )
 }
 
 fun getMapStyleByName(name: String): MapStyle? {
