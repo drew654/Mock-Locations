@@ -52,6 +52,7 @@ import com.google.maps.android.compose.CameraMoveStartedReason
 import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapType
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
@@ -90,7 +91,8 @@ fun MapScreen(
                 } else {
                     R.raw.map_style_standard
                 }
-        )
+        ),
+        mapType = mapStyle?.mapType ?: MapType.NORMAL
     )
     val mapUiSettings = MapUiSettings(
         compassEnabled = false,
