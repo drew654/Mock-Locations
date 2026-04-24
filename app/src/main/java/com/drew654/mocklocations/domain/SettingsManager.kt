@@ -40,6 +40,7 @@ class SettingsManager(private val context: Context) {
         val SAVED_ROUTES_JSON = stringPreferencesKey("saved_routes_json")
 
         // User preferences
+        val BUILD_ROUTE_ON_ROADS = booleanPreferencesKey("build_route_on_roads")
         val CLEAR_ROUTE_ON_STOP = booleanPreferencesKey("clear_route_on_stop")
         val MAP_STYLE = stringPreferencesKey("map_style")
         val SPEED_UNIT_VALUE_JSON = stringPreferencesKey("speed_unit_value_json")
@@ -59,6 +60,7 @@ class SettingsManager(private val context: Context) {
     suspend fun resetToDefault() {
         setIsUsingCrosshairs(true)
         context.dataStore.edit { preferences ->
+            preferences.remove(BUILD_ROUTE_ON_ROADS)
             preferences.remove(CLEAR_ROUTE_ON_STOP)
             preferences.remove(MAP_STYLE)
             preferences.remove(SPEED_UNIT_VALUE_JSON)
@@ -103,6 +105,16 @@ class SettingsManager(private val context: Context) {
     suspend fun setCurrentMockedLocation(location: RoutePoint?) {
         context.dataStore.edit { preferences ->
             preferences[CURRENT_MOCKED_LOCATION_JSON] = gson.toJson(location)
+        }
+    }
+
+    val buildRouteOnRoadsFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[BUILD_ROUTE_ON_ROADS] ?: true
+    }
+
+    suspend fun setBuildRouteOnRoads(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[BUILD_ROUTE_ON_ROADS] = enabled
         }
     }
 

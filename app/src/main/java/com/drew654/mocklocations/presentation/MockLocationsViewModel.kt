@@ -57,6 +57,11 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = runBlocking { settingsManager.mockControlStateFlow.first() }
     )
+    val isBuildRoutesOnRoad: StateFlow<Boolean> = settingsManager.buildRouteOnRoadsFlow.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = runBlocking { settingsManager.buildRouteOnRoadsFlow.first() }
+    )
     val mapStyle: StateFlow<MapStyle?> = settingsManager.mapStyleFlow.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -266,13 +271,25 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     }
 
     suspend fun pushPoint(point: LatLng) {
-        if (mockControlState.value.activeLocationTarget is LocationTarget.Empty) {
-            updateMockControlState { it.copy(activeLocationTarget = LocationTarget.create(it.activeLocationTarget.routeSegments + RouteSegment(listOf(point)))) }
+        if (isBuildRoutesOnRoad.value) {
+            if (mockControlState.value.activeLocationTarget is LocationTarget.Empty) {
+                updateMockControlState {
+                    it.copy(
+                        activeLocationTarget = LocationTarget.create(
+                            listOf(
+                                RouteSegment(listOf(point))
+                            )
+                        )
+                    )
+                }
+            } else {
+                fetchAndAppendRoute(
+                    start = mockControlState.value.activeLocationTarget.getLastPoint()!!,
+                    end = point
+                )
+            }
         } else {
-            fetchAndAppendRoute(
-                start = mockControlState.value.activeLocationTarget.getLastPoint()!!,
-                end = point
-            )
+            updateMockControlState { it.copy(activeLocationTarget = LocationTarget.create(it.activeLocationTarget.routeSegments + RouteSegment(listOf(point)))) }
         }
     }
 
@@ -391,6 +408,12 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     fun setIsUsingCrosshairs(enabled: Boolean) {
         viewModelScope.launch {
             updateMockControlState { it.copy(isUsingCrosshairs = enabled) }
+        }
+    }
+
+    fun setBuildRouteOnRoads(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsManager.setBuildRouteOnRoads(enabled)
         }
     }
 
