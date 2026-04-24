@@ -171,7 +171,7 @@ class SettingsManager(private val context: Context) {
                 val currentList =
                     gson.fromJson<MutableList<LocationTarget.SavedRoute>>(existingJson, type)
 
-                currentList.removeAll { it.name == route.name && it.points == route.points }
+                currentList.removeAll { it.name == route.name && it.routeSegments == route.routeSegments }
 
                 preferences[SAVED_ROUTES_JSON] = gson.toJson(currentList)
             }

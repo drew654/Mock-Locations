@@ -230,7 +230,7 @@ fun MapScreen(
                 ) {
                     if (locationTarget !is LocationTarget.Empty) {
                         Polyline(
-                            points = locationTarget.points.map {
+                            points = locationTarget.getAllPoints().map {
                                 LatLng(
                                     it.latitude,
                                     it.longitude
@@ -241,21 +241,21 @@ fun MapScreen(
                         )
                     }
 
-                    locationTarget.points.forEachIndexed { index, point ->
+                    locationTarget.routeSegments.forEachIndexed { index, routeSegment ->
                         Marker(
                             state = MarkerState(
                                 position = LatLng(
-                                    point.latitude,
-                                    point.longitude
+                                    routeSegment.getMapMarkerPoint().latitude,
+                                    routeSegment.getMapMarkerPoint().longitude
                                 )
                             ),
                             icon = BitmapDescriptorFactory.defaultMarker(
                                 getMarkerHue(
                                     index,
-                                    locationTarget.points.size
+                                    locationTarget.routeSegments.size
                                 )
                             ),
-                            snippet = "Lat: ${point.latitude}, Lng: ${point.longitude}",
+                            snippet = "Lat: ${routeSegment.getMapMarkerPoint().latitude}, Lng: ${routeSegment.getMapMarkerPoint().longitude}",
                             title = "Route Point",
                             onClick = {
                                 true
@@ -434,15 +434,15 @@ private suspend fun focusMapToLocationTarget(
     locationTarget: LocationTarget,
     cameraPositionState: CameraPositionState
 ) {
-    if (locationTarget.points.isEmpty()) return
+    if (locationTarget.routeSegments.isEmpty()) return
 
     val boundsBuilder = LatLngBounds.Builder()
-    locationTarget.points.forEach { boundsBuilder.include(it) }
+    locationTarget.routeSegments.map { it.points }.forEach { points -> points.forEach { boundsBuilder.include(it) } }
 
     val bounds = boundsBuilder.build()
 
-    val update = if (locationTarget.points.size == 1) {
-        CameraUpdateFactory.newLatLngZoom(locationTarget.points.first(), 15f)
+    val update = if (locationTarget.routeSegments.size == 1) {
+        CameraUpdateFactory.newLatLngZoom(locationTarget.getLastPoint()!!, 15f)
     } else {
         CameraUpdateFactory.newLatLngBounds(bounds, 200)
     }

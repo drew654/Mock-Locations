@@ -136,7 +136,7 @@ class MockLocationService : Service() {
                     when (locationTarget) {
                         is LocationTarget.Empty -> stopMocking()
                         is LocationTarget.SinglePoint -> mockLocationSinglePoint(locationTarget.point)
-                        else -> mockLocationStraightLineRoute(locationTarget)
+                        else -> mockLocationRoute(locationTarget)
                     }
                 }
             }
@@ -174,7 +174,7 @@ class MockLocationService : Service() {
                     val locationTarget = settingsManager.mockControlStateFlow.first().activeLocationTarget
                     val restoreMockingPoint = settingsManager.currentMockedLocationFlow.first()
                     if (locationTarget.isRoute()) {
-                        restoreMockLocationStraightLineRoute(locationTarget, restoreMockingPoint!!)
+                        restoreMockLocationRoute(locationTarget, restoreMockingPoint!!)
                     } else {
                         stopMocking()
                     }
@@ -289,8 +289,8 @@ class MockLocationService : Service() {
         }
     }
 
-    private fun mockLocationStraightLineRoute(locationTarget: LocationTarget) {
-        val routePoints = buildRoutePoints(locationTarget.points)
+    private fun mockLocationRoute(locationTarget: LocationTarget) {
+        val routePoints = buildRoutePoints(locationTarget.getAllPoints())
 
         startRouteMocking(
             routePoints = routePoints,
@@ -301,11 +301,11 @@ class MockLocationService : Service() {
         )
     }
 
-    private fun restoreMockLocationStraightLineRoute(
+    private fun restoreMockLocationRoute(
         locationTarget: LocationTarget,
         restorePoint: RoutePoint
     ) {
-        val routePoints = buildRoutePoints(locationTarget.points)
+        val routePoints = buildRoutePoints(locationTarget.getAllPoints())
         val startIndex = routePoints.closestIndexTo(restorePoint)
 
         startRouteMocking(

@@ -19,6 +19,7 @@ import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.MapStyle
 import com.drew654.mocklocations.domain.model.MockControlState
 import com.drew654.mocklocations.domain.model.RoutePoint
+import com.drew654.mocklocations.domain.model.RouteSegment
 import com.drew654.mocklocations.domain.model.SavedCameraPosition
 import com.drew654.mocklocations.domain.model.SpeedUnit
 import com.drew654.mocklocations.domain.model.SpeedUnitValue
@@ -266,10 +267,10 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
 
     suspend fun pushPoint(point: LatLng) {
         if (mockControlState.value.activeLocationTarget is LocationTarget.Empty) {
-            updateMockControlState { it.copy(activeLocationTarget = LocationTarget.create(it.activeLocationTarget.points + point)) }
+            updateMockControlState { it.copy(activeLocationTarget = LocationTarget.create(it.activeLocationTarget.routeSegments + RouteSegment(listOf(point)))) }
         } else {
             fetchAndAppendRoute(
-                start = mockControlState.value.activeLocationTarget.points.last(),
+                start = mockControlState.value.activeLocationTarget.getLastPoint()!!,
                 end = point
             )
         }
@@ -277,7 +278,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
 
     fun popPoint() {
         viewModelScope.launch {
-            updateMockControlState { it.copy(activeLocationTarget = LocationTarget.create(it.activeLocationTarget.points.dropLast(1))) }
+            updateMockControlState { it.copy(activeLocationTarget = LocationTarget.create(it.activeLocationTarget.routeSegments.dropLast(1))) }
         }
     }
 
@@ -301,7 +302,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
                 val target = if (pushPoint == null) {
                     state.activeLocationTarget
                 } else {
-                    LocationTarget.create(state.activeLocationTarget.points + pushPoint)
+                    LocationTarget.create(state.activeLocationTarget.routeSegments + RouteSegment(listOf(pushPoint)))
                 }
                 state.copy(isMocking = true, activeLocationTarget = target)
             }
@@ -334,7 +335,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         viewModelScope.launch {
             val points = routeRepository.getRoutePoints(start, end)
             if (points.isNotEmpty()) {
-                updateMockControlState { it.copy(activeLocationTarget = LocationTarget.create(it.activeLocationTarget.points + points)) }
+                updateMockControlState { it.copy(activeLocationTarget = LocationTarget.create(it.activeLocationTarget.routeSegments + RouteSegment(points)))}
             } else {
                 Toast.makeText(getApplication(), "No route found", Toast.LENGTH_SHORT).show()
             }
@@ -361,10 +362,10 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
 
     fun saveCurrentRoute(name: String) {
         val current = mockControlState.value.activeLocationTarget
-        if (current.points.isNotEmpty()) {
-            val routeToSave = LocationTarget.SavedRoute(name, current.points)
+        if (current.routeSegments.isNotEmpty()) {
+            val routeToSave = LocationTarget.SavedRoute(name = name, routeSegments = current.routeSegments)
             viewModelScope.launch {
-                settingsManager.saveRoute(routeToSave)
+                settingsManager.saveRoute(route = routeToSave)
             }
         }
     }
