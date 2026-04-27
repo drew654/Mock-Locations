@@ -114,6 +114,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     init {
         viewModelScope.launch {
             _speedUnitValue.value = settingsManager.speedUnitValueFlow.first()
+            settingsManager.setMockControlState(mockControlState.value.copy(isWaitingForRouteFetch = false))
         }
 
         viewModelScope.launch {
@@ -350,9 +351,17 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
 
     fun fetchAndAppendRoute(start: LatLng, end: LatLng) {
         viewModelScope.launch {
+            updateMockControlState { it.copy(isWaitingForRouteFetch = true) }
             val points = routeRepository.getRoutePoints(start, end)
             if (points.isNotEmpty()) {
-                updateMockControlState { it.copy(activeLocationTarget = LocationTarget.create(it.activeLocationTarget.routeSegments + RouteSegment(points)))}
+                updateMockControlState {
+                    it.copy(
+                        activeLocationTarget = LocationTarget.create(
+                            it.activeLocationTarget.routeSegments + RouteSegment(points)
+                        ),
+                        isWaitingForRouteFetch = false
+                    )
+                }
             } else {
                 Toast.makeText(getApplication(), "No route found", Toast.LENGTH_SHORT).show()
             }

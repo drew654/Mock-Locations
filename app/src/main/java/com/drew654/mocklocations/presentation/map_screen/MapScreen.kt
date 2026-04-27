@@ -28,6 +28,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import com.drew654.mocklocations.R
 import com.drew654.mocklocations.domain.model.LocationTarget
+import com.drew654.mocklocations.domain.model.MockControlAction
 import com.drew654.mocklocations.domain.model.Permission
 import com.drew654.mocklocations.domain.model.getEnabledActions
 import com.drew654.mocklocations.domain.model.getVisibleActions
@@ -221,7 +222,7 @@ fun MapScreen(
                     properties = mapProperties,
                     uiSettings = mapUiSettings,
                     onMapLongClick = {
-                        if (!isMocking) {
+                        if (MockControlAction.ADD_POINT in mockControlState.getEnabledActions()) {
                             scope.launch {
                                 viewModel.pushPoint(it)
                             }
