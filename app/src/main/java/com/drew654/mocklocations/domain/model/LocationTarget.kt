@@ -1,5 +1,8 @@
 package com.drew654.mocklocations.domain.model
 
+import android.location.Location
+import com.drew654.mocklocations.presentation.mToKm
+import com.drew654.mocklocations.presentation.mToMiles
 import com.google.android.gms.maps.model.LatLng
 
 sealed interface LocationTarget {
@@ -25,7 +28,24 @@ sealed interface LocationTarget {
 
     data class Route(override val routeSegments: List<RouteSegment>) : LocationTarget {
         fun getDistance(speedUnit: SpeedUnit): Double {
-            return routeSegments.sumOf { it.getDistance(speedUnit) }
+            val points = routeSegments.flatMap { it.points }
+            var totalDistance = 0.0
+            val results = FloatArray(1)
+
+            for (i in 0 until points.size - 1) {
+                Location.distanceBetween(
+                    points[i].latitude, points[i].longitude,
+                    points[i + 1].latitude, points[i + 1].longitude,
+                    results
+                )
+                totalDistance += results[0]
+            }
+
+            return if (speedUnit is SpeedUnit.MilesPerHour) {
+                mToMiles(totalDistance)
+            } else {
+                mToKm(totalDistance)
+            }
         }
 
         fun getDistanceText(speedUnit: SpeedUnit): String {
