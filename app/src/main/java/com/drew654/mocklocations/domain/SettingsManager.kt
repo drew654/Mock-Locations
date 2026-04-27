@@ -109,7 +109,7 @@ class SettingsManager(private val context: Context) {
     }
 
     val buildRouteOnRoadsFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
-        preferences[BUILD_ROUTE_ON_ROADS] ?: true
+        preferences[BUILD_ROUTE_ON_ROADS] ?: false
     }
 
     suspend fun setBuildRouteOnRoads(enabled: Boolean) {
