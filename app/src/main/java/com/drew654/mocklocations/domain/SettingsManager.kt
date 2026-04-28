@@ -11,12 +11,15 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.drew654.mocklocations.BuildConfig
+import com.drew654.mocklocations.domain.legacy.v12.LegacyLocationTarget12
+import com.drew654.mocklocations.domain.legacy.v12.LegacyLocationTarget12Adapter
 import com.drew654.mocklocations.domain.model.LocationAccuracyLevel
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.LocationTargetAdapter
 import com.drew654.mocklocations.domain.model.MapStyle
 import com.drew654.mocklocations.domain.model.MockControlState
 import com.drew654.mocklocations.domain.model.RoutePoint
+import com.drew654.mocklocations.domain.model.RouteSegment
 import com.drew654.mocklocations.domain.model.SpeedUnit
 import com.drew654.mocklocations.domain.model.SpeedUnitTypeAdapter
 import com.drew654.mocklocations.domain.model.SpeedUnitValue
@@ -40,6 +43,40 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
             override suspend fun migrate(currentData: Preferences): Preferences {
                 val mutablePrefs = currentData.toMutablePreferences()
                 val oldVersion = currentData[SettingsManager.VERSION_CODE] ?: 0
+
+                if (oldVersion < 13) {
+                    val oldSavedRoutesJson = currentData[SettingsManager.SAVED_ROUTES_JSON] ?: ""
+                    if (oldSavedRoutesJson.isEmpty()) {
+                        mutablePrefs.remove(SettingsManager.SAVED_ROUTES_JSON)
+                    } else {
+                        try {
+                            val gson: Gson = GsonBuilder()
+                                .registerTypeAdapter(LocationTarget::class.java, LocationTargetAdapter())
+                                .registerTypeAdapter(SpeedUnit::class.java, SpeedUnitTypeAdapter())
+                                .registerTypeAdapter(LegacyLocationTarget12::class.java, LegacyLocationTarget12Adapter())
+                                .create()
+
+                            val legacyType =
+                                object : TypeToken<List<LegacyLocationTarget12.SavedRoute>>() {}.type
+                            val legacyList: List<LegacyLocationTarget12.SavedRoute> =
+                                gson.fromJson(oldSavedRoutesJson, legacyType)
+
+                            val newList = legacyList.map { legacyTarget ->
+                                val routeSegments = legacyTarget.points.map { point ->
+                                    RouteSegment(listOf(point))
+                                }
+                                LocationTarget.SavedRoute(
+                                    name = legacyTarget.name,
+                                    routeSegments = routeSegments
+                                )
+                            }
+
+                            mutablePrefs[SettingsManager.SAVED_ROUTES_JSON] = gson.toJson(newList)
+                        } catch (e: Exception) {
+                            println("Migration failed: ${e.message}")
+                        }
+                    }
+                }
 
                 mutablePrefs[SettingsManager.VERSION_CODE] = BuildConfig.VERSION_CODE
                 return mutablePrefs.toPreferences()
@@ -80,6 +117,7 @@ class SettingsManager(private val context: Context) {
     val gson: Gson = GsonBuilder()
         .registerTypeAdapter(LocationTarget::class.java, LocationTargetAdapter())
         .registerTypeAdapter(SpeedUnit::class.java, SpeedUnitTypeAdapter())
+        .registerTypeAdapter(LegacyLocationTarget12::class.java, LegacyLocationTarget12Adapter())
         .create()
 
     suspend fun resetToDefault() {
