@@ -1,6 +1,7 @@
 package com.drew654.mocklocations.domain
 
 import android.content.Context
+import androidx.datastore.core.DataMigration
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
@@ -9,6 +10,7 @@ import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.drew654.mocklocations.BuildConfig
 import com.drew654.mocklocations.domain.model.LocationAccuracyLevel
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.LocationTargetAdapter
@@ -26,10 +28,32 @@ import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
+val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
+    name = "settings",
+    produceMigrations = {
+        listOf(object : DataMigration<Preferences> {
+            override suspend fun shouldMigrate(currentData: Preferences): Boolean {
+                val storedVersion = currentData[SettingsManager.VERSION_CODE] ?: 0
+                return storedVersion < BuildConfig.VERSION_CODE
+            }
+
+            override suspend fun migrate(currentData: Preferences): Preferences {
+                val mutablePrefs = currentData.toMutablePreferences()
+                val oldVersion = currentData[SettingsManager.VERSION_CODE] ?: 0
+
+                mutablePrefs[SettingsManager.VERSION_CODE] = BuildConfig.VERSION_CODE
+                return mutablePrefs.toPreferences()
+            }
+
+            override suspend fun cleanUp() {}
+        })
+    }
+)
 
 class SettingsManager(private val context: Context) {
     companion object {
+        val VERSION_CODE = intPreferencesKey("version_code")
+
         // Affects UI
         val MOCK_CONTROL_STATE_JSON = stringPreferencesKey("mock_control_state_json")
 
@@ -52,6 +76,7 @@ class SettingsManager(private val context: Context) {
         val LOCATION_ACCURACY_LEVEL = stringPreferencesKey("location_accuracy_level")
         val LOCATION_UPDATE_DELAY = floatPreferencesKey("location_update_delay")
     }
+
     val gson: Gson = GsonBuilder()
         .registerTypeAdapter(LocationTarget::class.java, LocationTargetAdapter())
         .registerTypeAdapter(SpeedUnit::class.java, SpeedUnitTypeAdapter())
