@@ -18,7 +18,9 @@ import com.drew654.mocklocations.R
 import com.drew654.mocklocations.domain.SettingsManager
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.MockControlState
+import com.drew654.mocklocations.domain.model.Permission
 import com.drew654.mocklocations.domain.model.RoutePoint
+import com.drew654.mocklocations.domain.model.isGranted
 import com.drew654.mocklocations.domain.model.isPauseVisible
 import com.drew654.mocklocations.domain.model.isResumeVisible
 import com.drew654.mocklocations.domain.model.toMetersPerSecond
@@ -196,6 +198,9 @@ class MockLocationService : Service() {
     }
 
     private fun updateNotification(mockControlState: MockControlState) {
+        val hasLocationPermission = Permission.FineLocation.isGranted(application)
+        if (!hasLocationPermission) return
+
         val stopMockingIntent = PendingIntent.getService(
             this,
             0,
