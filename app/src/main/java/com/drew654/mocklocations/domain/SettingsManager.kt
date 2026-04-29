@@ -12,21 +12,17 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.drew654.mocklocations.BuildConfig
 import com.drew654.mocklocations.domain.legacy.v12.LegacyLocationTarget12
-import com.drew654.mocklocations.domain.legacy.v12.LegacyLocationTarget12Adapter
 import com.drew654.mocklocations.domain.model.LocationAccuracyLevel
 import com.drew654.mocklocations.domain.model.LocationTarget
-import com.drew654.mocklocations.domain.model.LocationTargetAdapter
 import com.drew654.mocklocations.domain.model.MapStyle
 import com.drew654.mocklocations.domain.model.MockControlState
 import com.drew654.mocklocations.domain.model.RoutePoint
 import com.drew654.mocklocations.domain.model.RouteSegment
 import com.drew654.mocklocations.domain.model.SpeedUnit
-import com.drew654.mocklocations.domain.model.SpeedUnitTypeAdapter
 import com.drew654.mocklocations.domain.model.SpeedUnitValue
 import com.drew654.mocklocations.domain.model.getLocationAccuracyLevelByName
 import com.drew654.mocklocations.domain.model.getMapStyleByName
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
+import com.drew654.mocklocations.util.JsonUtils
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -50,11 +46,7 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
                         mutablePrefs.remove(SettingsManager.SAVED_ROUTES_JSON)
                     } else {
                         try {
-                            val gson: Gson = GsonBuilder()
-                                .registerTypeAdapter(LocationTarget::class.java, LocationTargetAdapter())
-                                .registerTypeAdapter(SpeedUnit::class.java, SpeedUnitTypeAdapter())
-                                .registerTypeAdapter(LegacyLocationTarget12::class.java, LegacyLocationTarget12Adapter())
-                                .create()
+                            val gson = JsonUtils.gson
 
                             val legacyType =
                                 object : TypeToken<List<LegacyLocationTarget12.SavedRoute>>() {}.type
@@ -114,11 +106,7 @@ class SettingsManager(private val context: Context) {
         val LOCATION_UPDATE_DELAY = floatPreferencesKey("location_update_delay")
     }
 
-    val gson: Gson = GsonBuilder()
-        .registerTypeAdapter(LocationTarget::class.java, LocationTargetAdapter())
-        .registerTypeAdapter(SpeedUnit::class.java, SpeedUnitTypeAdapter())
-        .registerTypeAdapter(LegacyLocationTarget12::class.java, LegacyLocationTarget12Adapter())
-        .create()
+    val gson = JsonUtils.gson
 
     suspend fun resetToDefault() {
         setIsUsingCrosshairs(true)
