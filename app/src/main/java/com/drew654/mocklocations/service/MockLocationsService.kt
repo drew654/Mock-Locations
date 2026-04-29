@@ -36,11 +36,13 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.random.Random
@@ -172,9 +174,17 @@ class MockLocationService : Service() {
             ACTION_RESTORE_STRAIGHT_LINE_MOCKING -> {
                 serviceScope.launch {
                     val locationTarget = settingsManager.mockControlStateFlow.first().activeLocationTarget
-                    val restoreMockingPoint = settingsManager.currentMockedLocationFlow.first()
-                    if (locationTarget.isRoute() && restoreMockingPoint != null) {
-                        restoreMockLocationStraightLineRoute(locationTarget, restoreMockingPoint)
+                    val restoreMockingPoint = withTimeoutOrNull(3000) {
+                        settingsManager.currentMockedLocationFlow
+                            .filterNotNull()
+                            .first()
+                    }
+                    if (locationTarget.isRoute()) {
+                        if (restoreMockingPoint == null) {
+                            mockLocationStraightLineRoute(locationTarget)
+                        } else {
+                            restoreMockLocationStraightLineRoute(locationTarget, restoreMockingPoint)
+                        }
                     } else {
                         stopMocking()
                     }
