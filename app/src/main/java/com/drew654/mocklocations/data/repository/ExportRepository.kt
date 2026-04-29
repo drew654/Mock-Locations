@@ -11,6 +11,7 @@ import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.getLocationAccuracyLevelByName
 import com.drew654.mocklocations.domain.model.getMapStyleByName
 import com.drew654.mocklocations.util.JsonUtils
+import com.drew654.mocklocations.util.MigrationUtils
 import kotlinx.coroutines.flow.first
 import java.time.Instant
 import java.time.format.DateTimeFormatter
@@ -61,7 +62,17 @@ class ExportRepository(
     }
 
     suspend fun importFromJson(json: String, importSettings: Boolean, importRouteOption: ImportRouteOption?) {
-        val exportData = gson.fromJson(json, ExportData::class.java)
+        var exportData = gson.fromJson(json, ExportData::class.java)
+
+        if (exportData.meta.appVersionCode < 13) {
+            val jsonObject = gson.fromJson(json, com.google.gson.JsonObject::class.java)
+            if (jsonObject.has("routes")) {
+                val legacyRoutesJson = jsonObject.get("routes").toString()
+                val migratedRoutesJson = MigrationUtils.migrateSavedRoutesJsonTo13(legacyRoutesJson)
+                val migratedRoutes = gson.fromJson(migratedRoutesJson, Array<LocationTarget.SavedRoute>::class.java).toList()
+                exportData = exportData.copy(routes = migratedRoutes)
+            }
+        }
 
         if (importSettings) {
             importSettings(exportData.settings)
