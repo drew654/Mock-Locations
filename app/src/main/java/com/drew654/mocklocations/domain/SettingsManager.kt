@@ -64,6 +64,7 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
                             }
 
                             mutablePrefs[SettingsManager.SAVED_ROUTES_JSON] = gson.toJson(newList)
+                            mutablePrefs.remove(SettingsManager.MOCK_CONTROL_STATE_JSON)
                         } catch (e: Exception) {
                             println("Migration failed: ${e.message}")
                         }

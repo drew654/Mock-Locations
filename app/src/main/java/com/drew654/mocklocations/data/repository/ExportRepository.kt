@@ -10,6 +10,7 @@ import com.drew654.mocklocations.domain.model.ImportRouteOption
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.getLocationAccuracyLevelByName
 import com.drew654.mocklocations.domain.model.getMapStyleByName
+import com.drew654.mocklocations.util.JsonUtils
 import kotlinx.coroutines.flow.first
 import java.time.Instant
 import java.time.format.DateTimeFormatter
@@ -17,6 +18,8 @@ import java.time.format.DateTimeFormatter
 class ExportRepository(
     private val settingsManager: SettingsManager
 ) {
+    val gson = JsonUtils.gson
+
     suspend fun generateExportToJson(
         context: Context,
         exportSettings: Boolean,
@@ -54,11 +57,11 @@ class ExportRepository(
             routes = routes
         )
 
-        return settingsManager.gson.toJson(exportData)
+        return gson.toJson(exportData)
     }
 
     suspend fun importFromJson(json: String, importSettings: Boolean, importRouteOption: ImportRouteOption?) {
-        val exportData = settingsManager.gson.fromJson(json, ExportData::class.java)
+        val exportData = gson.fromJson(json, ExportData::class.java)
 
         if (importSettings) {
             importSettings(exportData.settings)
@@ -69,12 +72,12 @@ class ExportRepository(
     }
 
     fun getRouteCountFromJson(json: String): Int {
-        val exportData = settingsManager.gson.fromJson(json, ExportData::class.java)
+        val exportData = gson.fromJson(json, ExportData::class.java)
         return exportData.routes?.size ?: 0
     }
 
     fun isWithSettingsToImport(json: String): Boolean {
-        val exportData = settingsManager.gson.fromJson(json, ExportData::class.java)
+        val exportData = gson.fromJson(json, ExportData::class.java)
         return exportData.settings != null
     }
 

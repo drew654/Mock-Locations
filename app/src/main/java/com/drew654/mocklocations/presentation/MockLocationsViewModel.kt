@@ -371,7 +371,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     val clearRouteOnStop = settingsManager.clearRouteOnStopFlow.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = true
+        initialValue = runBlocking { settingsManager.clearRouteOnStopFlow.first() }
     )
 
     fun setClearRouteOnStop(enabled: Boolean) {
@@ -383,7 +383,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     val savedRoutes = settingsManager.savedRoutesFlow.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
+        initialValue = runBlocking { settingsManager.savedRoutesFlow.first() }
     )
 
     fun saveCurrentRoute(name: String) {
