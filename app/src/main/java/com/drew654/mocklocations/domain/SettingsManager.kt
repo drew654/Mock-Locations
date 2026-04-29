@@ -17,12 +17,12 @@ import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.MapStyle
 import com.drew654.mocklocations.domain.model.MockControlState
 import com.drew654.mocklocations.domain.model.RoutePoint
-import com.drew654.mocklocations.domain.model.RouteSegment
 import com.drew654.mocklocations.domain.model.SpeedUnit
 import com.drew654.mocklocations.domain.model.SpeedUnitValue
 import com.drew654.mocklocations.domain.model.getLocationAccuracyLevelByName
 import com.drew654.mocklocations.domain.model.getMapStyleByName
 import com.drew654.mocklocations.util.JsonUtils
+import com.drew654.mocklocations.util.MigrationUtils
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -54,13 +54,7 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
                                 gson.fromJson(oldSavedRoutesJson, legacyType)
 
                             val newList = legacyList.map { legacyTarget ->
-                                val routeSegments = legacyTarget.points.map { point ->
-                                    RouteSegment(listOf(point))
-                                }
-                                LocationTarget.SavedRoute(
-                                    name = legacyTarget.name,
-                                    routeSegments = routeSegments
-                                )
+                                MigrationUtils.migrateSavedRouteTo13(legacyTarget)
                             }
 
                             mutablePrefs[SettingsManager.SAVED_ROUTES_JSON] = gson.toJson(newList)
