@@ -32,10 +32,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.drew654.mocklocations.presentation.NoRippleInteractionSource
+import com.drew654.mocklocations.presentation.parseFloatLocally
 import com.drew654.mocklocations.presentation.round
 import com.drew654.mocklocations.presentation.toTrimmedString
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
-import java.lang.Float.parseFloat
 
 @Composable
 fun LocationUpdateDelayDialog(
@@ -61,10 +61,10 @@ fun LocationUpdateDelayDialog(
                     )
                 )
             }
-            fun isValid(): Boolean = (textFieldValue.text.toFloatOrNull() ?: 0f) in 0.01f..999f
+            fun isValid(): Boolean = (textFieldValue.text.parseFloatLocally() ?: 0f) in 0.01f..999f
             fun handleSubmit() {
                 if (isValid()) {
-                    onLocationUpdateDelayChanged(parseFloat(textFieldValue.text).round())
+                    onLocationUpdateDelayChanged(textFieldValue.text.parseFloatLocally()!!.round())
                     onDismiss()
                 }
             }
