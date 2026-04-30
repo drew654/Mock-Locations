@@ -198,6 +198,24 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
+    fun getVersionCodeFromUri(): Int {
+        var versionCode = 0
+        viewModelScope.launch {
+            val context = getApplication<Application>().applicationContext
+            try {
+                val json = context.contentResolver
+                    .openInputStream(_importUri.value!!)
+                    ?.bufferedReader()
+                    ?.use { it.readText() }
+                    ?: throw IllegalStateException("Unable to read file")
+                versionCode = repository.getVersionCodeFromJson(json)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+        return versionCode
+    }
+
     fun getRouteCountFromImportUri(): Int {
         var count = 0
         viewModelScope.launch {

@@ -1,6 +1,7 @@
 package com.drew654.mocklocations.presentation.settings_screen
 
 import android.content.Intent
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -31,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.core.net.toUri
 import androidx.navigation.NavController
+import com.drew654.mocklocations.BuildConfig
 import com.drew654.mocklocations.R
 import com.drew654.mocklocations.presentation.MockLocationsViewModel
 import com.drew654.mocklocations.presentation.Screen
@@ -66,6 +68,12 @@ fun SettingsScreen(
     ) { uri ->
         uri?.let {
             viewModel.setImportUri(it)
+            val versionCode = viewModel.getVersionCodeFromUri()
+            if (versionCode > BuildConfig.VERSION_CODE) {
+                Toast.makeText(navController.context, "App version is out of date", Toast.LENGTH_SHORT).show()
+                viewModel.setImportUri(null)
+                return@let
+            }
             navController.navigate(Screen.ImportSettings.route)
         }
     }

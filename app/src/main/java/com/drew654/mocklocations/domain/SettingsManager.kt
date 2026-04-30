@@ -165,7 +165,7 @@ class SettingsManager(private val context: Context) {
     }
 
     val clearRouteOnStopFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
-        preferences[CLEAR_ROUTE_ON_STOP] ?: true
+        preferences[CLEAR_ROUTE_ON_STOP] ?: false
     }
 
     suspend fun setClearRouteOnStop(enabled: Boolean) {

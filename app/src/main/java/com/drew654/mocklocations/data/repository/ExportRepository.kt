@@ -1,6 +1,7 @@
 package com.drew654.mocklocations.data.repository
 
 import android.content.Context
+import com.drew654.mocklocations.BuildConfig
 import com.drew654.mocklocations.domain.SettingsManager
 import com.drew654.mocklocations.domain.model.LocationAccuracyLevel
 import com.drew654.mocklocations.domain.model.ExportData
@@ -74,12 +75,21 @@ class ExportRepository(
             }
         }
 
+        if (exportData.meta.appVersionCode > BuildConfig.VERSION_CODE) {
+            throw Exception("App version is out of date")
+        }
+
         if (importSettings) {
             importSettings(exportData.settings)
         }
         if (importRouteOption != null) {
             importRoutes(exportData.routes, importRouteOption)
         }
+    }
+
+    fun getVersionCodeFromJson(json: String): Int {
+        val exportData = settingsManager.gson.fromJson(json, ExportData::class.java)
+        return exportData.meta.appVersionCode
     }
 
     fun getRouteCountFromJson(json: String): Int {

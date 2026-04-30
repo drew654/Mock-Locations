@@ -162,7 +162,7 @@ If there are no settings or no routes in the JSON to import, that section of the
 This is enabled by default. Turning it off will remove the crosshairs marker that is shown in the center of the map screen. With it off, the "add point" button will not show, so adding points to the map is only done by long pressing on the map.
 
 ### Clear route on stop
-This is enabled by default. With it on, the route or point being mocked will be cleared when the stop button is pressed or the route is completed.
+This is disabled by default. With it on, the route or point being mocked will be cleared when the stop button is pressed or the route is completed.
 
 ### Camera follows mocked location
 This is enabled by default. With it on, the map's camera follows the current mocked location while mocking a route. This makes it so that the mocked location stays in the middle of the screen as it moves. Panning or zooming on the map while mocking with this option enabled prevents the camera from following the route, until another route is started.
