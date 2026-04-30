@@ -7,7 +7,7 @@ import com.drew654.mocklocations.domain.model.RouteSegment
 object MigrationUtils {
     val gson = JsonUtils.gson
 
-    fun migrateSavedRouteTo13(route: LegacyLocationTarget12.SavedRoute): LocationTarget.SavedRoute {
+    fun migrateSavedRouteTo15(route: LegacyLocationTarget12.SavedRoute): LocationTarget.SavedRoute {
         return LocationTarget.SavedRoute(
             name = route.name,
             routeSegments = route.points.map { point ->
@@ -18,9 +18,9 @@ object MigrationUtils {
         )
     }
 
-    fun migrateSavedRoutesJsonTo13(routesJson: String): String {
+    fun migrateSavedRoutesJsonTo15(routesJson: String): String {
         val legacyRoutes = gson.fromJson(routesJson, Array<LegacyLocationTarget12.SavedRoute>::class.java)
-        val newRoutes = legacyRoutes.map { migrateSavedRouteTo13(it) }
+        val newRoutes = legacyRoutes.map { migrateSavedRouteTo15(it) }
         return gson.toJson(newRoutes)
     }
 }

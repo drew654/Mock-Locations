@@ -54,7 +54,7 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
                                 gson.fromJson(oldSavedRoutesJson, legacyType)
 
                             val newList = legacyList.map { legacyTarget ->
-                                MigrationUtils.migrateSavedRouteTo13(legacyTarget)
+                                MigrationUtils.migrateSavedRouteTo15(legacyTarget)
                             }
 
                             mutablePrefs[SettingsManager.SAVED_ROUTES_JSON] = gson.toJson(newList)

@@ -208,7 +208,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
                     ?.bufferedReader()
                     ?.use { it.readText() }
                     ?: throw IllegalStateException("Unable to read file")
-                versionCode = repository.getVersionCodeFromJson(json)
+                versionCode = exportRepository.getVersionCodeFromJson(json)
             } catch (e: Exception) {
                 e.printStackTrace()
             }

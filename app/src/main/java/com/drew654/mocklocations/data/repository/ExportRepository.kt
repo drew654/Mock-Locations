@@ -65,11 +65,11 @@ class ExportRepository(
     suspend fun importFromJson(json: String, importSettings: Boolean, importRouteOption: ImportRouteOption?) {
         var exportData = gson.fromJson(json, ExportData::class.java)
 
-        if (exportData.meta.appVersionCode < 13) {
+        if (exportData.meta.appVersionCode < 15) {
             val jsonObject = gson.fromJson(json, com.google.gson.JsonObject::class.java)
             if (jsonObject.has("routes")) {
                 val legacyRoutesJson = jsonObject.get("routes").toString()
-                val migratedRoutesJson = MigrationUtils.migrateSavedRoutesJsonTo13(legacyRoutesJson)
+                val migratedRoutesJson = MigrationUtils.migrateSavedRoutesJsonTo15(legacyRoutesJson)
                 val migratedRoutes = gson.fromJson(migratedRoutesJson, Array<LocationTarget.SavedRoute>::class.java).toList()
                 exportData = exportData.copy(routes = migratedRoutes)
             }
