@@ -23,12 +23,18 @@ fun mToMiles(m: Double) = m * 0.000621371
 fun mToKm(m: Double) = m / 1000.0
 
 fun Float.toTrimmedString(): String {
-    val symbols = DecimalFormatSymbols(Locale.ROOT)
+    val symbols = DecimalFormatSymbols(Locale.getDefault())
     val decimalFormat = DecimalFormat("#.##", symbols)
     return decimalFormat.format(this)
 }
 
-fun Float.round(decimals: Int = 2): Float = "%.${decimals}f".format(this).toFloat()
+fun Float.round(decimals: Int = 2): Float {
+    return "%.${decimals}f".format(Locale.ROOT, this).toFloat()
+}
+
+fun String.parseFloatLocally(): Float? {
+    return this.replace(",", ".").toFloatOrNull()
+}
 
 fun Location.toRoutePoint(): RoutePoint {
     return RoutePoint(
