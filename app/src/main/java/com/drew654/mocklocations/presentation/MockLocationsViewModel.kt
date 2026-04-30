@@ -364,6 +364,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
                 }
             } else {
                 Toast.makeText(getApplication(), "No route found", Toast.LENGTH_SHORT).show()
+                updateMockControlState { it.copy(isWaitingForRouteFetch = false) }
             }
         }
     }
