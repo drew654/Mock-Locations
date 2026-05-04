@@ -1,4 +1,4 @@
-package com.drew654.mocklocations.domain.legacy.v12
+package com.drew654.mocklocations.domain.legacy.v14
 
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
@@ -8,17 +8,17 @@ import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
 import java.lang.reflect.Type
 
-class LegacyLocationTarget12Adapter : JsonSerializer<LegacyLocationTarget12>, JsonDeserializer<LegacyLocationTarget12> {
+class LegacyLocationTarget14Adapter : JsonSerializer<LegacyLocationTarget14>, JsonDeserializer<LegacyLocationTarget14> {
     override fun serialize(
-        src: LegacyLocationTarget12?,
+        src: LegacyLocationTarget14?,
         typeOfSrc: Type?,
         context: JsonSerializationContext?
     ): JsonElement? {
         val jsonObject = JsonObject()
         val typeName = when (src) {
-            is LegacyLocationTarget12.SinglePoint -> "SinglePoint"
-            is LegacyLocationTarget12.Route -> "Route"
-            is LegacyLocationTarget12.SavedRoute -> "SavedRoute"
+            is LegacyLocationTarget14.SinglePoint -> "SinglePoint"
+            is LegacyLocationTarget14.Route -> "Route"
+            is LegacyLocationTarget14.SavedRoute -> "SavedRoute"
             else -> "Empty"
         }
 
@@ -31,17 +31,17 @@ class LegacyLocationTarget12Adapter : JsonSerializer<LegacyLocationTarget12>, Js
         json: JsonElement?,
         typeOfT: Type?,
         context: JsonDeserializationContext?
-    ): LegacyLocationTarget12? {
+    ): LegacyLocationTarget14? {
         val jsonObject = json?.asJsonObject
 
         val typeName = jsonObject?.get("type")?.asString
         val data = jsonObject?.get("data")
 
         return when (typeName) {
-            "SinglePoint" -> context?.deserialize(data, LegacyLocationTarget12.SinglePoint::class.java)
-            "Route" -> context?.deserialize(data, LegacyLocationTarget12.Route::class.java)
-            "SavedRoute" -> context?.deserialize(data, LegacyLocationTarget12.SavedRoute::class.java)
-            else -> LegacyLocationTarget12.Empty
+            "SinglePoint" -> context?.deserialize(data, LegacyLocationTarget14.SinglePoint::class.java)
+            "Route" -> context?.deserialize(data, LegacyLocationTarget14.Route::class.java)
+            "SavedRoute" -> context?.deserialize(data, LegacyLocationTarget14.SavedRoute::class.java)
+            else -> LegacyLocationTarget14.Empty
         }
     }
 }

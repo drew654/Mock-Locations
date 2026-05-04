@@ -1,4 +1,4 @@
-package com.drew654.mocklocations.domain.legacy.v12
+package com.drew654.mocklocations.domain.legacy.v14
 
 import android.location.Location
 import com.drew654.mocklocations.domain.model.SpeedUnit
@@ -6,11 +6,11 @@ import com.drew654.mocklocations.presentation.mToKm
 import com.drew654.mocklocations.presentation.mToMiles
 import com.google.android.gms.maps.model.LatLng
 
-sealed interface LegacyLocationTarget12 {
+sealed interface LegacyLocationTarget14 {
     val points: List<LatLng>
 
     companion object {
-        fun create(points: List<LatLng>): LegacyLocationTarget12 {
+        fun create(points: List<LatLng>): LegacyLocationTarget14 {
             return when (points.size) {
                 0 -> Empty
                 1 -> SinglePoint(points.first())
@@ -19,15 +19,15 @@ sealed interface LegacyLocationTarget12 {
         }
     }
 
-    data object Empty : LegacyLocationTarget12 {
+    data object Empty : LegacyLocationTarget14 {
         override val points: List<LatLng> = emptyList()
     }
 
-    data class SinglePoint(val point: LatLng) : LegacyLocationTarget12 {
+    data class SinglePoint(val point: LatLng) : LegacyLocationTarget14 {
         override val points: List<LatLng> = listOf(point)
     }
 
-    data class Route(override val points: List<LatLng>) : LegacyLocationTarget12 {
+    data class Route(override val points: List<LatLng>) : LegacyLocationTarget14 {
         fun getDistance(speedUnit: SpeedUnit): Double {
             var totalDistance = 0.0
             val results = FloatArray(1)
@@ -60,7 +60,7 @@ sealed interface LegacyLocationTarget12 {
     data class SavedRoute(
         val name: String,
         override val points: List<LatLng>
-    ) : LegacyLocationTarget12 {
+    ) : LegacyLocationTarget14 {
         fun getDistanceText(speedUnit: SpeedUnit): String = Route(points).getDistanceText(speedUnit)
     }
 

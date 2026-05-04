@@ -11,7 +11,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.drew654.mocklocations.BuildConfig
-import com.drew654.mocklocations.domain.legacy.v12.LegacyLocationTarget12
+import com.drew654.mocklocations.domain.legacy.v14.LegacyLocationTarget14
 import com.drew654.mocklocations.domain.model.LocationAccuracyLevel
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.MapStyle
@@ -49,8 +49,8 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
                             val gson = JsonUtils.gson
 
                             val legacyType =
-                                object : TypeToken<List<LegacyLocationTarget12.SavedRoute>>() {}.type
-                            val legacyList: List<LegacyLocationTarget12.SavedRoute> =
+                                object : TypeToken<List<LegacyLocationTarget14.SavedRoute>>() {}.type
+                            val legacyList: List<LegacyLocationTarget14.SavedRoute> =
                                 gson.fromJson(oldSavedRoutesJson, legacyType)
 
                             val newList = legacyList.map { legacyTarget ->

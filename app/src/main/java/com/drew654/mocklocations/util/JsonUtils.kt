@@ -1,7 +1,7 @@
 package com.drew654.mocklocations.util
 
-import com.drew654.mocklocations.domain.legacy.v12.LegacyLocationTarget12
-import com.drew654.mocklocations.domain.legacy.v12.LegacyLocationTarget12Adapter
+import com.drew654.mocklocations.domain.legacy.v14.LegacyLocationTarget14
+import com.drew654.mocklocations.domain.legacy.v14.LegacyLocationTarget14Adapter
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.LocationTargetAdapter
 import com.drew654.mocklocations.domain.model.SpeedUnit
@@ -13,6 +13,6 @@ object JsonUtils {
     val gson: Gson = GsonBuilder()
         .registerTypeAdapter(LocationTarget::class.java, LocationTargetAdapter())
         .registerTypeAdapter(SpeedUnit::class.java, SpeedUnitTypeAdapter())
-        .registerTypeAdapter(LegacyLocationTarget12::class.java, LegacyLocationTarget12Adapter())
+        .registerTypeAdapter(LegacyLocationTarget14::class.java, LegacyLocationTarget14Adapter())
         .create()
 }
