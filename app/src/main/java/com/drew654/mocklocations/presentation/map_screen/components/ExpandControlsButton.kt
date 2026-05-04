@@ -61,10 +61,12 @@ fun ExpandControlsButton(
 fun ExpandControlsButtonPreview() {
     MockLocationsTheme {
         Surface {
-            ExpandControlsButton(
-                onClick = { },
-                controlsAreExpanded = false
-            )
+            Box(modifier = Modifier.padding(4.dp)) {
+                ExpandControlsButton(
+                    onClick = { },
+                    controlsAreExpanded = false
+                )
+            }
         }
     }
 }

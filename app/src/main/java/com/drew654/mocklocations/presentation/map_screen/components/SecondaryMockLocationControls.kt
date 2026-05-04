@@ -12,15 +12,11 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.drew654.mocklocations.R
 import com.drew654.mocklocations.domain.model.MockControlAction
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 
@@ -35,9 +31,6 @@ fun SecondaryMockLocationControls(
     scrollState: ScrollState,
     modifier: Modifier = Modifier
 ) {
-    val enabledTint = MaterialTheme.colorScheme.onPrimaryContainer
-    val disabledTint = MaterialTheme.colorScheme.onSurfaceVariant
-
     Column(
         modifier = modifier
             .verticalScroll(
@@ -50,71 +43,24 @@ fun SecondaryMockLocationControls(
             )
             .padding(bottom = 12.dp, end = 12.dp)
     ) {
-        DisableableSmallFloatingActionButton(
-            onClick = {
-                setShowSearch(!isShowingSearch)
-            },
-            enabled = true
-        ) {
-            if (isShowingSearch) {
-                Icon(
-                    painter = painterResource(id = R.drawable.baseline_search_off_24),
-                    contentDescription = "Close search",
-                    tint = enabledTint
-                )
-            } else {
-                Icon(
-                    painter = painterResource(id = R.drawable.baseline_search_24),
-                    contentDescription = "Search",
-                    tint = enabledTint
-                )
-            }
-        }
+        SearchAddressButton(
+            setShowSearch = setShowSearch,
+            isShowingSearch = isShowingSearch
+        )
         Spacer(Modifier.height(4.dp))
-        DisableableSmallFloatingActionButton(
-            onClick = {
-                onSaveLocationTarget()
-            },
-            enabled = true
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.baseline_save_24),
-                contentDescription = "Saved Routes",
-                tint = enabledTint
-            )
-        }
+        SavedRoutesButton(
+            onSaveLocationTarget = onSaveLocationTarget
+        )
         Spacer(Modifier.height(4.dp))
-        DisableableSmallFloatingActionButton(
-            onClick = {
-                onClearLocationTarget()
-            },
-            enabled = MockControlAction.CLEAR_LOCATION_TARGET in enabledMockControlActions
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.baseline_clear_24),
-                contentDescription = "Clear",
-                tint = if (MockControlAction.CLEAR_LOCATION_TARGET in enabledMockControlActions)
-                    enabledTint
-                else
-                    disabledTint
-            )
-        }
+        ClearLocationTargetButton(
+            onClearLocationTarget = onClearLocationTarget,
+            enabledMockControlActions = enabledMockControlActions
+        )
         Spacer(Modifier.height(4.dp))
-        DisableableSmallFloatingActionButton(
-            onClick = {
-                onPopRouteSegment()
-            },
-            enabled = MockControlAction.POP_POINT in enabledMockControlActions
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.baseline_backspace_24),
-                contentDescription = "Pop",
-                tint = if (MockControlAction.POP_POINT in enabledMockControlActions)
-                    enabledTint
-                else
-                    disabledTint
-            )
-        }
+        PopRouteSegmentButton(
+            onPopRouteSegment = onPopRouteSegment,
+            enabledMockControlActions = enabledMockControlActions
+        )
     }
 }
 

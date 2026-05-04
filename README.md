@@ -76,12 +76,17 @@ Pauses the movement of the route that is currently running. The mock location se
 
 Adds a point on the map at the location of the crosshairs. This button is not visible when the "use crosshairs" setting is disabled.
 
+### Search address
+<img src="docs/images/components/search_address_button.png" alt="Search address button" width="64">
+
+Shows a search bar that takes a street address and moves the map to that location.
+
 ### Saved routes
 <img src="docs/images/components/saved_routes_button.png" alt="Saved routes button" width="64">
 
 Shows a dialog for the routes you have saved, and an option to save the current route on your map.
 
-### Clear route
+### Clear route/point
 <img src="docs/images/components/clear_route_button.png" alt="Clear route button" width="64">
 
 Removes all points on the map.
