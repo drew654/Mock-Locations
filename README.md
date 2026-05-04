@@ -41,6 +41,7 @@ Other apps may be able to detect that a mock location provider is being used.
 - **Location** – Required to show your real location, and mocked location while mocking
 - **Notifications** – Required to display a persistent notification while mocking is active
 - **Developer Options / Mock Location App** – Required by Android to allow location simulation
+- **Internet** - Required for fetching routes using OSRM (Open Source Routing Machine)
 
 # App Setup
 
@@ -119,6 +120,10 @@ Pressing start starts the mock location service, and it follows the route built 
 
 <br />
 
+Routes can also be built on the roads using OSRM, using a setting that is disabled by default.
+
+<br />
+
 # Saving routes
 Tapping the "saved routes" button opens a dialog showing your saved routes. Tapping on "Save Route" navigates to the next page, where the route is given a name and saved. There cannot be multiple routes with the same name. The distance unit shown in the saved routes dialog is based on the unit selected in the expanded controls configuration screen.
 
@@ -157,6 +162,9 @@ If there are no settings or no routes in the JSON to import, that section of the
 <br />
 
 # Settings
+
+### Build routes on roads
+This is disabled by default. When it is enabled, the OSRM API is used to form a segment of the route currently being built on the map, aligned to the roads. When this setting is disabled, straight lines are created on the map between the points placed.
 
 ### Use crosshairs
 This is enabled by default. Turning it off will remove the crosshairs marker that is shown in the center of the map screen. With it off, the "add point" button will not show, so adding points to the map is only done by long pressing on the map.
