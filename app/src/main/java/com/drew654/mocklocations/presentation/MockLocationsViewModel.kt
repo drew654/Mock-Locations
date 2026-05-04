@@ -296,7 +296,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
-    suspend fun pushPoint(point: LatLng) {
+    suspend fun pushRouteSegment(point: LatLng) {
         if (isBuildRoutesOnRoad.value) {
             if (mockControlState.value.activeLocationTarget is LocationTarget.Empty) {
                 updateMockControlState {
@@ -319,7 +319,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
-    fun popPoint() {
+    fun popRouteSegment() {
         viewModelScope.launch {
             updateMockControlState { it.copy(activeLocationTarget = LocationTarget.create(it.activeLocationTarget.routeSegments.dropLast(1))) }
         }

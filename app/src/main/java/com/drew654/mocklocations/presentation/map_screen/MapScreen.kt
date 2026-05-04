@@ -262,7 +262,7 @@ fun MapScreen(
                         focusManager.clearFocus()
                         if (MockControlAction.ADD_POINT in mockControlState.getEnabledActions()) {
                             scope.launch {
-                                viewModel.pushPoint(it)
+                                viewModel.pushRouteSegment(it)
                             }
                         }
                     }
@@ -357,8 +357,8 @@ fun MapScreen(
                     onStop = {
                         viewModel.stopMockLocation()
                     },
-                    onPopPoint = {
-                        viewModel.popPoint()
+                    onPopRouteSegment = {
+                        viewModel.popRouteSegment()
                     },
                     onTogglePause = {
                         viewModel.togglePause()
@@ -372,7 +372,7 @@ fun MapScreen(
                     isPaused = isPaused,
                     onAddCrosshairsPoint = {
                         scope.launch {
-                            viewModel.pushPoint(cameraPositionState.position.target)
+                            viewModel.pushRouteSegment(cameraPositionState.position.target)
                         }
                     },
                     onUserLocationFocus = {
@@ -481,7 +481,7 @@ private suspend fun focusMapToLocationTarget(
     if (locationTarget.routeSegments.isEmpty()) return
 
     val boundsBuilder = LatLngBounds.Builder()
-    locationTarget.routeSegments.map { it.points }.forEach { points -> points.forEach { boundsBuilder.include(it) } }
+    locationTarget.getAllPoints().forEach { boundsBuilder.include(it) }
 
     val bounds = boundsBuilder.build()
 

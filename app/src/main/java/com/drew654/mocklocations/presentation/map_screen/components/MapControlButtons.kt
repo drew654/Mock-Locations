@@ -44,7 +44,7 @@ fun MapControlButtons(
     onClearLocationTarget: () -> Unit,
     onStart: () -> Unit,
     onStop: () -> Unit,
-    onPopPoint: () -> Unit,
+    onPopRouteSegment: () -> Unit,
     onTogglePause: () -> Unit,
     onSaveLocationTarget: () -> Unit,
     isPaused: Boolean,
@@ -146,8 +146,8 @@ fun MapControlButtons(
                 onStop = {
                     onStop()
                 },
-                onPopPoint = {
-                    onPopPoint()
+                onPopRouteSegment = {
+                    onPopRouteSegment()
                 },
                 onTogglePause = {
                     onTogglePause()
@@ -207,7 +207,7 @@ fun MapControlButtonsPreview() {
                 onClearLocationTarget = { },
                 onStart = { },
                 onStop = { },
-                onPopPoint = { },
+                onPopRouteSegment = { },
                 onTogglePause = { },
                 onSaveLocationTarget = { },
                 isPaused = false,
