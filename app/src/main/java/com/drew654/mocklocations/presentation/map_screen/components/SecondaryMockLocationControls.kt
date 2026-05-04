@@ -29,7 +29,7 @@ fun SecondaryMockLocationControls(
     enabledMockControlActions: Set<MockControlAction>,
     onClearLocationTarget: () -> Unit,
     onSaveLocationTarget: () -> Unit,
-    onPopPoint: () -> Unit,
+    onPopRouteSegment: () -> Unit,
     setShowSearch: (Boolean) -> Unit,
     isShowingSearch: Boolean,
     scrollState: ScrollState,
@@ -102,7 +102,7 @@ fun SecondaryMockLocationControls(
         Spacer(Modifier.height(4.dp))
         DisableableSmallFloatingActionButton(
             onClick = {
-                onPopPoint()
+                onPopRouteSegment()
             },
             enabled = MockControlAction.POP_POINT in enabledMockControlActions
         ) {
@@ -138,7 +138,7 @@ private fun SecondaryMockLocationControlsPreview() {
                 ),
                 onClearLocationTarget = { },
                 onSaveLocationTarget = { },
-                onPopPoint = { },
+                onPopRouteSegment = { },
                 setShowSearch = { },
                 isShowingSearch = false,
                 scrollState = ScrollState(0)

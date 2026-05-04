@@ -5,7 +5,8 @@ data class MockControlState(
     val isPaused: Boolean = false,
     val isWaitingAtEndOfRoute: Boolean = false,
     val activeLocationTarget: LocationTarget = LocationTarget.Empty,
-    val isUsingCrosshairs: Boolean = true
+    val isUsingCrosshairs: Boolean = true,
+    val isWaitingForRouteFetch: Boolean = false
 )
 
 fun MockControlState.getVisibleActions(): Set<MockControlAction> {
@@ -100,7 +101,7 @@ fun MockControlState.isAddPointVisible(): Boolean {
 }
 
 fun MockControlState.isAddPointEnabled(): Boolean {
-    return isAddPointVisible()
+    return isAddPointVisible() && !isWaitingForRouteFetch
 }
 
 fun isPopPointVisible(): Boolean {

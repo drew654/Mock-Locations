@@ -50,7 +50,7 @@ fun PrimaryMockLocationControls(
             if (MockControlAction.ADD_POINT in visibleMockControlActions) {
                 DisableableFloatingActionButton(
                     onClick = { onAddCrosshairsPoint() },
-                    enabled = true,
+                    enabled = MockControlAction.ADD_POINT in enabledMockControlActions,
                     modifier = Modifier.padding(bottom = 12.dp)
                 ) {
                     Icon(
@@ -64,7 +64,7 @@ fun PrimaryMockLocationControls(
             if (MockControlAction.RESUME in visibleMockControlActions) {
                 DisableableSmallFloatingActionButton(
                     onClick = { onTogglePause() },
-                    enabled = true,
+                    enabled = MockControlAction.RESUME in enabledMockControlActions,
                     modifier = Modifier.padding(bottom = 12.dp)
                 ) {
                     Icon(
@@ -79,7 +79,7 @@ fun PrimaryMockLocationControls(
             if (MockControlAction.PAUSE in visibleMockControlActions) {
                 DisableableSmallFloatingActionButton(
                     onClick = { onTogglePause() },
-                    enabled = true,
+                    enabled = MockControlAction.PAUSE in enabledMockControlActions,
                     modifier = Modifier.padding(bottom = 12.dp)
                 ) {
                     Icon(
@@ -111,7 +111,7 @@ fun PrimaryMockLocationControls(
                     onClick = {
                         onStop()
                     },
-                    enabled = true,
+                    enabled = MockControlAction.STOP in enabledMockControlActions,
                     modifier = Modifier.padding(bottom = 12.dp, end = 12.dp)
                 ) {
                     Icon(

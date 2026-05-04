@@ -31,6 +31,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import com.drew654.mocklocations.R
 import com.drew654.mocklocations.domain.model.LocationTarget
+import com.drew654.mocklocations.domain.model.MockControlAction
 import com.drew654.mocklocations.domain.model.Permission
 import com.drew654.mocklocations.domain.model.getEnabledActions
 import com.drew654.mocklocations.domain.model.getVisibleActions
@@ -259,16 +260,16 @@ fun MapScreen(
                     },
                     onMapLongClick = {
                         focusManager.clearFocus()
-                        if (!isMocking) {
+                        if (MockControlAction.ADD_POINT in mockControlState.getEnabledActions()) {
                             scope.launch {
-                                viewModel.pushPoint(it)
+                                viewModel.pushRouteSegment(it)
                             }
                         }
                     }
                 ) {
                     if (locationTarget !is LocationTarget.Empty) {
                         Polyline(
-                            points = locationTarget.points.map {
+                            points = locationTarget.getAllPoints().map {
                                 LatLng(
                                     it.latitude,
                                     it.longitude
@@ -279,21 +280,21 @@ fun MapScreen(
                         )
                     }
 
-                    locationTarget.points.forEachIndexed { index, point ->
+                    locationTarget.routeSegments.forEachIndexed { index, routeSegment ->
                         Marker(
                             state = MarkerState(
                                 position = LatLng(
-                                    point.latitude,
-                                    point.longitude
+                                    routeSegment.getMapMarkerPoint().latitude,
+                                    routeSegment.getMapMarkerPoint().longitude
                                 )
                             ),
                             icon = BitmapDescriptorFactory.defaultMarker(
                                 getMarkerHue(
                                     index,
-                                    locationTarget.points.size
+                                    locationTarget.routeSegments.size
                                 )
                             ),
-                            snippet = "Lat: ${point.latitude}, Lng: ${point.longitude}",
+                            snippet = "Lat: ${routeSegment.getMapMarkerPoint().latitude}, Lng: ${routeSegment.getMapMarkerPoint().longitude}",
                             title = "Route Point",
                             onClick = {
                                 true
@@ -356,8 +357,8 @@ fun MapScreen(
                     onStop = {
                         viewModel.stopMockLocation()
                     },
-                    onPopPoint = {
-                        viewModel.popPoint()
+                    onPopRouteSegment = {
+                        viewModel.popRouteSegment()
                     },
                     onTogglePause = {
                         viewModel.togglePause()
@@ -371,7 +372,7 @@ fun MapScreen(
                     isPaused = isPaused,
                     onAddCrosshairsPoint = {
                         scope.launch {
-                            viewModel.pushPoint(cameraPositionState.position.target)
+                            viewModel.pushRouteSegment(cameraPositionState.position.target)
                         }
                     },
                     onUserLocationFocus = {
@@ -477,15 +478,15 @@ private suspend fun focusMapToLocationTarget(
     locationTarget: LocationTarget,
     cameraPositionState: CameraPositionState
 ) {
-    if (locationTarget.points.isEmpty()) return
+    if (locationTarget.routeSegments.isEmpty()) return
 
     val boundsBuilder = LatLngBounds.Builder()
-    locationTarget.points.forEach { boundsBuilder.include(it) }
+    locationTarget.getAllPoints().forEach { boundsBuilder.include(it) }
 
     val bounds = boundsBuilder.build()
 
-    val update = if (locationTarget.points.size == 1) {
-        CameraUpdateFactory.newLatLngZoom(locationTarget.points.first(), 15f)
+    val update = if (locationTarget.routeSegments.size == 1) {
+        CameraUpdateFactory.newLatLngZoom(locationTarget.getLastPoint()!!, 15f)
     } else {
         CameraUpdateFactory.newLatLngBounds(bounds, 200)
     }
