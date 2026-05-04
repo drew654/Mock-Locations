@@ -51,7 +51,7 @@ fun RouteListItem(
                     onLongClick(route)
                 }
             ),
-        trailingContent = {
+        leadingContent = {
             if (shouldShowCheckbox) {
                 Checkbox(
                     checked = selected,
@@ -59,6 +59,7 @@ fun RouteListItem(
                 )
             }
         },
+        trailingContent = { },
         colors = ListItemDefaults.colors(
             containerColor = MaterialTheme.colorScheme.secondaryContainer
         )
