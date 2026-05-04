@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -49,9 +50,12 @@ fun MapControlButtons(
     isPaused: Boolean,
     onAddCrosshairsPoint: () -> Unit,
     onUserLocationFocus: () -> Unit,
+    setShowSearch: (Boolean) -> Unit,
+    isShowingSearch: Boolean,
     isCameraCurrentlyFollowingMockedLocation: Boolean,
     crosshairsColor: Color
 ) {
+    val focusManager = LocalFocusManager.current
     val scope = rememberCoroutineScope()
 
     Box(
@@ -105,6 +109,7 @@ fun MapControlButtons(
             ) {
                 SmallFloatingActionButton(
                     onClick = {
+                        focusManager.clearFocus()
                         navController.navigate(Screen.Settings.route)
                     },
                     modifier = Modifier
@@ -153,6 +158,8 @@ fun MapControlButtons(
                 onAddCrosshairsPoint = {
                     onAddCrosshairsPoint()
                 },
+                setShowSearch = setShowSearch,
+                isShowingSearch = isShowingSearch,
                 controlsAreExpanded = controlsAreExpanded,
                 setControlsAreExpanded = {
                     setControlsAreExpanded(it)
@@ -206,6 +213,8 @@ fun MapControlButtonsPreview() {
                 isPaused = false,
                 onAddCrosshairsPoint = { },
                 onUserLocationFocus = { },
+                setShowSearch = { },
+                isShowingSearch = false,
                 isCameraCurrentlyFollowingMockedLocation = false,
                 crosshairsColor = MaterialTheme.colorScheme.onSurface
             )

@@ -2,8 +2,10 @@ package com.drew654.mocklocations.presentation.map_screen
 
 import android.Manifest
 import android.os.Build
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -34,10 +37,12 @@ import com.drew654.mocklocations.domain.model.getEnabledActions
 import com.drew654.mocklocations.domain.model.getVisibleActions
 import com.drew654.mocklocations.domain.model.isGranted
 import com.drew654.mocklocations.presentation.MockLocationsViewModel
+import com.drew654.mocklocations.presentation.NoRippleInteractionSource
 import com.drew654.mocklocations.presentation.map_screen.components.ExpandedControls
 import com.drew654.mocklocations.presentation.map_screen.components.MapControlButtons
 import com.drew654.mocklocations.presentation.map_screen.components.PermissionsDialog
 import com.drew654.mocklocations.presentation.map_screen.components.SavedRoutesDialog
+import com.drew654.mocklocations.presentation.map_screen.components.SearchAddressSection
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
@@ -62,6 +67,7 @@ fun MapScreen(
     navController: NavController
 ) {
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
     val systemInDarkTheme = isSystemInDarkTheme()
     val scope = rememberCoroutineScope()
     val mockControlState by viewModel.mockControlState.collectAsState()
@@ -102,6 +108,7 @@ fun MapScreen(
     var isShowingSavedRoutesDialog by rememberSaveable { mutableStateOf(false) }
     val savedRoutes by viewModel.savedRoutes.collectAsState()
     val controlsAreExpanded by viewModel.controlsAreExpanded.collectAsState()
+    var isShowingSearch by rememberSaveable { mutableStateOf(false) }
     val permissionsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { result ->
@@ -117,6 +124,7 @@ fun MapScreen(
     val isCameraFollowingMockedLocation by viewModel.isCameraFollowingMockedLocation.collectAsState()
     val isCameraCurrentlyFollowingMockedLocation by viewModel.isCameraCurrentlyFollowingMockedLocation.collectAsState()
     val currentMockedLocation by viewModel.currentMockedLocation.collectAsState()
+    val shouldFocusSearchBar by viewModel.shouldFocusSearchBar.collectAsState()
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -211,8 +219,34 @@ fun MapScreen(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .clickable(
+                interactionSource = NoRippleInteractionSource(),
+                indication = null
+            ) {
+                focusManager.clearFocus()
+            }
+    ) {
         Column {
+            if (isShowingSearch) {
+                SearchAddressSection(
+                    onSearchAddress = { address ->
+                        scope.launch {
+                            val latLng = viewModel.geocodeAddress(context, address)
+                            if (latLng == null) {
+                                Toast.makeText(context, "Address not found", Toast.LENGTH_SHORT).show()
+                            } else {
+                                cameraPositionState.animate(
+                                    CameraUpdateFactory.newLatLngZoom(latLng, 15f)
+                                )
+                            }
+                        }
+                    },
+                    shouldFocusSearchBar = shouldFocusSearchBar
+                )
+            }
             Box(
                 modifier = Modifier.weight(1f)
             ) {
@@ -221,7 +255,11 @@ fun MapScreen(
                     cameraPositionState = cameraPositionState,
                     properties = mapProperties,
                     uiSettings = mapUiSettings,
+                    onMapClick = {
+                        focusManager.clearFocus()
+                    },
                     onMapLongClick = {
+                        focusManager.clearFocus()
                         if (MockControlAction.ADD_POINT in mockControlState.getEnabledActions()) {
                             scope.launch {
                                 viewModel.pushPoint(it)
@@ -367,6 +405,11 @@ fun MapScreen(
                             }
                         }
                     },
+                    setShowSearch = {
+                        viewModel.setShouldFocusSearchBar(it)
+                        isShowingSearch = it
+                    },
+                    isShowingSearch = isShowingSearch,
                     isCameraCurrentlyFollowingMockedLocation = isCameraCurrentlyFollowingMockedLocation,
                     crosshairsColor = mapStyle?.polyLineStroke ?: MaterialTheme.colorScheme.onBackground
                 )

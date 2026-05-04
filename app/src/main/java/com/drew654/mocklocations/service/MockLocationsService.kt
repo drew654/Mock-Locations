@@ -600,6 +600,12 @@ class MockLocationService : Service() {
 
         if (isClearRouteOnStopState.value) {
             sendBroadcast(Intent(ACTION_ROUTE_FINISHED).setPackage(packageName))
+        } else {
+            settingsManager.setMockControlState(settingsManager.mockControlStateFlow.first().copy(
+                isMocking = false,
+                isPaused = false,
+                isWaitingAtEndOfRoute = false
+            ))
         }
 
         stopForeground(STOP_FOREGROUND_REMOVE)

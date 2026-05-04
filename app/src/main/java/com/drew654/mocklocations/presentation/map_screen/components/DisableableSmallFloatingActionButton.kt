@@ -6,6 +6,7 @@ import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import com.drew654.mocklocations.presentation.NoRippleInteractionSource
 
 @Composable
@@ -15,8 +16,11 @@ fun DisableableSmallFloatingActionButton(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
+    val focusManager = LocalFocusManager.current
+
     SmallFloatingActionButton(
         onClick = {
+            focusManager.clearFocus()
             if (enabled) {
                 onClick()
             }

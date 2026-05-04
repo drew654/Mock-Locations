@@ -6,6 +6,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import com.drew654.mocklocations.presentation.NoRippleInteractionSource
 
 @Composable
@@ -15,11 +16,14 @@ fun DisableableFloatingActionButton(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
+    val focusManager = LocalFocusManager.current
+
     FloatingActionButton(
         onClick = {
             if (enabled) {
                 onClick()
             }
+            focusManager.clearFocus()
         },
         containerColor = if (enabled)
             MaterialTheme.colorScheme.primaryContainer
