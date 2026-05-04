@@ -40,7 +40,7 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
                 val mutablePrefs = currentData.toMutablePreferences()
                 val oldVersion = currentData[SettingsManager.VERSION_CODE] ?: 0
 
-                if (oldVersion < 13) {
+                if (oldVersion < 15) {
                     val oldSavedRoutesJson = currentData[SettingsManager.SAVED_ROUTES_JSON] ?: ""
                     if (oldSavedRoutesJson.isEmpty()) {
                         mutablePrefs.remove(SettingsManager.SAVED_ROUTES_JSON)
