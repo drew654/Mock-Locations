@@ -19,9 +19,7 @@ fun SavedRoutesButton(
     onSaveLocationTarget: () -> Unit
 ) {
     DisableableSmallFloatingActionButton(
-        onClick = {
-            onSaveLocationTarget()
-        },
+        onClick = { onSaveLocationTarget() },
         enabled = true
     ) {
         Icon(

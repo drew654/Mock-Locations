@@ -57,9 +57,7 @@ fun SearchAddressSection(
     ) {
         OutlinedTextField(
             value = address,
-            onValueChange = {
-                address = it
-            },
+            onValueChange = { address = it },
             label = { Text("Search address") },
             leadingIcon = {
                 Icon(
@@ -70,9 +68,7 @@ fun SearchAddressSection(
             trailingIcon = {
                 if (address.text.isNotBlank()) {
                     IconButton(
-                        onClick = {
-                            address = TextFieldValue("")
-                        }
+                        onClick = { address = TextFieldValue("") }
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.baseline_clear_24),

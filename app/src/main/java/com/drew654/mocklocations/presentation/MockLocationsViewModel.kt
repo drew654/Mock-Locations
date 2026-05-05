@@ -382,7 +382,6 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         context: Context,
         address: String
     ): LatLng? = suspendCancellableCoroutine { continuation ->
-
         val geocoder = Geocoder(context)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
