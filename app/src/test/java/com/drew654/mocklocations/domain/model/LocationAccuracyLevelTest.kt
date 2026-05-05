@@ -5,7 +5,7 @@ import org.junit.Test
 
 class LocationAccuracyLevelTest {
     @Test
-    fun `getLocationAccuracyLevelByName with valid names returns correct level`() {
+    fun `getLocationAccuracyLevelByName with valid name returns correct level`() {
         assertEquals(LocationAccuracyLevel.Perfect, getLocationAccuracyLevelByName("Perfect"))
         assertEquals(LocationAccuracyLevel.High, getLocationAccuracyLevelByName("High"))
         assertEquals(LocationAccuracyLevel.Medium, getLocationAccuracyLevelByName("Medium"))
