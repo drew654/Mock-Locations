@@ -155,7 +155,7 @@ The speed unit for mocking a route and range for the slider in the expanded cont
 <br>
 
 # Export and import settings
-From the main settings screen, there are options to export or import settings. This makes it easy for testing the same routes and keeping your preferences across multiple devices or between device resets. You have the option to export just the settings, just the routes, or both, as a JSON file. See an example JSON export file [here](docs/mock_locations_2026_04_10_13_32_57.json).
+From the main settings screen, there are options to export or import settings. This makes it easy for testing the same routes and keeping your preferences across multiple devices or between device resets. You have the option to export just the settings, just the routes, or both, as a JSON file. See an example JSON export file [here](docs/mock_locations_2026_05_04_19_12_38.json).
 
 <img src="docs/images/screenshots/export_screen_settings_and_routes.png" alt="Export screen with settings and routes selected" width="400">
 <img src="docs/images/screenshots/import_screen_settings_and_routes.png" alt="Import screen with settings and routes selected" width="400">
