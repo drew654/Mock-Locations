@@ -13,7 +13,7 @@ class LocationTargetAdapter : JsonSerializer<LocationTarget>, JsonDeserializer<L
         src: LocationTarget?,
         typeOfSrc: Type?,
         context: JsonSerializationContext?
-    ): JsonElement? {
+    ): JsonElement {
         val jsonObject = JsonObject()
         val typeName = when (src) {
             is LocationTarget.SinglePoint -> "SinglePoint"

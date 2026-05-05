@@ -13,7 +13,7 @@ class LegacyLocationTarget14Adapter : JsonSerializer<LegacyLocationTarget14>, Js
         src: LegacyLocationTarget14?,
         typeOfSrc: Type?,
         context: JsonSerializationContext?
-    ): JsonElement? {
+    ): JsonElement {
         val jsonObject = JsonObject()
         val typeName = when (src) {
             is LegacyLocationTarget14.SinglePoint -> "SinglePoint"
