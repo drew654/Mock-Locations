@@ -140,7 +140,7 @@ class MockLocationService : Service() {
                     when (locationTarget) {
                         is LocationTarget.Empty -> stopMocking()
                         is LocationTarget.SinglePoint -> mockLocationSinglePoint(locationTarget.point)
-                        else -> mockLocationStraightLineRoute(locationTarget)
+                        else -> mockLocationRoute(locationTarget)
                     }
                 }
             }
@@ -183,9 +183,9 @@ class MockLocationService : Service() {
                     }
                     if (locationTarget.isRoute()) {
                         if (restoreMockingPoint == null) {
-                            mockLocationStraightLineRoute(locationTarget)
+                            mockLocationRoute(locationTarget)
                         } else {
-                            restoreMockLocationStraightLineRoute(locationTarget, restoreMockingPoint)
+                            restoreMockLocationRoute(locationTarget, restoreMockingPoint)
                         }
                     } else {
                         stopMocking()
@@ -304,55 +304,89 @@ class MockLocationService : Service() {
         }
     }
 
-    private fun mockLocationStraightLineRoute(locationTarget: LocationTarget) {
-        val routePoints = buildRoutePoints(locationTarget.points)
+    private fun mockLocationRoute(locationTarget: LocationTarget) {
+        val points = locationTarget.getAllPoints()
 
         startRouteMocking(
-            routePoints = routePoints,
-            startIndex = 0,
-            isStartedPaused = false,
+            anchorPoints = points,
+            startSegmentIndex = 0,
+            startDistanceInSegment = 0.0,
             isStartedWaitingAtEndOfRoute = false,
             startedMessage = "Route Mocking Started"
         )
     }
 
-    private fun restoreMockLocationStraightLineRoute(
-        locationTarget: LocationTarget,
-        restorePoint: RoutePoint
-    ) {
-        val routePoints = buildRoutePoints(locationTarget.points)
-        val startIndex = routePoints.closestIndexTo(restorePoint)
+    private fun restoreMockLocationRoute(locationTarget: LocationTarget, restorePoint: RoutePoint) {
+        val points = locationTarget.getAllPoints()
+        if (points.size < 2) return
+
+        val (segmentIndex, distanceInSegment) = findProgressOnRoute(points, restorePoint.latLng)
 
         startRouteMocking(
-            routePoints = routePoints,
-            startIndex = startIndex,
-            isStartedPaused = mockControlState.value.isPaused,
+            anchorPoints = points,
+            startSegmentIndex = segmentIndex,
+            startDistanceInSegment = distanceInSegment,
             isStartedWaitingAtEndOfRoute = mockControlState.value.isWaitingAtEndOfRoute,
             startedMessage = "Route Mocking Restored"
         )
     }
 
-    private fun List<RoutePoint>.closestIndexTo(target: RoutePoint): Int =
-        indexOfFirst {
-            it.latLng == target.latLng
-        }.takeIf { it != -1 }
-            ?: indices.minByOrNull { i ->
-                val rp = this[i]
-                val results = FloatArray(1)
-                Location.distanceBetween(
-                    rp.latLng.latitude,
-                    rp.latLng.longitude,
-                    target.latLng.latitude,
-                    target.latLng.longitude,
-                    results
-                )
-                results[0]
-            } ?: 0
+    private fun interpolate(start: LatLng, end: LatLng, fraction: Double): LatLng {
+        val lat = start.latitude + (end.latitude - start.latitude) * fraction
+        val lng = start.longitude + (end.longitude - start.longitude) * fraction
+        return LatLng(lat, lng)
+    }
+
+    private fun findProgressOnRoute(
+        anchorPoints: List<LatLng>,
+        restorePoint: LatLng
+    ): Pair<Int, Double> {
+        var closestSegmentIndex = 0
+        var closestDistanceInSegment = 0.0
+        var minTotalDistanceToLine = Double.MAX_VALUE
+
+        for (i in 0 until anchorPoints.size - 1) {
+            val p1 = anchorPoints[i]
+            val p2 = anchorPoints[i + 1]
+
+            val results = FloatArray(3)
+            Location.distanceBetween(p1.latitude, p1.longitude, p2.latitude, p2.longitude, results)
+            val segmentLength = results[0].toDouble()
+
+            Location.distanceBetween(
+                p1.latitude,
+                p1.longitude,
+                restorePoint.latitude,
+                restorePoint.longitude,
+                results
+            )
+            val distanceToStart = results[0].toDouble()
+
+            Location.distanceBetween(
+                p2.latitude,
+                p2.longitude,
+                restorePoint.latitude,
+                restorePoint.longitude,
+                results
+            )
+            val distanceToEnd = results[0].toDouble()
+
+            val deviation = (distanceToStart + distanceToEnd) - segmentLength
+
+            if (deviation < minTotalDistanceToLine) {
+                minTotalDistanceToLine = deviation
+                closestSegmentIndex = i
+                closestDistanceInSegment = distanceToStart
+            }
+        }
+
+        return Pair(closestSegmentIndex, closestDistanceInSegment)
+    }
 
     private fun startRouteMocking(
-        routePoints: List<RoutePoint>,
-        startIndex: Int,
-        isStartedPaused: Boolean,
+        anchorPoints: List<LatLng>,
+        startSegmentIndex: Int,
+        startDistanceInSegment: Double,
         isStartedWaitingAtEndOfRoute: Boolean,
         startedMessage: String
     ) {
@@ -368,102 +402,84 @@ class MockLocationService : Service() {
                     Toast.LENGTH_SHORT
                 ).show()
 
-                var currentSpeedMetersPerSec = settingsManager.speedUnitValueFlow.first().toMetersPerSecond()
+                var currentSpeedMetersPerSec =
+                    settingsManager.speedUnitValueFlow.first().toMetersPerSecond()
                 launch {
-                    settingsManager.speedUnitValueFlow.collect { currentSpeedMetersPerSec = it.toMetersPerSecond() }
+                    settingsManager.speedUnitValueFlow.collect {
+                        currentSpeedMetersPerSec = it.toMetersPerSecond()
+                    }
                 }
 
-                val metersPerPoint = 1.0
-
-                var index = startIndex
-                var distanceAccumulator = 0.0
-
-                if (isStartedPaused) {
-                    val routePoint = routePoints.getOrNull(index) ?: return@launch
-                    broadcastLocation(
-                        latLng = routePoint.latLng,
-                        bearing = routePoint.bearing,
-                        speed = 0f
-                    )
-                    delay(locationUpdateDelayState.value)
-                }
-
+                var segmentIndex = startSegmentIndex
+                var distanceInSegment = startDistanceInSegment
                 var pausedBaseLocation: Location? = null
 
                 if (!isStartedWaitingAtEndOfRoute) {
-                    while (index < routePoints.size && isActive) {
-                        if (mockControlState.value.isPaused) {
-                            if (pausedBaseLocation == null) {
-                                pausedBaseLocation = lastBroadcastLocation
-                            }
+                    while (segmentIndex < anchorPoints.size - 1 && isActive) {
+                        val start = anchorPoints[segmentIndex]
+                        val end = anchorPoints[segmentIndex + 1]
 
-                            if (pausedBaseLocation != null) {
-                                broadcastLocation(
-                                    latLng = pausedBaseLocation.toLatLng(),
-                                    bearing = pausedBaseLocation.bearing,
-                                    speed = 0f
-                                )
-                            }
-
-                            delay(locationUpdateDelayState.value)
-                            updateNoiseSmooth()
-                            continue
-                        } else {
-                            pausedBaseLocation = null
-                        }
-
-                        val routePoint = routePoints.getOrNull(index) ?: break
-
-                        broadcastLocation(
-                            latLng = routePoint.latLng,
-                            bearing = routePoint.bearing,
-                            speed = currentSpeedMetersPerSec.toFloat()
+                        val results = FloatArray(3)
+                        Location.distanceBetween(
+                            start.latitude,
+                            start.longitude,
+                            end.latitude,
+                            end.longitude,
+                            results
                         )
+                        val segmentLength = results[0].toDouble()
+                        val bearing = results[1]
 
-                        val updateIntervalMs = locationUpdateDelayState.value
-                        delay(updateIntervalMs)
-                        updateNoiseSmooth()
+                        while (distanceInSegment < segmentLength && isActive) {
+                            val updateIntervalMs = locationUpdateDelayState.value
 
-                        distanceAccumulator += currentSpeedMetersPerSec * (updateIntervalMs / 1000.0)
-                        while (distanceAccumulator >= metersPerPoint && index < routePoints.size) {
-                            distanceAccumulator -= metersPerPoint
-                            index++
-                            if (index >= routePoints.size - 1) {
-                                index = routePoints.size - 1
+                            if (mockControlState.value.isPaused) {
+                                if (pausedBaseLocation == null) {
+                                    pausedBaseLocation = lastBroadcastLocation
+                                }
 
-                                val finalPoint = routePoints[index]
-                                broadcastLocation(
-                                    latLng = finalPoint.latLng,
-                                    bearing = finalPoint.bearing,
-                                    speed = 0f
-                                )
+                                pausedBaseLocation?.let { base ->
+                                    broadcastLocation(base.toLatLng(), base.bearing, 0f)
+                                }
 
                                 delay(updateIntervalMs)
-                                index = routePoints.size
-                                break
+                                updateNoiseSmooth()
+                                continue
+                            } else {
+                                pausedBaseLocation = null
                             }
+
+                            val fraction = (distanceInSegment / segmentLength).coerceIn(0.0, 1.0)
+                            val currentPosition = interpolate(start, end, fraction)
+
+                            broadcastLocation(
+                                currentPosition,
+                                bearing,
+                                currentSpeedMetersPerSec.toFloat()
+                            )
+
+                            delay(updateIntervalMs)
+                            updateNoiseSmooth()
+
+                            distanceInSegment += currentSpeedMetersPerSec * (updateIntervalMs / 1000.0)
+                        }
+
+                        if (isActive) {
+                            distanceInSegment -= segmentLength
+                            segmentIndex++
                         }
                     }
                 }
 
                 if (settingsManager.isGoingToWaitAtRouteFinishFlow.first()) {
-                    settingsManager.setMockControlState(settingsManager.mockControlStateFlow.first().copy(
-                        isWaitingAtEndOfRoute = true
-                    ))
+                    settingsManager.setMockControlState(
+                        settingsManager.mockControlStateFlow.first()
+                            .copy(isWaitingAtEndOfRoute = true)
+                    )
 
+                    val finalPoint = anchorPoints.last()
                     while (mockControlState.value.isMocking) {
-                        if (pausedBaseLocation == null) {
-                            pausedBaseLocation = lastBroadcastLocation
-                        }
-
-                        if (pausedBaseLocation != null) {
-                            broadcastLocation(
-                                latLng = pausedBaseLocation.toLatLng(),
-                                bearing = pausedBaseLocation.bearing,
-                                speed = 0f
-                            )
-                        }
-
+                        broadcastLocation(finalPoint, lastBroadcastLocation?.bearing ?: 0f, 0f)
                         delay(locationUpdateDelayState.value)
                         updateNoiseSmooth()
                     }
@@ -517,41 +533,6 @@ class MockLocationService : Service() {
 
         lastBroadcastLocation = mockLocation
         settingsManager.setCurrentMockedLocation(mockLocation.toRoutePoint())
-    }
-
-    private fun buildRoutePoints(
-        points: List<LatLng>,
-        stepMeters: Double = 1.0
-    ): List<RoutePoint> {
-        if (points.isEmpty()) return emptyList()
-        val result = mutableListOf<RoutePoint>()
-
-        for (i in 0 until points.size - 1) {
-            val start = points[i]
-            val end = points[i + 1]
-
-            val results = FloatArray(3)
-            Location.distanceBetween(start.latitude, start.longitude, end.latitude, end.longitude, results)
-
-            val totalDistance = results[0]
-            val bearing = results[1]
-
-            var distance = 0.0
-            while (distance < totalDistance) {
-                val fraction = distance / totalDistance
-                val lat = start.latitude + (end.latitude - start.latitude) * fraction
-                val lng = start.longitude + (end.longitude - start.longitude) * fraction
-
-                result += RoutePoint(latLng = LatLng(lat, lng), bearing = bearing)
-                distance += stepMeters
-            }
-        }
-
-        val finalPoint = points.last()
-        val finalBearing = result.lastOrNull()?.bearing ?: 0.0f
-        result += RoutePoint(latLng = finalPoint, bearing = finalBearing)
-
-        return result
     }
 
     private fun setUpTestProvider() {
@@ -619,6 +600,12 @@ class MockLocationService : Service() {
 
         if (isClearRouteOnStopState.value) {
             sendBroadcast(Intent(ACTION_ROUTE_FINISHED).setPackage(packageName))
+        } else {
+            settingsManager.setMockControlState(settingsManager.mockControlStateFlow.first().copy(
+                isMocking = false,
+                isPaused = false,
+                isWaitingAtEndOfRoute = false
+            ))
         }
 
         stopForeground(STOP_FOREGROUND_REMOVE)

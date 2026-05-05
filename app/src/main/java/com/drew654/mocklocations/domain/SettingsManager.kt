@@ -1,6 +1,7 @@
 package com.drew654.mocklocations.domain
 
 import android.content.Context
+import androidx.datastore.core.DataMigration
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
@@ -9,27 +10,74 @@ import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.drew654.mocklocations.BuildConfig
+import com.drew654.mocklocations.domain.legacy.v14.LegacyLocationTarget14
 import com.drew654.mocklocations.domain.model.LocationAccuracyLevel
 import com.drew654.mocklocations.domain.model.LocationTarget
-import com.drew654.mocklocations.domain.model.LocationTargetAdapter
 import com.drew654.mocklocations.domain.model.MapStyle
 import com.drew654.mocklocations.domain.model.MockControlState
 import com.drew654.mocklocations.domain.model.RoutePoint
 import com.drew654.mocklocations.domain.model.SpeedUnit
-import com.drew654.mocklocations.domain.model.SpeedUnitTypeAdapter
 import com.drew654.mocklocations.domain.model.SpeedUnitValue
 import com.drew654.mocklocations.domain.model.getLocationAccuracyLevelByName
 import com.drew654.mocklocations.domain.model.getMapStyleByName
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
+import com.drew654.mocklocations.util.JsonUtils
+import com.drew654.mocklocations.util.MigrationUtils
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
+val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
+    name = "settings",
+    produceMigrations = {
+        listOf(object : DataMigration<Preferences> {
+            override suspend fun shouldMigrate(currentData: Preferences): Boolean {
+                val storedVersion = currentData[SettingsManager.VERSION_CODE] ?: 0
+                return storedVersion < BuildConfig.VERSION_CODE
+            }
+
+            override suspend fun migrate(currentData: Preferences): Preferences {
+                val mutablePrefs = currentData.toMutablePreferences()
+                val oldVersion = currentData[SettingsManager.VERSION_CODE] ?: 0
+
+                if (oldVersion < 15) {
+                    val oldSavedRoutesJson = currentData[SettingsManager.SAVED_ROUTES_JSON] ?: ""
+                    if (oldSavedRoutesJson.isEmpty()) {
+                        mutablePrefs.remove(SettingsManager.SAVED_ROUTES_JSON)
+                    } else {
+                        try {
+                            val gson = JsonUtils.gson
+
+                            val legacyType =
+                                object : TypeToken<List<LegacyLocationTarget14.SavedRoute>>() {}.type
+                            val legacyList: List<LegacyLocationTarget14.SavedRoute> =
+                                gson.fromJson(oldSavedRoutesJson, legacyType)
+
+                            val newList = legacyList.map { legacyTarget ->
+                                MigrationUtils.migrateSavedRouteTo15(legacyTarget)
+                            }
+
+                            mutablePrefs[SettingsManager.SAVED_ROUTES_JSON] = gson.toJson(newList)
+                            mutablePrefs.remove(SettingsManager.MOCK_CONTROL_STATE_JSON)
+                        } catch (e: Exception) {
+                            println("Migration failed: ${e.message}")
+                        }
+                    }
+                }
+
+                mutablePrefs[SettingsManager.VERSION_CODE] = BuildConfig.VERSION_CODE
+                return mutablePrefs.toPreferences()
+            }
+
+            override suspend fun cleanUp() {}
+        })
+    }
+)
 
 class SettingsManager(private val context: Context) {
     companion object {
+        val VERSION_CODE = intPreferencesKey("version_code")
+
         // Affects UI
         val MOCK_CONTROL_STATE_JSON = stringPreferencesKey("mock_control_state_json")
 
@@ -40,6 +88,7 @@ class SettingsManager(private val context: Context) {
         val SAVED_ROUTES_JSON = stringPreferencesKey("saved_routes_json")
 
         // User preferences
+        val BUILD_ROUTE_ON_ROADS = booleanPreferencesKey("build_route_on_roads")
         val CLEAR_ROUTE_ON_STOP = booleanPreferencesKey("clear_route_on_stop")
         val MAP_STYLE = stringPreferencesKey("map_style")
         val SPEED_UNIT_VALUE_JSON = stringPreferencesKey("speed_unit_value_json")
@@ -51,14 +100,13 @@ class SettingsManager(private val context: Context) {
         val LOCATION_ACCURACY_LEVEL = stringPreferencesKey("location_accuracy_level")
         val LOCATION_UPDATE_DELAY = floatPreferencesKey("location_update_delay")
     }
-    val gson: Gson = GsonBuilder()
-        .registerTypeAdapter(LocationTarget::class.java, LocationTargetAdapter())
-        .registerTypeAdapter(SpeedUnit::class.java, SpeedUnitTypeAdapter())
-        .create()
+
+    val gson = JsonUtils.gson
 
     suspend fun resetToDefault() {
         setIsUsingCrosshairs(true)
         context.dataStore.edit { preferences ->
+            preferences.remove(BUILD_ROUTE_ON_ROADS)
             preferences.remove(CLEAR_ROUTE_ON_STOP)
             preferences.remove(MAP_STYLE)
             preferences.remove(SPEED_UNIT_VALUE_JSON)
@@ -106,8 +154,18 @@ class SettingsManager(private val context: Context) {
         }
     }
 
+    val buildRouteOnRoadsFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[BUILD_ROUTE_ON_ROADS] ?: false
+    }
+
+    suspend fun setBuildRouteOnRoads(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[BUILD_ROUTE_ON_ROADS] = enabled
+        }
+    }
+
     val clearRouteOnStopFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
-        preferences[CLEAR_ROUTE_ON_STOP] ?: true
+        preferences[CLEAR_ROUTE_ON_STOP] ?: false
     }
 
     suspend fun setClearRouteOnStop(enabled: Boolean) {
@@ -171,7 +229,7 @@ class SettingsManager(private val context: Context) {
                 val currentList =
                     gson.fromJson<MutableList<LocationTarget.SavedRoute>>(existingJson, type)
 
-                currentList.removeAll { it.name == route.name && it.points == route.points }
+                currentList.removeAll { it.name == route.name && it.routeSegments == route.routeSegments }
 
                 preferences[SAVED_ROUTES_JSON] = gson.toJson(currentList)
             }

@@ -51,6 +51,7 @@ fun SettingsScreen(
     navController: NavController
 ) {
     val mockControlState by viewModel.mockControlState.collectAsState()
+    val isBuildRouteOnRoads by viewModel.isBuildRoutesOnRoad.collectAsState()
     val isUsingCrosshairs = mockControlState.isUsingCrosshairs
     val clearPointsOnStop by viewModel.clearRouteOnStop.collectAsState()
     var isShowingMapStylesDialog by rememberSaveable { mutableStateOf(false) }
@@ -93,6 +94,7 @@ fun SettingsScreen(
                 navigationIcon = {
                     IconButton(
                         onClick = {
+                            viewModel.setShouldFocusSearchBar(false)
                             navController.popBackStack()
                         }
                     ) {
@@ -112,6 +114,13 @@ fun SettingsScreen(
                 .padding(innerPadding)
                 .verticalScroll(scrollState)
         ) {
+            SwitchRow(
+                label = "Build route on roads",
+                checked = isBuildRouteOnRoads,
+                onCheckedChange = {
+                    viewModel.setBuildRouteOnRoads(it)
+                }
+            )
             SwitchRow(
                 label = "Use crosshairs",
                 checked = isUsingCrosshairs,

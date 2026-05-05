@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.domain.model.MockControlAction
@@ -28,14 +29,17 @@ fun MockLocationControls(
     onClearLocationTarget: () -> Unit,
     onStart: () -> Unit,
     onStop: () -> Unit,
-    onPopPoint: () -> Unit,
+    onPopRouteSegment: () -> Unit,
     onTogglePause: () -> Unit,
     onSaveLocationTarget: () -> Unit,
     onAddCrosshairsPoint: () -> Unit,
+    setShowSearch: (Boolean) -> Unit,
+    isShowingSearch: Boolean,
     controlsAreExpanded: Boolean,
     setControlsAreExpanded: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val focusManager = LocalFocusManager.current
     val minWidth = 384.dp
     val scrollState = rememberScrollState()
 
@@ -54,7 +58,9 @@ fun MockLocationControls(
             enabledMockControlActions = enabledMockControlActions,
             onClearLocationTarget = onClearLocationTarget,
             onSaveLocationTarget = onSaveLocationTarget,
-            onPopPoint = onPopPoint,
+            onPopRouteSegment = onPopRouteSegment,
+            setShowSearch = setShowSearch,
+            isShowingSearch = isShowingSearch,
             scrollState = scrollState,
             modifier = Modifier.weight(1f, fill = false)
         )
@@ -93,6 +99,7 @@ fun MockLocationControls(
 
                     ExpandControlsButton(
                         onClick = {
+                            focusManager.clearFocus()
                             setControlsAreExpanded(!controlsAreExpanded)
                         },
                         controlsAreExpanded = controlsAreExpanded
@@ -138,10 +145,12 @@ private fun MockLocationControlsPreview1() {
                 onClearLocationTarget = { },
                 onStart = { },
                 onStop = { },
-                onPopPoint = { },
+                onPopRouteSegment = { },
                 onTogglePause = { },
                 onSaveLocationTarget = { },
                 onAddCrosshairsPoint = { },
+                setShowSearch = { },
+                isShowingSearch = false,
                 controlsAreExpanded = false,
                 setControlsAreExpanded = { }
             )
@@ -174,10 +183,12 @@ private fun MockLocationControlsPreview2() {
                 onClearLocationTarget = { },
                 onStart = { },
                 onStop = { },
-                onPopPoint = { },
+                onPopRouteSegment = { },
                 onTogglePause = { },
                 onSaveLocationTarget = { },
                 onAddCrosshairsPoint = { },
+                setShowSearch = { },
+                isShowingSearch = false,
                 controlsAreExpanded = false,
                 setControlsAreExpanded = { }
             )
@@ -212,10 +223,12 @@ private fun MockLocationControlsPreviewNarrow() {
                 onClearLocationTarget = { },
                 onStart = { },
                 onStop = { },
-                onPopPoint = { },
+                onPopRouteSegment = { },
                 onTogglePause = { },
                 onSaveLocationTarget = { },
                 onAddCrosshairsPoint = { },
+                setShowSearch = { },
+                isShowingSearch = false,
                 controlsAreExpanded = false,
                 setControlsAreExpanded = { }
             )

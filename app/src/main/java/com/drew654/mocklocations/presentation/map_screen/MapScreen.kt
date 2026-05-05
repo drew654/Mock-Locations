@@ -2,8 +2,10 @@ package com.drew654.mocklocations.presentation.map_screen
 
 import android.Manifest
 import android.os.Build
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,21 +24,25 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import com.drew654.mocklocations.R
 import com.drew654.mocklocations.domain.model.LocationTarget
+import com.drew654.mocklocations.domain.model.MockControlAction
 import com.drew654.mocklocations.domain.model.Permission
 import com.drew654.mocklocations.domain.model.getEnabledActions
 import com.drew654.mocklocations.domain.model.getVisibleActions
 import com.drew654.mocklocations.domain.model.isGranted
 import com.drew654.mocklocations.presentation.MockLocationsViewModel
+import com.drew654.mocklocations.presentation.NoRippleInteractionSource
 import com.drew654.mocklocations.presentation.map_screen.components.ExpandedControls
 import com.drew654.mocklocations.presentation.map_screen.components.MapControlButtons
 import com.drew654.mocklocations.presentation.map_screen.components.PermissionsDialog
 import com.drew654.mocklocations.presentation.map_screen.components.SavedRoutesDialog
+import com.drew654.mocklocations.presentation.map_screen.components.SearchAddressSection
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
@@ -47,6 +53,7 @@ import com.google.maps.android.compose.CameraMoveStartedReason
 import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapType
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
@@ -60,6 +67,7 @@ fun MapScreen(
     navController: NavController
 ) {
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
     val systemInDarkTheme = isSystemInDarkTheme()
     val scope = rememberCoroutineScope()
     val mockControlState by viewModel.mockControlState.collectAsState()
@@ -84,7 +92,8 @@ fun MapScreen(
                 } else {
                     R.raw.map_style_standard
                 }
-        )
+        ),
+        mapType = mapStyle?.mapType ?: MapType.NORMAL
     )
     val mapUiSettings = MapUiSettings(
         compassEnabled = false,
@@ -99,6 +108,7 @@ fun MapScreen(
     var isShowingSavedRoutesDialog by rememberSaveable { mutableStateOf(false) }
     val savedRoutes by viewModel.savedRoutes.collectAsState()
     val controlsAreExpanded by viewModel.controlsAreExpanded.collectAsState()
+    var isShowingSearch by rememberSaveable { mutableStateOf(false) }
     val permissionsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { result ->
@@ -114,6 +124,7 @@ fun MapScreen(
     val isCameraFollowingMockedLocation by viewModel.isCameraFollowingMockedLocation.collectAsState()
     val isCameraCurrentlyFollowingMockedLocation by viewModel.isCameraCurrentlyFollowingMockedLocation.collectAsState()
     val currentMockedLocation by viewModel.currentMockedLocation.collectAsState()
+    val shouldFocusSearchBar by viewModel.shouldFocusSearchBar.collectAsState()
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -208,8 +219,34 @@ fun MapScreen(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .clickable(
+                interactionSource = NoRippleInteractionSource(),
+                indication = null
+            ) {
+                focusManager.clearFocus()
+            }
+    ) {
         Column {
+            if (isShowingSearch) {
+                SearchAddressSection(
+                    onSearchAddress = { address ->
+                        scope.launch {
+                            val latLng = viewModel.geocodeAddress(context, address)
+                            if (latLng == null) {
+                                Toast.makeText(context, "Address not found", Toast.LENGTH_SHORT).show()
+                            } else {
+                                cameraPositionState.animate(
+                                    CameraUpdateFactory.newLatLngZoom(latLng, 15f)
+                                )
+                            }
+                        }
+                    },
+                    shouldFocusSearchBar = shouldFocusSearchBar
+                )
+            }
             Box(
                 modifier = Modifier.weight(1f)
             ) {
@@ -218,17 +255,21 @@ fun MapScreen(
                     cameraPositionState = cameraPositionState,
                     properties = mapProperties,
                     uiSettings = mapUiSettings,
+                    onMapClick = {
+                        focusManager.clearFocus()
+                    },
                     onMapLongClick = {
-                        if (!isMocking) {
+                        focusManager.clearFocus()
+                        if (MockControlAction.ADD_POINT in mockControlState.getEnabledActions()) {
                             scope.launch {
-                                viewModel.pushPoint(it)
+                                viewModel.pushRouteSegment(it)
                             }
                         }
                     }
                 ) {
                     if (locationTarget !is LocationTarget.Empty) {
                         Polyline(
-                            points = locationTarget.points.map {
+                            points = locationTarget.getAllPoints().map {
                                 LatLng(
                                     it.latitude,
                                     it.longitude
@@ -239,21 +280,21 @@ fun MapScreen(
                         )
                     }
 
-                    locationTarget.points.forEachIndexed { index, point ->
+                    locationTarget.routeSegments.forEachIndexed { index, routeSegment ->
                         Marker(
                             state = MarkerState(
                                 position = LatLng(
-                                    point.latitude,
-                                    point.longitude
+                                    routeSegment.getMapMarkerPoint().latitude,
+                                    routeSegment.getMapMarkerPoint().longitude
                                 )
                             ),
                             icon = BitmapDescriptorFactory.defaultMarker(
                                 getMarkerHue(
                                     index,
-                                    locationTarget.points.size
+                                    locationTarget.routeSegments.size
                                 )
                             ),
-                            snippet = "Lat: ${point.latitude}, Lng: ${point.longitude}",
+                            snippet = "Lat: ${routeSegment.getMapMarkerPoint().latitude}, Lng: ${routeSegment.getMapMarkerPoint().longitude}",
                             title = "Route Point",
                             onClick = {
                                 true
@@ -316,8 +357,8 @@ fun MapScreen(
                     onStop = {
                         viewModel.stopMockLocation()
                     },
-                    onPopPoint = {
-                        viewModel.popPoint()
+                    onPopRouteSegment = {
+                        viewModel.popRouteSegment()
                     },
                     onTogglePause = {
                         viewModel.togglePause()
@@ -331,7 +372,7 @@ fun MapScreen(
                     isPaused = isPaused,
                     onAddCrosshairsPoint = {
                         scope.launch {
-                            viewModel.pushPoint(cameraPositionState.position.target)
+                            viewModel.pushRouteSegment(cameraPositionState.position.target)
                         }
                     },
                     onUserLocationFocus = {
@@ -364,6 +405,11 @@ fun MapScreen(
                             }
                         }
                     },
+                    setShowSearch = {
+                        viewModel.setShouldFocusSearchBar(it)
+                        isShowingSearch = it
+                    },
+                    isShowingSearch = isShowingSearch,
                     isCameraCurrentlyFollowingMockedLocation = isCameraCurrentlyFollowingMockedLocation,
                     crosshairsColor = mapStyle?.polyLineStroke ?: MaterialTheme.colorScheme.onBackground
                 )
@@ -432,15 +478,15 @@ private suspend fun focusMapToLocationTarget(
     locationTarget: LocationTarget,
     cameraPositionState: CameraPositionState
 ) {
-    if (locationTarget.points.isEmpty()) return
+    if (locationTarget.routeSegments.isEmpty()) return
 
     val boundsBuilder = LatLngBounds.Builder()
-    locationTarget.points.forEach { boundsBuilder.include(it) }
+    locationTarget.getAllPoints().forEach { boundsBuilder.include(it) }
 
     val bounds = boundsBuilder.build()
 
-    val update = if (locationTarget.points.size == 1) {
-        CameraUpdateFactory.newLatLngZoom(locationTarget.points.first(), 15f)
+    val update = if (locationTarget.routeSegments.size == 1) {
+        CameraUpdateFactory.newLatLngZoom(locationTarget.getLastPoint()!!, 15f)
     } else {
         CameraUpdateFactory.newLatLngBounds(bounds, 200)
     }

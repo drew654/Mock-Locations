@@ -1,0 +1,249 @@
+{
+  "meta": {
+    "appVersionCode": 15,
+    "appVersionName": "0.4.0-alpha.1",
+    "exportedAt": "2026-05-05T00:12:39.363726Z"
+  },
+  "routes": [
+    {
+      "name": "ILCB to Zachry",
+      "routeSegments": [
+        {
+          "points": [
+            { "latitude": 30.612306062097367, "longitude": -96.34331602603197 }
+          ]
+        },
+        {
+          "points": [
+            { "latitude": 30.612524493890483, "longitude": -96.34303774684668 }
+          ]
+        },
+        {
+          "points": [
+            { "latitude": 30.61356932396127, "longitude": -96.34143009781837 }
+          ]
+        },
+        {
+          "points": [
+            { "latitude": 30.61593969890262, "longitude": -96.34330227971077 }
+          ]
+        },
+        {
+          "points": [
+            { "latitude": 30.616381162201414, "longitude": -96.34344309568405 }
+          ]
+        },
+        {
+          "points": [
+            { "latitude": 30.616450699700923, "longitude": -96.34303774684668 }
+          ]
+        },
+        {
+          "points": [
+            { "latitude": 30.618988062928008, "longitude": -96.33933864533901 }
+          ]
+        },
+        {
+          "points": [
+            { "latitude": 30.620379343031093, "longitude": -96.34055402129889 }
+          ]
+        },
+        {
+          "points": [
+            { "latitude": 30.6206470943526, "longitude": -96.34038034826517 }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Trigon to MAC",
+      "routeSegments": [
+        {
+          "points": [
+            { "latitude": 30.613716193675007, "longitude": -96.33953779935837 }
+          ]
+        },
+        {
+          "points": [
+            { "latitude": 30.61254844344945, "longitude": -96.33846625685692 }
+          ]
+        },
+        {
+          "points": [
+            { "latitude": 30.61186111760771, "longitude": -96.33693136274815 }
+          ]
+        },
+        {
+          "points": [
+            { "latitude": 30.609536523531006, "longitude": -96.33468501269817 }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Reed Arena to UCG",
+      "routeSegments": [
+        {
+          "points": [
+            { "latitude": 30.606806150741036, "longitude": -96.34598951786757 }
+          ]
+        },
+        {
+          "points": [
+            { "latitude": 30.60733797637694, "longitude": -96.34496558457613 }
+          ]
+        },
+        {
+          "points": [
+            { "latitude": 30.608358911817472, "longitude": -96.34590335190296 }
+          ]
+        },
+        {
+          "points": [
+            { "latitude": 30.612421770413736, "longitude": -96.3398626819253 }
+          ]
+        },
+        {
+          "points": [
+            { "latitude": 30.61148253806638, "longitude": -96.33895710110664 }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "MSC to Zachry to East Lawn",
+      "routeSegments": [
+        {
+          "points": [
+            { "latitude": 30.61505849751468, "longitude": -96.34181801229715 }
+          ]
+        },
+        {
+          "points": [
+            { "latitude": 30.614743, "longitude": -96.342352 },
+            { "latitude": 30.614746, "longitude": -96.342355 },
+            { "latitude": 30.614796, "longitude": -96.342398 },
+            { "latitude": 30.614828, "longitude": -96.342425 },
+            { "latitude": 30.61504, "longitude": -96.342604 },
+            { "latitude": 30.61541, "longitude": -96.342912 },
+            { "latitude": 30.615719, "longitude": -96.343174 },
+            { "latitude": 30.615806, "longitude": -96.343228 },
+            { "latitude": 30.615862, "longitude": -96.34327 },
+            { "latitude": 30.615882, "longitude": -96.343295 },
+            { "latitude": 30.615904, "longitude": -96.343335 },
+            { "latitude": 30.615913, "longitude": -96.34338 },
+            { "latitude": 30.615996, "longitude": -96.343383 },
+            { "latitude": 30.616191, "longitude": -96.343392 },
+            { "latitude": 30.61624, "longitude": -96.343395 },
+            { "latitude": 30.616279, "longitude": -96.343396 },
+            { "latitude": 30.616402, "longitude": -96.343402 },
+            { "latitude": 30.6164, "longitude": -96.343335 },
+            { "latitude": 30.616407, "longitude": -96.343251 },
+            { "latitude": 30.616426, "longitude": -96.343157 },
+            { "latitude": 30.616447, "longitude": -96.343082 },
+            { "latitude": 30.616468, "longitude": -96.343021 },
+            { "latitude": 30.616513, "longitude": -96.342939 },
+            { "latitude": 30.616661, "longitude": -96.342733 },
+            { "latitude": 30.616718, "longitude": -96.342652 },
+            { "latitude": 30.616826, "longitude": -96.342501 },
+            { "latitude": 30.616871, "longitude": -96.342437 },
+            { "latitude": 30.617042, "longitude": -96.342196 },
+            { "latitude": 30.617189, "longitude": -96.341985 },
+            { "latitude": 30.617262, "longitude": -96.34188 },
+            { "latitude": 30.617755, "longitude": -96.341211 },
+            { "latitude": 30.617794, "longitude": -96.341158 },
+            { "latitude": 30.617829, "longitude": -96.341101 },
+            { "latitude": 30.617966, "longitude": -96.340898 },
+            { "latitude": 30.618295, "longitude": -96.340407 },
+            { "latitude": 30.618472, "longitude": -96.340144 },
+            { "latitude": 30.61884, "longitude": -96.33961 },
+            { "latitude": 30.618977, "longitude": -96.339414 },
+            { "latitude": 30.619021, "longitude": -96.339351 },
+            { "latitude": 30.619074, "longitude": -96.339397 },
+            { "latitude": 30.619369, "longitude": -96.339653 },
+            { "latitude": 30.619531, "longitude": -96.339794 },
+            { "latitude": 30.619621, "longitude": -96.339879 },
+            { "latitude": 30.619668, "longitude": -96.339921 },
+            { "latitude": 30.620441, "longitude": -96.340626 },
+            { "latitude": 30.620757, "longitude": -96.340913 }
+          ]
+        },
+        {
+          "points": [
+            { "latitude": 30.620757, "longitude": -96.340913 },
+            { "latitude": 30.620441, "longitude": -96.340626 },
+            { "latitude": 30.619668, "longitude": -96.339921 },
+            { "latitude": 30.619621, "longitude": -96.339879 },
+            { "latitude": 30.619531, "longitude": -96.339794 },
+            { "latitude": 30.619369, "longitude": -96.339653 },
+            { "latitude": 30.619074, "longitude": -96.339397 },
+            { "latitude": 30.619021, "longitude": -96.339351 },
+            { "latitude": 30.619061, "longitude": -96.339293 },
+            { "latitude": 30.619458, "longitude": -96.338712 },
+            { "latitude": 30.619542, "longitude": -96.33859 },
+            { "latitude": 30.619631, "longitude": -96.338461 },
+            { "latitude": 30.619726, "longitude": -96.338332 },
+            { "latitude": 30.61977, "longitude": -96.338235 },
+            { "latitude": 30.619907, "longitude": -96.338035 },
+            { "latitude": 30.620005, "longitude": -96.337888 },
+            { "latitude": 30.620058, "longitude": -96.337809 },
+            { "latitude": 30.620071, "longitude": -96.337789 },
+            { "latitude": 30.620079, "longitude": -96.337775 },
+            { "latitude": 30.620133, "longitude": -96.337682 },
+            { "latitude": 30.620167, "longitude": -96.337618 },
+            { "latitude": 30.620198, "longitude": -96.337547 },
+            { "latitude": 30.620227, "longitude": -96.337474 },
+            { "latitude": 30.620231, "longitude": -96.337464 },
+            { "latitude": 30.620239, "longitude": -96.337444 },
+            { "latitude": 30.620256, "longitude": -96.337398 },
+            { "latitude": 30.620279, "longitude": -96.337325 },
+            { "latitude": 30.620284, "longitude": -96.337307 },
+            { "latitude": 30.620309, "longitude": -96.337207 },
+            { "latitude": 30.620329, "longitude": -96.337107 },
+            { "latitude": 30.620345, "longitude": -96.337011 },
+            { "latitude": 30.620357, "longitude": -96.336914 },
+            { "latitude": 30.620364, "longitude": -96.336839 },
+            { "latitude": 30.62037, "longitude": -96.336758 },
+            { "latitude": 30.620371, "longitude": -96.336643 },
+            { "latitude": 30.620366, "longitude": -96.336546 },
+            { "latitude": 30.62036, "longitude": -96.33644 },
+            { "latitude": 30.620351, "longitude": -96.33636 },
+            { "latitude": 30.620346, "longitude": -96.336324 },
+            { "latitude": 30.620338, "longitude": -96.336268 },
+            { "latitude": 30.620318, "longitude": -96.336165 },
+            { "latitude": 30.620308, "longitude": -96.336124 },
+            { "latitude": 30.620294, "longitude": -96.336067 },
+            { "latitude": 30.620258, "longitude": -96.335946 },
+            { "latitude": 30.620217, "longitude": -96.33583 },
+            { "latitude": 30.62018, "longitude": -96.335739 },
+            { "latitude": 30.62014, "longitude": -96.335652 },
+            { "latitude": 30.620102, "longitude": -96.335574 },
+            { "latitude": 30.620058, "longitude": -96.335499 },
+            { "latitude": 30.620013, "longitude": -96.33543 },
+            { "latitude": 30.619963, "longitude": -96.335357 },
+            { "latitude": 30.619882, "longitude": -96.335248 },
+            { "latitude": 30.61982, "longitude": -96.335179 },
+            { "latitude": 30.619788, "longitude": -96.335144 },
+            { "latitude": 30.619756, "longitude": -96.335111 },
+            { "latitude": 30.619686, "longitude": -96.335042 },
+            { "latitude": 30.61965, "longitude": -96.33501 }
+          ]
+        }
+      ]
+    }
+  ],
+  "settings": {
+    "cameraFollowsMockedLocation": true,
+    "clearRouteOnStop": false,
+    "expandedControlsSpeedSliderLowerEnd": 0,
+    "expandedControlsSpeedSliderUpperEnd": 100,
+    "expandedControlsSpeedUnitValue": {
+      "speedUnit": "mph",
+      "value": 20.64767837524414
+    },
+    "locationAccuracyLevel": "Perfect",
+    "locationUpdateDelay": 1.0,
+    "useCrosshairs": true,
+    "waitAtRouteFinish": false
+  }
+}

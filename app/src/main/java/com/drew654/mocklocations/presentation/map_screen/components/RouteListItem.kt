@@ -17,6 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.domain.model.LocationTarget
+import com.drew654.mocklocations.domain.model.RouteSegment
 import com.drew654.mocklocations.domain.model.SpeedUnit
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 import com.google.android.gms.maps.model.LatLng
@@ -35,7 +36,7 @@ fun RouteListItem(
         headlineContent = { Text(route.name) },
         supportingContent = {
             Text(
-                "${route.points.size} points • ${route.getDistanceText(speedUnit)}"
+                "${route.routeSegments.size} points • ${route.getDistanceText(speedUnit)}"
             )
         },
         modifier = Modifier
@@ -50,7 +51,7 @@ fun RouteListItem(
                     onLongClick(route)
                 }
             ),
-        trailingContent = {
+        leadingContent = {
             if (shouldShowCheckbox) {
                 Checkbox(
                     checked = selected,
@@ -58,6 +59,7 @@ fun RouteListItem(
                 )
             }
         },
+        trailingContent = { },
         colors = ListItemDefaults.colors(
             containerColor = MaterialTheme.colorScheme.secondaryContainer
         )
@@ -81,9 +83,13 @@ private fun RouteListItemUnselectedPreview() {
                 selected = false,
                 route = LocationTarget.SavedRoute(
                     name = "Route 1",
-                    points = listOf(
-                        LatLng(0.0, 0.0),
-                        LatLng(0.0, 0.1)
+                    routeSegments = listOf(
+                        RouteSegment(
+                            points = listOf(
+                                LatLng(0.0, 0.0),
+                                LatLng(0.0, 0.1)
+                            )
+                        )
                     )
                 ),
                 onClick = { },
@@ -112,9 +118,13 @@ private fun RouteListItemSelectedPreview() {
                 selected = true,
                 route = LocationTarget.SavedRoute(
                     name = "Route 1",
-                    points = listOf(
-                        LatLng(0.0, 0.0),
-                        LatLng(0.0, 0.1)
+                    routeSegments = listOf(
+                        RouteSegment(
+                            points = listOf(
+                                LatLng(0.0, 0.0),
+                                LatLng(0.0, 0.1)
+                            )
+                        )
                     )
                 ),
                 onClick = { },
