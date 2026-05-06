@@ -62,6 +62,7 @@ sealed interface LocationTarget {
         val name: String,
         override val routeSegments: List<RouteSegment>
     ) : LocationTarget {
+        fun getDistance(speedUnit: SpeedUnit): Double = Route(routeSegments).getDistance(speedUnit)
         fun getDistanceText(speedUnit: SpeedUnit): String = Route(routeSegments).getDistanceText(speedUnit)
     }
 
