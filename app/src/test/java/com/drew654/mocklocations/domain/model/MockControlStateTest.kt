@@ -85,7 +85,7 @@ class MockControlStateTest {
     }
 
     @Test
-    fun `Pause and Resume visibility for routes`() {
+    fun `Stop is visible and enabled when mocking`() {
         val mockingState = MockControlState(
             isMocking = true,
             isPaused = false,
@@ -94,12 +94,78 @@ class MockControlStateTest {
             isUsingCrosshairs = false,
             isWaitingForRouteFetch = false
         )
+
+        assertTrue(mockingState.isStopVisible())
+        assertTrue(mockingState.isStopEnabled())
+    }
+
+    @Test
+    fun `Stop is not visible or enabled when not mocking`() {
+        val state1 = MockControlState(
+            isMocking = false,
+            isPaused = false,
+            isWaitingAtEndOfRoute = false,
+            activeLocationTarget = LocationTarget.Empty,
+            isUsingCrosshairs = false,
+            isWaitingForRouteFetch = false
+        )
+        val state2 = MockControlState(
+            isMocking = false,
+            isPaused = false,
+            isWaitingAtEndOfRoute = false,
+            activeLocationTarget = LocationTarget.Empty,
+            isUsingCrosshairs = true,
+            isWaitingForRouteFetch = false
+        )
+        val state3 = MockControlState(
+            activeLocationTarget = trigonToMacRoute,
+            isMocking = false,
+            isPaused = false,
+            isUsingCrosshairs = true,
+            isWaitingAtEndOfRoute = false,
+            isWaitingForRouteFetch = true
+        )
+        val state4 = MockControlState(
+            isMocking = false,
+            isPaused = false,
+            isWaitingAtEndOfRoute = false,
+            activeLocationTarget = trigonToMacRoute,
+            isUsingCrosshairs = true,
+            isWaitingForRouteFetch = false
+        )
+
+        assertFalse(state1.isStopVisible())
+        assertFalse(state1.isStopEnabled())
+        assertFalse(state2.isStopVisible())
+        assertFalse(state2.isStopEnabled())
+        assertFalse(state3.isStopVisible())
+        assertFalse(state3.isStopEnabled())
+        assertFalse(state4.isStopVisible())
+        assertFalse(state4.isStopEnabled())
+    }
+
+    @Test
+    fun `Pause and Resume visibility and enabled check for routes`() {
+        val mockingState = MockControlState(
+            isMocking = true,
+            isPaused = false,
+            isWaitingAtEndOfRoute = false,
+            activeLocationTarget = trigonToMacRoute,
+            isUsingCrosshairs = false,
+            isWaitingForRouteFetch = false
+        )
+
         assertTrue(mockingState.isPauseVisible())
+        assertTrue(mockingState.isPauseEnabled())
         assertFalse(mockingState.isResumeVisible())
+        assertFalse(mockingState.isResumeEnabled())
 
         val pausedState = mockingState.copy(isPaused = true)
+
         assertFalse(pausedState.isPauseVisible())
+        assertFalse(pausedState.isPauseEnabled())
         assertTrue(pausedState.isResumeVisible())
+        assertTrue(pausedState.isResumeEnabled())
     }
 
     @Test
@@ -130,5 +196,213 @@ class MockControlStateTest {
 
         assertFalse(state.isPopPointEnabled())
         assertFalse(state.isClearLocationTargetEnabled())
+    }
+
+    @Test
+    fun `Pop Point is always visible`() {
+        assertTrue(isPopPointVisible())
+    }
+
+    @Test
+    fun `Pop Point is enabled when building a route`() {
+        val state = MockControlState(
+            isMocking = false,
+            isPaused = false,
+            isWaitingAtEndOfRoute = false,
+            activeLocationTarget = trigonToMacRoute,
+            isUsingCrosshairs = true,
+            isWaitingForRouteFetch = false
+        )
+
+        assertTrue(state.isPopPointEnabled())
+    }
+
+    @Test
+    fun `Clear Location Target is always visible`() {
+        assertTrue(isClearLocationTargetVisible())
+    }
+
+    @Test
+    fun `Clear Location Target is enabled when building a route`() {
+        val state = MockControlState(
+            isMocking = false,
+            isPaused = false,
+            isWaitingAtEndOfRoute = false,
+            activeLocationTarget = trigonToMacRoute,
+            isUsingCrosshairs = true,
+            isWaitingForRouteFetch = false
+        )
+
+        assertTrue(state.isClearLocationTargetEnabled())
+    }
+
+    @Test
+    fun `getVisibleActions() while building a route with crosshairs on`() {
+        val state = MockControlState(
+            isMocking = false,
+            isPaused = false,
+            isWaitingAtEndOfRoute = false,
+            activeLocationTarget = trigonToMacRoute,
+            isUsingCrosshairs = true,
+            isWaitingForRouteFetch = false
+        )
+        val actual = state.getVisibleActions()
+        val expected = setOf(
+            MockControlAction.START,
+            MockControlAction.ADD_POINT,
+            MockControlAction.POP_POINT,
+            MockControlAction.CLEAR_LOCATION_TARGET
+        )
+
+        assertEquals(expected.size, actual.size)
+        assertTrue(actual.containsAll(expected))
+    }
+
+    @Test
+    fun `getEnabledActions() while building a route with crosshairs on`() {
+        val state = MockControlState(
+            isMocking = false,
+            isPaused = false,
+            isWaitingAtEndOfRoute = false,
+            activeLocationTarget = trigonToMacRoute,
+            isUsingCrosshairs = true,
+            isWaitingForRouteFetch = false
+        )
+        val actual = state.getEnabledActions()
+        val expected = setOf(
+            MockControlAction.START,
+            MockControlAction.ADD_POINT,
+            MockControlAction.POP_POINT,
+            MockControlAction.CLEAR_LOCATION_TARGET
+        )
+
+        assertEquals(expected.size, actual.size)
+        assertTrue(actual.containsAll(expected))
+    }
+
+    @Test
+    fun `getVisibleActions() while building a route with crosshairs off`() {
+        val state = MockControlState(
+            isMocking = false,
+            isPaused = false,
+            isWaitingAtEndOfRoute = false,
+            activeLocationTarget = trigonToMacRoute,
+            isUsingCrosshairs = false,
+            isWaitingForRouteFetch = false
+        )
+        val actual = state.getVisibleActions()
+        val expected = setOf(
+            MockControlAction.START,
+            MockControlAction.POP_POINT,
+            MockControlAction.CLEAR_LOCATION_TARGET
+        )
+
+        assertEquals(expected.size, actual.size)
+        assertTrue(actual.containsAll(expected))
+    }
+
+    @Test
+    fun `getEnabledActions() while building a route with crosshairs off`() {
+        val state = MockControlState(
+            isMocking = false,
+            isPaused = false,
+            isWaitingAtEndOfRoute = false,
+            activeLocationTarget = trigonToMacRoute,
+            isUsingCrosshairs = false,
+            isWaitingForRouteFetch = false
+        )
+        val actual = state.getEnabledActions()
+        val expected = setOf(
+            MockControlAction.START,
+            MockControlAction.POP_POINT,
+            MockControlAction.CLEAR_LOCATION_TARGET
+        )
+
+        assertEquals(expected.size, actual.size)
+        assertTrue(actual.containsAll(expected))
+    }
+
+    @Test
+    fun `getVisibleActions when mocking`() {
+        val mockingState = MockControlState(
+            isMocking = true,
+            isPaused = false,
+            isWaitingAtEndOfRoute = false,
+            activeLocationTarget = trigonToMacRoute,
+            isUsingCrosshairs = false,
+            isWaitingForRouteFetch = false
+        )
+        val actual = mockingState.getVisibleActions()
+        val expected = setOf(
+            MockControlAction.STOP,
+            MockControlAction.PAUSE,
+            MockControlAction.POP_POINT,
+            MockControlAction.CLEAR_LOCATION_TARGET
+        )
+
+        assertEquals(expected.size, actual.size)
+        assertTrue(actual.containsAll(expected))
+    }
+
+    @Test
+    fun `getEnabledActions when mocking`() {
+        val mockingState = MockControlState(
+            isMocking = true,
+            isPaused = false,
+            isWaitingAtEndOfRoute = false,
+            activeLocationTarget = trigonToMacRoute,
+            isUsingCrosshairs = false,
+            isWaitingForRouteFetch = false
+        )
+        val actual = mockingState.getEnabledActions()
+        val expected = setOf(
+            MockControlAction.STOP,
+            MockControlAction.PAUSE
+        )
+
+        assertEquals(expected.size, actual.size)
+        assertTrue(actual.containsAll(expected))
+    }
+
+    @Test
+    fun `getVisibleActions when paused`() {
+        val pausedState = MockControlState(
+            isMocking = true,
+            isPaused = true,
+            isWaitingAtEndOfRoute = false,
+            activeLocationTarget = trigonToMacRoute,
+            isUsingCrosshairs = false,
+            isWaitingForRouteFetch = false
+        )
+        val actual = pausedState.getVisibleActions()
+        val expected = setOf(
+            MockControlAction.STOP,
+            MockControlAction.RESUME,
+            MockControlAction.POP_POINT,
+            MockControlAction.CLEAR_LOCATION_TARGET
+        )
+
+        assertEquals(expected.size, actual.size)
+        assertTrue(actual.containsAll(expected))
+    }
+
+    @Test
+    fun `getEnabledActions when paused`() {
+        val pausedState = MockControlState(
+            isMocking = true,
+            isPaused = true,
+            isWaitingAtEndOfRoute = false,
+            activeLocationTarget = trigonToMacRoute,
+            isUsingCrosshairs = false,
+            isWaitingForRouteFetch = false
+        )
+        val actual = pausedState.getEnabledActions()
+        val expected = setOf(
+            MockControlAction.STOP,
+            MockControlAction.RESUME
+        )
+
+        assertEquals(expected.size, actual.size)
+        assertTrue(actual.containsAll(expected))
     }
 }
