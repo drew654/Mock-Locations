@@ -1,5 +1,6 @@
 package com.drew654.mocklocations.data.repository
 
+import android.util.Log
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -47,7 +48,8 @@ class RouteRepository() {
                         )
                     }
                 }
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                Log.e("RouteRepository", "Failed to get route points", e)
                 emptyList()
             }
         }

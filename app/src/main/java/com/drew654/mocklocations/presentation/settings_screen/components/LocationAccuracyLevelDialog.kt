@@ -9,12 +9,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -73,23 +75,56 @@ fun LocationAccuracyLevelDialog(
 
 @Preview(
     name = "Light Mode",
-    showBackground = true
+    showBackground = true,
+    showSystemUi = true
 )
 @Preview(
     name = "Dark Mode",
     uiMode = Configuration.UI_MODE_NIGHT_YES,
-    showBackground = true
+    showBackground = true,
+    showSystemUi = true
 )
 @Composable
-private fun LocationAccuracyLevelDialogPreview() {
+private fun LocationAccuracyLevelDialogPhonePreview() {
     MockLocationsTheme {
-        Surface {
-            LocationAccuracyLevelDialog(
-                isVisible = true,
-                selectedLevel = LocationAccuracyLevel.Perfect,
-                onLevelSelected = { },
-                onDismiss = { }
-            )
+        Scaffold { innerPadding ->
+            Surface(modifier = Modifier.padding(innerPadding)) {
+                LocationAccuracyLevelDialog(
+                    isVisible = true,
+                    selectedLevel = LocationAccuracyLevel.Perfect,
+                    onLevelSelected = { },
+                    onDismiss = { }
+                )
+            }
+        }
+    }
+}
+
+@Preview(
+    name = "Light Mode",
+    showBackground = true,
+    showSystemUi = true,
+    device = Devices.TABLET
+)
+@Preview(
+    name = "Dark Mode",
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+    showBackground = true,
+    showSystemUi = true,
+    device = Devices.TABLET
+)
+@Composable
+private fun LocationAccuracyLevelDialogTabletPreview() {
+    MockLocationsTheme {
+        Scaffold { innerPadding ->
+            Surface(modifier = Modifier.padding(innerPadding)) {
+                LocationAccuracyLevelDialog(
+                    isVisible = true,
+                    selectedLevel = LocationAccuracyLevel.Perfect,
+                    onLevelSelected = { },
+                    onDismiss = { }
+                )
+            }
         }
     }
 }
