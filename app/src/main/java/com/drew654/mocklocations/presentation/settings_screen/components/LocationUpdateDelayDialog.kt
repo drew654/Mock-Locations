@@ -6,11 +6,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -28,6 +30,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -73,7 +76,9 @@ fun LocationUpdateDelayDialog(
                 focusRequester.requestFocus()
             }
 
-            Card {
+            Card(
+                modifier = Modifier.widthIn(max = 300.dp)
+            ) {
                 Column(
                     modifier = Modifier
                         .padding(16.dp)
@@ -139,23 +144,56 @@ fun LocationUpdateDelayDialog(
 
 @Preview(
     name = "Light Mode",
-    showBackground = true
+    showBackground = true,
+    showSystemUi = true
 )
 @Preview(
     name = "Dark Mode",
     uiMode = Configuration.UI_MODE_NIGHT_YES,
-    showBackground = true
+    showBackground = true,
+    showSystemUi = true
 )
 @Composable
-private fun LocationUpdateDelayDialogPreview() {
+private fun LocationUpdateDelayDialogPhonePreview() {
     MockLocationsTheme {
-        Surface {
-            LocationUpdateDelayDialog(
-                isVisible = true,
-                locationUpdateDelay = 1f,
-                onLocationUpdateDelayChanged = { },
-                onDismiss = { }
-            )
+        Scaffold { innerPadding ->
+            Surface(modifier = Modifier.padding(innerPadding)) {
+                LocationUpdateDelayDialog(
+                    isVisible = true,
+                    locationUpdateDelay = 1f,
+                    onLocationUpdateDelayChanged = { },
+                    onDismiss = { }
+                )
+            }
+        }
+    }
+}
+
+@Preview(
+    name = "Light Mode",
+    showBackground = true,
+    showSystemUi = true,
+    device = Devices.TABLET
+)
+@Preview(
+    name = "Dark Mode",
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+    showBackground = true,
+    showSystemUi = true,
+    device = Devices.TABLET
+)
+@Composable
+private fun LocationUpdateDelayDialogTabletPreview() {
+    MockLocationsTheme {
+        Scaffold { innerPadding ->
+            Surface(modifier = Modifier.padding(innerPadding)) {
+                LocationUpdateDelayDialog(
+                    isVisible = true,
+                    locationUpdateDelay = 1f,
+                    onLocationUpdateDelayChanged = { },
+                    onDismiss = { }
+                )
+            }
         }
     }
 }
