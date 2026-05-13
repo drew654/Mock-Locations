@@ -8,6 +8,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Process
 import android.provider.Settings
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 
@@ -44,7 +45,8 @@ private fun isDeveloperOptionsEnabled(context: Context): Boolean {
             context.contentResolver,
             Settings.Global.DEVELOPMENT_SETTINGS_ENABLED, 0
         ) != 0
-    } catch (_: Exception) {
+    } catch (e: Exception) {
+        Log.e("Permission", "Failed to check developer options permission status", e)
         false
     }
 }
@@ -66,7 +68,8 @@ private fun isAppSetAsMockLocationsApp(context: Context): Boolean {
             context.packageName
         )
         return mode == AppOpsManager.MODE_ALLOWED
-    } catch (_: Exception) {
+    } catch (e: Exception) {
+        Log.e("Permission", "Failed to check mock location app permission", e)
         return false
     }
 }

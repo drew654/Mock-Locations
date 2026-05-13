@@ -1,6 +1,7 @@
 package com.drew654.mocklocations.domain
 
 import android.content.Context
+import android.util.Log
 import androidx.datastore.core.DataMigration
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
@@ -129,7 +130,8 @@ class SettingsManager(private val context: Context) {
             } else {
                 try {
                     gson.fromJson(json, MockControlState::class.java)
-                } catch (_: Exception) {
+                } catch (e: Exception) {
+                    Log.e("SettingsManager", "Failed to get MockControlState", e)
                     MockControlState()
                 }
             }
@@ -195,7 +197,8 @@ class SettingsManager(private val context: Context) {
                 try {
                     val type = object : TypeToken<List<LocationTarget.SavedRoute>>() {}.type
                     gson.fromJson(json, type)
-                } catch (_: Exception) {
+                } catch (e: Exception) {
+                    Log.e("SettingsManager", "Failed to get saved routes", e)
                     emptyList()
                 }
             }
@@ -208,7 +211,8 @@ class SettingsManager(private val context: Context) {
                 try {
                     val type = object : TypeToken<MutableList<LocationTarget.SavedRoute>>() {}.type
                     gson.fromJson<MutableList<LocationTarget.SavedRoute>>(existingJson, type)
-                } catch (_: Exception) {
+                } catch (e: Exception) {
+                    Log.e("SettingsManager", "Failed to save route", e)
                     mutableListOf()
                 }
             } else {

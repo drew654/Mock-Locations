@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.net.Uri
 import android.provider.Settings
+import android.util.Log
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -79,7 +80,8 @@ fun PermissionsDialog(
 
                             is Permission.PostNotifications -> return@TextButton
                         }
-                    } catch (_: Exception) {
+                    } catch (e: Exception) {
+                        Log.e("PermissionsDialog", "Failed to open system settings", e)
                         context.startActivity(Intent(Settings.ACTION_SETTINGS))
                     }
                 }

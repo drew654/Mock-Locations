@@ -8,6 +8,7 @@ import android.content.IntentFilter
 import android.location.Geocoder
 import android.net.Uri
 import android.os.Build
+import android.util.Log
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
@@ -402,7 +403,8 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
                 }
 
                 continuation.resume(latLng)
-            } catch (_: IOException) {
+            } catch (e: IOException) {
+                Log.e("MockLocationsViewModel", "Failed to geocode address", e)
                 continuation.resume(null)
             }
         }

@@ -418,7 +418,8 @@ fun MapScreen(
                                         }
                                     }
                                 }
-                            } catch (_: SecurityException) {
+                            } catch (e: SecurityException) {
+                                Log.e("MapScreen", "Failed to get user location", e)
                             }
                         }
                     },
