@@ -45,8 +45,12 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.math.atan
 import kotlin.math.cos
+import kotlin.math.exp
+import kotlin.math.ln
 import kotlin.math.sin
+import kotlin.math.tan
 import kotlin.random.Random
 
 class MockLocationService : Service() {
@@ -332,10 +336,30 @@ class MockLocationService : Service() {
         )
     }
 
-    private fun interpolate(start: LatLng, end: LatLng, fraction: Double): LatLng {
-        val lat = start.latitude + (end.latitude - start.latitude) * fraction
-        val lng = start.longitude + (end.longitude - start.longitude) * fraction
-        return LatLng(lat, lng)
+    private fun interpolate(from: LatLng, to: LatLng, fraction: Double): LatLng {
+        if (from == to) return from
+
+        fun latToMercator(lat: Double): Double {
+            return ln(tan(Math.PI / 4 + Math.toRadians(lat) / 2))
+        }
+
+        fun mercatorToLat(y: Double): Double {
+            return Math.toDegrees(2 * atan(exp(y)) - Math.PI / 2)
+        }
+
+        val fromY = latToMercator(from.latitude)
+        val toY = latToMercator(to.latitude)
+
+        val interpolatedY = fromY + (toY - fromY) * fraction
+        val interpolatedLat = mercatorToLat(interpolatedY)
+
+        var dLng = to.longitude - from.longitude
+
+        if (dLng > 180) dLng -= 360
+        if (dLng < -180) dLng += 360
+        val interpolatedLng = from.longitude + dLng * fraction
+
+        return LatLng(interpolatedLat, interpolatedLng)
     }
 
     private fun findProgressOnRoute(
