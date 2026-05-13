@@ -55,6 +55,9 @@ fun MockControlState.getEnabledActions(): Set<MockControlAction> {
     if (isPopPointEnabled()) {
         actions.add(MockControlAction.POP_POINT)
     }
+    if (isLongPressAddPointEnabled()) {
+        actions.add(MockControlAction.LONG_PRESS_ADD_POINT)
+    }
     if (isClearLocationTargetEnabled()) {
         actions.add(MockControlAction.CLEAR_LOCATION_TARGET)
     }
@@ -102,6 +105,10 @@ fun MockControlState.isAddPointVisible(): Boolean {
 
 fun MockControlState.isAddPointEnabled(): Boolean {
     return isAddPointVisible() && !isWaitingForRouteFetch
+}
+
+fun MockControlState.isLongPressAddPointEnabled(): Boolean {
+    return !isMocking && !isWaitingForRouteFetch
 }
 
 fun isPopPointVisible(): Boolean {

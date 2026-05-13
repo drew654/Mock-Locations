@@ -8,6 +8,7 @@ import android.content.IntentFilter
 import android.location.Geocoder
 import android.net.Uri
 import android.os.Build
+import android.util.Log
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
@@ -46,8 +47,8 @@ import kotlin.coroutines.resume
 class MockLocationsViewModel(application: Application) : AndroidViewModel(application) {
     private val _cameraPosition = MutableStateFlow<SavedCameraPosition?>(null)
     val cameraPosition = _cameraPosition.asStateFlow()
-    private val _hasCenteredOnUser = MutableStateFlow(false)
-    val hasCenteredOnUser = _hasCenteredOnUser.asStateFlow()
+    private val _isMapCenteredAfterLaunch = MutableStateFlow(false)
+    val isMapCenteredAfterLaunch = _isMapCenteredAfterLaunch.asStateFlow()
     private val _controlsAreExpanded = MutableStateFlow(false)
     val controlsAreExpanded: StateFlow<Boolean> = _controlsAreExpanded.asStateFlow()
     private val settingsManager = SettingsManager(application)
@@ -276,8 +277,8 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         )
     }
 
-    fun markCenteredOnUser() {
-        _hasCenteredOnUser.value = true
+    fun setMapIsCenteredAfterLaunch() {
+        _isMapCenteredAfterLaunch.value = true
     }
 
     fun setControlsAreExpanded(expanded: Boolean) {
@@ -402,7 +403,8 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
                 }
 
                 continuation.resume(latLng)
-            } catch (_: IOException) {
+            } catch (e: IOException) {
+                Log.e("MockLocationsViewModel", "Failed to geocode address", e)
                 continuation.resume(null)
             }
         }

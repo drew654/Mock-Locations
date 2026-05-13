@@ -114,7 +114,8 @@ class MockLocationService : Service() {
     override fun onDestroy() {
         try {
             tearDownTestProvider()
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            Log.e("MockLocationsService", "Failed to tear down test provider", e)
         }
 
         super.onDestroy()
@@ -463,7 +464,8 @@ class MockLocationService : Service() {
             try {
                 locationManager.setTestProviderEnabled(name, false)
                 locationManager.removeTestProvider(name)
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                Log.e("MockLocationsService", "Failed to tear down test provider: $name", e)
             }
         }
     }

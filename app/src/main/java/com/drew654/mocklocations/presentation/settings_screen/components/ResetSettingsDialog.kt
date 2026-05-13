@@ -1,11 +1,15 @@
 package com.drew654.mocklocations.presentation.settings_screen.components
 
 import android.content.res.Configuration
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 
@@ -39,22 +43,54 @@ fun ResetSettingsDialog(
 
 @Preview(
     name = "Light Mode",
-    showBackground = true
+    showBackground = true,
+    showSystemUi = true
 )
 @Preview(
     name = "Dark Mode",
     uiMode = Configuration.UI_MODE_NIGHT_YES,
-    showBackground = true
+    showBackground = true,
+    showSystemUi = true
 )
 @Composable
-private fun ResetSettingsDialogPreview() {
+private fun ResetSettingsDialogPhonePreview() {
     MockLocationsTheme {
-        Surface {
-            ResetSettingsDialog(
-                isVisible = true,
-                onConfirm = { },
-                onDismiss = { }
-            )
+        Scaffold { innerPadding ->
+            Surface(modifier = Modifier.padding(innerPadding)) {
+                ResetSettingsDialog(
+                    isVisible = true,
+                    onConfirm = { },
+                    onDismiss = { }
+                )
+            }
+        }
+    }
+}
+
+@Preview(
+    name = "Light Mode",
+    showBackground = true,
+    showSystemUi = true,
+    device = Devices.TABLET
+)
+@Preview(
+    name = "Dark Mode",
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+    showBackground = true,
+    showSystemUi = true,
+    device = Devices.TABLET
+)
+@Composable
+private fun ResetSettingsDialogTabletPreview() {
+    MockLocationsTheme {
+        Scaffold { innerPadding ->
+            Surface(modifier = Modifier.padding(innerPadding)) {
+                ResetSettingsDialog(
+                    isVisible = true,
+                    onConfirm = { },
+                    onDismiss = { }
+                )
+            }
         }
     }
 }

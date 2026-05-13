@@ -2,6 +2,7 @@ package com.drew654.mocklocations.presentation.map_screen
 
 import android.Manifest
 import android.os.Build
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -59,6 +60,8 @@ import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 @Composable
@@ -102,7 +105,7 @@ fun MapScreen(
     )
     val savedCameraPosition by viewModel.cameraPosition.collectAsState()
     var hasRestoredCamera by remember { mutableStateOf(false) }
-    val hasCenteredOnUser by viewModel.hasCenteredOnUser.collectAsState()
+    val isMapCenteredAfterLaunch by viewModel.isMapCenteredAfterLaunch.collectAsState()
     val cameraPositionState = rememberCameraPositionState()
     val lifecycleOwner = LocalLifecycleOwner.current
     var isShowingSavedRoutesDialog by rememberSaveable { mutableStateOf(false) }
@@ -199,22 +202,36 @@ fun MapScreen(
     }
 
     LaunchedEffect(Unit) {
-        if (hasLocationPermission && !hasCenteredOnUser) {
-            val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+        if (!isMapCenteredAfterLaunch) {
+            if (mockControlState.activeLocationTarget !is LocationTarget.Empty) {
+                snapshotFlow { cameraPositionState.projection }
+                    .filterNotNull()
+                    .first()
 
-            try {
-                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-                    if (location != null) {
-                        cameraPositionState.move(
-                            CameraUpdateFactory.newLatLngZoom(
-                                LatLng(location.latitude, location.longitude),
-                                15f
-                            )
-                        )
-                        viewModel.markCenteredOnUser()
-                    }
+                try {
+                    focusMapToLocationTarget(mockControlState.activeLocationTarget, cameraPositionState)
+                    viewModel.setMapIsCenteredAfterLaunch()
+                } catch (e: Exception) {
+                    Log.e("MapScreen", "Error centering map to active location target", e)
                 }
-            } catch (_: SecurityException) {
+            } else if (hasLocationPermission) {
+                val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+
+                try {
+                    fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                        if (location != null) {
+                            cameraPositionState.move(
+                                CameraUpdateFactory.newLatLngZoom(
+                                    LatLng(location.latitude, location.longitude),
+                                    15f
+                                )
+                            )
+                            viewModel.setMapIsCenteredAfterLaunch()
+                        }
+                    }
+                } catch (e: SecurityException) {
+                    Log.e("MapScreen", "Error centering map to user", e)
+                }
             }
         }
     }
@@ -260,7 +277,7 @@ fun MapScreen(
                     },
                     onMapLongClick = {
                         focusManager.clearFocus()
-                        if (MockControlAction.ADD_POINT in mockControlState.getEnabledActions()) {
+                        if (MockControlAction.LONG_PRESS_ADD_POINT in mockControlState.getEnabledActions()) {
                             scope.launch {
                                 viewModel.pushRouteSegment(it)
                             }
@@ -401,7 +418,8 @@ fun MapScreen(
                                         }
                                     }
                                 }
-                            } catch (_: SecurityException) {
+                            } catch (e: SecurityException) {
+                                Log.e("MapScreen", "Failed to get user location", e)
                             }
                         }
                     },
