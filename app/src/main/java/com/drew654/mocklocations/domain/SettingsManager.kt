@@ -250,25 +250,32 @@ class SettingsManager(private val context: Context) {
         }
     }
 
-    suspend fun mergeRoutes(routes: List<LocationTarget.SavedRoute>) {
+    suspend fun mergeRoutes(incomingRoutes: List<LocationTarget.SavedRoute>) {
         context.dataStore.edit { preferences ->
             val existingJson = preferences[SAVED_ROUTES_JSON] ?: ""
             if (existingJson.isEmpty()) {
-                preferences[SAVED_ROUTES_JSON] = gson.toJson(routes)
+                preferences[SAVED_ROUTES_JSON] = gson.toJson(incomingRoutes)
             } else {
                 val type = object : TypeToken<MutableList<LocationTarget.SavedRoute>>() {}.type
-                val currentList = gson.fromJson<MutableList<LocationTarget.SavedRoute>>(existingJson, type)
+                val existingRoutes = gson.fromJson<MutableList<LocationTarget.SavedRoute>>(existingJson, type)
 
-                val existingNames = currentList.map { it.name }.toMutableSet()
-                val updatedRoutes = routes.map { route ->
-                    val uniqueName = generateUniqueRouteName(route.name, existingNames)
-                    existingNames.add(uniqueName)
+                val nonDuplicateIncomingRoutes = incomingRoutes.filter { incoming ->
+                    existingRoutes.none { existing ->
+                        existing.name == incoming.name &&
+                                existing.routeSegments == incoming.routeSegments
+                    }
+                }.distinct()
+
+                val existingRouteNames = existingRoutes.map { it.name }.toMutableSet()
+                val renamedIncomingRoutes = nonDuplicateIncomingRoutes.map { route ->
+                    val uniqueName = generateUniqueRouteName(route.name, existingRouteNames)
+                    existingRouteNames.add(uniqueName)
                     route.copy(name = uniqueName)
                 }
 
-                currentList.addAll(updatedRoutes)
+                existingRoutes.addAll(renamedIncomingRoutes)
 
-                preferences[SAVED_ROUTES_JSON] = gson.toJson(currentList)
+                preferences[SAVED_ROUTES_JSON] = gson.toJson(existingRoutes)
             }
         }
     }
