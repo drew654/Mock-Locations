@@ -1,6 +1,7 @@
 package com.drew654.mocklocations.domain
 
 import android.content.Context
+import android.util.Log
 import androidx.datastore.core.DataMigration
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
@@ -129,7 +130,8 @@ class SettingsManager(private val context: Context) {
             } else {
                 try {
                     gson.fromJson(json, MockControlState::class.java)
-                } catch (_: Exception) {
+                } catch (e: Exception) {
+                    Log.e("SettingsManager", "Failed to get MockControlState", e)
                     MockControlState()
                 }
             }
@@ -195,7 +197,8 @@ class SettingsManager(private val context: Context) {
                 try {
                     val type = object : TypeToken<List<LocationTarget.SavedRoute>>() {}.type
                     gson.fromJson(json, type)
-                } catch (_: Exception) {
+                } catch (e: Exception) {
+                    Log.e("SettingsManager", "Failed to get saved routes", e)
                     emptyList()
                 }
             }
@@ -208,7 +211,8 @@ class SettingsManager(private val context: Context) {
                 try {
                     val type = object : TypeToken<MutableList<LocationTarget.SavedRoute>>() {}.type
                     gson.fromJson<MutableList<LocationTarget.SavedRoute>>(existingJson, type)
-                } catch (_: Exception) {
+                } catch (e: Exception) {
+                    Log.e("SettingsManager", "Failed to save route", e)
                     mutableListOf()
                 }
             } else {
@@ -250,25 +254,32 @@ class SettingsManager(private val context: Context) {
         }
     }
 
-    suspend fun mergeRoutes(routes: List<LocationTarget.SavedRoute>) {
+    suspend fun mergeRoutes(incomingRoutes: List<LocationTarget.SavedRoute>) {
         context.dataStore.edit { preferences ->
             val existingJson = preferences[SAVED_ROUTES_JSON] ?: ""
             if (existingJson.isEmpty()) {
-                preferences[SAVED_ROUTES_JSON] = gson.toJson(routes)
+                preferences[SAVED_ROUTES_JSON] = gson.toJson(incomingRoutes)
             } else {
                 val type = object : TypeToken<MutableList<LocationTarget.SavedRoute>>() {}.type
-                val currentList = gson.fromJson<MutableList<LocationTarget.SavedRoute>>(existingJson, type)
+                val existingRoutes = gson.fromJson<MutableList<LocationTarget.SavedRoute>>(existingJson, type)
 
-                val existingNames = currentList.map { it.name }.toMutableSet()
-                val updatedRoutes = routes.map { route ->
-                    val uniqueName = generateUniqueRouteName(route.name, existingNames)
-                    existingNames.add(uniqueName)
+                val nonDuplicateIncomingRoutes = incomingRoutes.filter { incoming ->
+                    existingRoutes.none { existing ->
+                        existing.name == incoming.name &&
+                                existing.routeSegments == incoming.routeSegments
+                    }
+                }.distinct()
+
+                val existingRouteNames = existingRoutes.map { it.name }.toMutableSet()
+                val renamedIncomingRoutes = nonDuplicateIncomingRoutes.map { route ->
+                    val uniqueName = generateUniqueRouteName(route.name, existingRouteNames)
+                    existingRouteNames.add(uniqueName)
                     route.copy(name = uniqueName)
                 }
 
-                currentList.addAll(updatedRoutes)
+                existingRoutes.addAll(renamedIncomingRoutes)
 
-                preferences[SAVED_ROUTES_JSON] = gson.toJson(currentList)
+                preferences[SAVED_ROUTES_JSON] = gson.toJson(existingRoutes)
             }
         }
     }

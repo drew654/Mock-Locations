@@ -1,8 +1,8 @@
 {
   "meta": {
-    "appVersionCode": 15,
-    "appVersionName": "0.4.0-alpha.1",
-    "exportedAt": "2026-05-05T00:12:39.363726Z"
+    "appVersionCode": 16,
+    "appVersionName": "0.4.0",
+    "exportedAt": "2026-05-13T13:10:41.648870Z"
   },
   "routes": [
     {
@@ -111,7 +111,7 @@
       ]
     },
     {
-      "name": "MSC to Zachry to East Lawn",
+      "name": "Academic Plaza to Zachry to East Lawn",
       "routeSegments": [
         {
           "points": [
