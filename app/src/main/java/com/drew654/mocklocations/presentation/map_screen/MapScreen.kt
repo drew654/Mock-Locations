@@ -44,6 +44,7 @@ import com.drew654.mocklocations.presentation.map_screen.components.MapControlBu
 import com.drew654.mocklocations.presentation.map_screen.components.PermissionsDialog
 import com.drew654.mocklocations.presentation.map_screen.components.SavedRoutesDialog
 import com.drew654.mocklocations.presentation.map_screen.components.SearchAddressSection
+import com.drew654.mocklocations.util.MapUtils
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
@@ -251,7 +252,7 @@ fun MapScreen(
                 SearchAddressSection(
                     onSearchAddress = { address ->
                         scope.launch {
-                            val latLng = viewModel.geocodeAddress(context, address)
+                            val latLng = MapUtils.geocodeAddress(context, address)
                             if (latLng == null) {
                                 Toast.makeText(context, "Address not found", Toast.LENGTH_SHORT).show()
                             } else {
