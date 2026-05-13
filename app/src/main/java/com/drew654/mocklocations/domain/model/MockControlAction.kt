@@ -6,6 +6,7 @@ enum class MockControlAction {
     PAUSE,
     RESUME,
     ADD_POINT,
+    LONG_PRESS_ADD_POINT,
     POP_POINT,
     CLEAR_LOCATION_TARGET
 }

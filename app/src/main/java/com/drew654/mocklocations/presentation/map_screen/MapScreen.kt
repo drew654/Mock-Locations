@@ -277,7 +277,7 @@ fun MapScreen(
                     },
                     onMapLongClick = {
                         focusManager.clearFocus()
-                        if (MockControlAction.ADD_POINT in mockControlState.getEnabledActions()) {
+                        if (MockControlAction.LONG_PRESS_ADD_POINT in mockControlState.getEnabledActions()) {
                             scope.launch {
                                 viewModel.pushRouteSegment(it)
                             }
