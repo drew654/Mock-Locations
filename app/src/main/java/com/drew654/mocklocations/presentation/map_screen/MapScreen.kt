@@ -105,7 +105,7 @@ fun MapScreen(
     )
     val savedCameraPosition by viewModel.cameraPosition.collectAsState()
     var hasRestoredCamera by remember { mutableStateOf(false) }
-    val hasCenteredOnUser by viewModel.hasCenteredOnUser.collectAsState()
+    val isMapCenteredAfterLaunch by viewModel.isMapCenteredAfterLaunch.collectAsState()
     val cameraPositionState = rememberCameraPositionState()
     val lifecycleOwner = LocalLifecycleOwner.current
     var isShowingSavedRoutesDialog by rememberSaveable { mutableStateOf(false) }
@@ -202,7 +202,7 @@ fun MapScreen(
     }
 
     LaunchedEffect(Unit) {
-        if (!hasCenteredOnUser) {
+        if (!isMapCenteredAfterLaunch) {
             if (mockControlState.activeLocationTarget !is LocationTarget.Empty) {
                 snapshotFlow { cameraPositionState.projection }
                     .filterNotNull()
@@ -210,7 +210,7 @@ fun MapScreen(
 
                 try {
                     focusMapToLocationTarget(mockControlState.activeLocationTarget, cameraPositionState)
-                    viewModel.markCenteredOnUser()
+                    viewModel.setMapIsCenteredAfterLaunch()
                 } catch (e: Exception) {
                     Log.e("MapScreen", "Error centering map to active location target", e)
                 }
@@ -226,7 +226,7 @@ fun MapScreen(
                                     15f
                                 )
                             )
-                            viewModel.markCenteredOnUser()
+                            viewModel.setMapIsCenteredAfterLaunch()
                         }
                     }
                 } catch (e: SecurityException) {
