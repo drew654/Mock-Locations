@@ -2,6 +2,7 @@ package com.drew654.mocklocations.presentation.map_screen
 
 import android.Manifest
 import android.os.Build
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -59,6 +60,8 @@ import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 @Composable
@@ -199,22 +202,36 @@ fun MapScreen(
     }
 
     LaunchedEffect(Unit) {
-        if (hasLocationPermission && !hasCenteredOnUser) {
-            val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+        if (!hasCenteredOnUser) {
+            if (mockControlState.activeLocationTarget !is LocationTarget.Empty) {
+                snapshotFlow { cameraPositionState.projection }
+                    .filterNotNull()
+                    .first()
 
-            try {
-                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-                    if (location != null) {
-                        cameraPositionState.move(
-                            CameraUpdateFactory.newLatLngZoom(
-                                LatLng(location.latitude, location.longitude),
-                                15f
-                            )
-                        )
-                        viewModel.markCenteredOnUser()
-                    }
+                try {
+                    focusMapToLocationTarget(mockControlState.activeLocationTarget, cameraPositionState)
+                    viewModel.markCenteredOnUser()
+                } catch (e: Exception) {
+                    Log.e("MapScreen", "Error centering map to active location target", e)
                 }
-            } catch (_: SecurityException) {
+            } else if (hasLocationPermission) {
+                val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+
+                try {
+                    fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                        if (location != null) {
+                            cameraPositionState.move(
+                                CameraUpdateFactory.newLatLngZoom(
+                                    LatLng(location.latitude, location.longitude),
+                                    15f
+                                )
+                            )
+                            viewModel.markCenteredOnUser()
+                        }
+                    }
+                } catch (e: SecurityException) {
+                    Log.e("MapScreen", "Error centering map to user", e)
+                }
             }
         }
     }
