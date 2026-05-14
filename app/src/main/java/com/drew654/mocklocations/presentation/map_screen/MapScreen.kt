@@ -47,10 +47,8 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.maps.android.compose.CameraMoveStartedReason
-import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapType
@@ -208,7 +206,7 @@ fun MapScreen(
                     .first()
 
                 try {
-                    focusMapToLocationTarget(mockControlState.activeLocationTarget, cameraPositionState)
+                    MapUtils.focusMapToLocationTarget(mockControlState.activeLocationTarget, cameraPositionState)
                     viewModel.setMapIsCenteredAfterLaunch()
                 } catch (e: Exception) {
                     Log.e("MapScreen", "Error centering map to active location target", e)
@@ -305,7 +303,7 @@ fun MapScreen(
                                 )
                             ),
                             icon = BitmapDescriptorFactory.defaultMarker(
-                                getMarkerHue(
+                                MapUtils.getMarkerHue(
                                     index,
                                     locationTarget.routeSegments.size
                                 )
@@ -461,7 +459,7 @@ fun MapScreen(
         onRouteLoaded = {
             viewModel.loadSavedRoute(it)
             scope.launch {
-                focusMapToLocationTarget(it, cameraPositionState)
+                MapUtils.focusMapToLocationTarget(it, cameraPositionState)
             }
         },
         onRouteDeleted = {
@@ -480,32 +478,4 @@ fun MapScreen(
             context = context
         )
     }
-}
-
-private fun getMarkerHue(index: Int, numPoints: Int): Float {
-    return when (index) {
-        0 -> BitmapDescriptorFactory.HUE_GREEN
-        numPoints - 1 -> BitmapDescriptorFactory.HUE_RED
-        else -> BitmapDescriptorFactory.HUE_YELLOW
-    }
-}
-
-private suspend fun focusMapToLocationTarget(
-    locationTarget: LocationTarget,
-    cameraPositionState: CameraPositionState
-) {
-    if (locationTarget.routeSegments.isEmpty()) return
-
-    val boundsBuilder = LatLngBounds.Builder()
-    locationTarget.getAllPoints().forEach { boundsBuilder.include(it) }
-
-    val bounds = boundsBuilder.build()
-
-    val update = if (locationTarget.routeSegments.size == 1) {
-        CameraUpdateFactory.newLatLngZoom(locationTarget.getLastPoint()!!, 15f)
-    } else {
-        CameraUpdateFactory.newLatLngBounds(bounds, 200)
-    }
-
-    cameraPositionState.animate(update)
 }
