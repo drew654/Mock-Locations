@@ -12,18 +12,17 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.R
-import com.drew654.mocklocations.domain.model.MockControlAction
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 
 @Composable
 fun PauseMockingButton(
     onTogglePause: () -> Unit,
-    enabledMockControlActions: Set<MockControlAction>,
+    enabled: Boolean,
     modifier: Modifier = Modifier
 ) {
     DisableableSmallFloatingActionButton(
         onClick = { onTogglePause() },
-        enabled = MockControlAction.PAUSE in enabledMockControlActions,
+        enabled = enabled,
         modifier = modifier
     ) {
         Icon(
@@ -50,10 +49,7 @@ fun PauseMockingButtonPreview() {
             Box(modifier = Modifier.padding(4.dp)) {
                 PauseMockingButton(
                     onTogglePause = { },
-                    enabledMockControlActions = setOf(
-                        MockControlAction.STOP,
-                        MockControlAction.PAUSE
-                    )
+                    enabled = true
                 )
             }
         }

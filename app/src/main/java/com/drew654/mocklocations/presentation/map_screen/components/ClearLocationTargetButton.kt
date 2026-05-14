@@ -12,24 +12,23 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.R
-import com.drew654.mocklocations.domain.model.MockControlAction
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 
 @Composable
 fun ClearLocationTargetButton(
     onClearLocationTarget: () -> Unit,
-    enabledMockControlActions: Set<MockControlAction>
+    enabled: Boolean
 ) {
     DisableableSmallFloatingActionButton(
         onClick = {
             onClearLocationTarget()
         },
-        enabled = MockControlAction.CLEAR_LOCATION_TARGET in enabledMockControlActions
+        enabled = enabled
     ) {
         Icon(
             painter = painterResource(id = R.drawable.baseline_clear_24),
             contentDescription = "Clear",
-            tint = if (MockControlAction.CLEAR_LOCATION_TARGET in enabledMockControlActions)
+            tint = if (enabled)
                 MaterialTheme.colorScheme.onPrimaryContainer
             else
                 MaterialTheme.colorScheme.onSurfaceVariant
@@ -53,12 +52,7 @@ fun ClearLocationTargetButtonPreview() {
             Box(modifier = Modifier.padding(4.dp)) {
                 ClearLocationTargetButton(
                     onClearLocationTarget = { },
-                    enabledMockControlActions = setOf(
-                        MockControlAction.START,
-                        MockControlAction.ADD_POINT,
-                        MockControlAction.POP_POINT,
-                        MockControlAction.CLEAR_LOCATION_TARGET
-                    )
+                    enabled = true
                 )
             }
         }

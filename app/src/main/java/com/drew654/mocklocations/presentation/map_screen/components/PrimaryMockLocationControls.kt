@@ -15,13 +15,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.drew654.mocklocations.domain.model.MockControlAction
+import com.drew654.mocklocations.domain.model.MockControlState
+import com.drew654.mocklocations.domain.model.isAddPointEnabled
+import com.drew654.mocklocations.domain.model.isAddPointVisible
+import com.drew654.mocklocations.domain.model.isPauseEnabled
+import com.drew654.mocklocations.domain.model.isPauseVisible
+import com.drew654.mocklocations.domain.model.isResumeEnabled
+import com.drew654.mocklocations.domain.model.isResumeVisible
+import com.drew654.mocklocations.domain.model.isStartEnabled
+import com.drew654.mocklocations.domain.model.isStartVisible
+import com.drew654.mocklocations.domain.model.isStopEnabled
+import com.drew654.mocklocations.domain.model.isStopVisible
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 
 @Composable
 fun PrimaryMockLocationControls(
-    visibleMockControlActions: Set<MockControlAction>,
-    enabledMockControlActions: Set<MockControlAction>,
+    mockControlState: MockControlState,
     onStart: () -> Unit,
     onStop: () -> Unit,
     onTogglePause: () -> Unit,
@@ -41,42 +50,42 @@ fun PrimaryMockLocationControls(
         Row(
             verticalAlignment = Alignment.Bottom
         ) {
-            if (MockControlAction.ADD_POINT in visibleMockControlActions) {
+            if (mockControlState.isAddPointVisible()) {
                 AddPointButton(
                     onAddCrosshairsPoint = onAddCrosshairsPoint,
-                    enabledMockControlActions = enabledMockControlActions,
+                    enabled = mockControlState.isAddPointEnabled(),
                     modifier = Modifier.padding(end = 12.dp, bottom = 12.dp)
                 )
             }
 
-            if (MockControlAction.RESUME in visibleMockControlActions) {
+            if (mockControlState.isResumeVisible()) {
                 ResumeMockingButton(
                     onTogglePause = onTogglePause,
-                    enabledMockControlActions = enabledMockControlActions,
+                    enabled = mockControlState.isResumeEnabled(),
                     modifier = Modifier.padding(end = 12.dp, bottom = 12.dp)
                 )
             }
 
-            if (MockControlAction.PAUSE in visibleMockControlActions) {
+            if (mockControlState.isPauseVisible()) {
                 PauseMockingButton(
                     onTogglePause = onTogglePause,
-                    enabledMockControlActions = enabledMockControlActions,
+                    enabled = mockControlState.isPauseEnabled(),
                     modifier = Modifier.padding(end = 12.dp, bottom = 12.dp)
                 )
             }
 
-            if (MockControlAction.START in visibleMockControlActions) {
+            if (mockControlState.isStartVisible()) {
                 StartMockingButton(
                     onStart = onStart,
-                    enabledMockControlActions = enabledMockControlActions,
+                    enabled = mockControlState.isStartEnabled(),
                     modifier = Modifier.padding(bottom = 12.dp, end = 12.dp)
                 )
             }
 
-            if (MockControlAction.STOP in visibleMockControlActions) {
+            if (mockControlState.isStopVisible()) {
                 StopMockingButton(
                     onStop = onStop,
-                    enabledMockControlActions = enabledMockControlActions,
+                    enabled = mockControlState.isStopEnabled(),
                     modifier = Modifier.padding(bottom = 12.dp, end = 12.dp)
                 )
             }
@@ -98,14 +107,7 @@ private fun PrimaryMockLocationControlsPreview() {
     MockLocationsTheme {
         Surface {
             PrimaryMockLocationControls(
-                visibleMockControlActions = setOf(
-                    MockControlAction.START,
-                    MockControlAction.ADD_POINT
-                ),
-                enabledMockControlActions = setOf(
-                    MockControlAction.START,
-                    MockControlAction.ADD_POINT
-                ),
+                mockControlState = MockControlState(),
                 onStart = { },
                 onStop = { },
                 onTogglePause = { },
