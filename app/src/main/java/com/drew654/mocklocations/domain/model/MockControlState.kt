@@ -69,7 +69,7 @@ fun MockControlState.isStartVisible(): Boolean {
 }
 
 fun MockControlState.isStartEnabled(): Boolean {
-    if (activeLocationTarget is LocationTarget.Empty && !isUsingCrosshairs) {
+    if ((activeLocationTarget is LocationTarget.Empty && !isUsingCrosshairs) || isWaitingForRouteFetch) {
         return false
     }
     return isStartVisible()
@@ -116,7 +116,7 @@ fun isPopPointVisible(): Boolean {
 }
 
 fun MockControlState.isPopPointEnabled(): Boolean {
-    if (activeLocationTarget is LocationTarget.Empty || isMocking) {
+    if (activeLocationTarget is LocationTarget.Empty || isMocking || isWaitingForRouteFetch) {
         return false
     }
     return isPopPointVisible()
@@ -127,7 +127,7 @@ fun isClearLocationTargetVisible(): Boolean {
 }
 
 fun MockControlState.isClearLocationTargetEnabled(): Boolean {
-    if (activeLocationTarget is LocationTarget.Empty || isMocking) {
+    if (activeLocationTarget is LocationTarget.Empty || isMocking || isWaitingForRouteFetch) {
         return false
     }
     return isClearLocationTargetVisible()
