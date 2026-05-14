@@ -17,12 +17,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.drew654.mocklocations.domain.model.MockControlAction
+import com.drew654.mocklocations.domain.model.MockControlState
+import com.drew654.mocklocations.domain.model.isClearLocationTargetEnabled
+import com.drew654.mocklocations.domain.model.isPopPointEnabled
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 
 @Composable
 fun SecondaryMockLocationControls(
-    enabledMockControlActions: Set<MockControlAction>,
+    mockControlState: MockControlState,
     onClearLocationTarget: () -> Unit,
     onSaveLocationTarget: () -> Unit,
     onPopRouteSegment: () -> Unit,
@@ -54,12 +56,12 @@ fun SecondaryMockLocationControls(
         Spacer(Modifier.height(4.dp))
         ClearLocationTargetButton(
             onClearLocationTarget = onClearLocationTarget,
-            enabledMockControlActions = enabledMockControlActions
+            enabled = mockControlState.isClearLocationTargetEnabled()
         )
         Spacer(Modifier.height(4.dp))
         PopRouteSegmentButton(
             onPopRouteSegment = onPopRouteSegment,
-            enabledMockControlActions = enabledMockControlActions
+            enabled = mockControlState.isPopPointEnabled()
         )
     }
 }
@@ -78,10 +80,7 @@ private fun SecondaryMockLocationControlsPreview() {
     MockLocationsTheme {
         Surface {
             SecondaryMockLocationControls(
-                enabledMockControlActions = setOf(
-                    MockControlAction.STOP,
-                    MockControlAction.PAUSE
-                ),
+                mockControlState = MockControlState(),
                 onClearLocationTarget = { },
                 onSaveLocationTarget = { },
                 onPopRouteSegment = { },

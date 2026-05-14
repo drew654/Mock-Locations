@@ -28,7 +28,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.drew654.mocklocations.R
-import com.drew654.mocklocations.domain.model.MockControlAction
+import com.drew654.mocklocations.domain.model.MockControlState
+import com.drew654.mocklocations.domain.model.isAddPointVisible
 import com.drew654.mocklocations.presentation.Screen
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 import com.google.maps.android.compose.CameraPositionState
@@ -36,8 +37,7 @@ import com.google.maps.android.compose.CameraPositionState
 @Composable
 fun MapControlButtons(
     navController: NavController,
-    visibleMockControlActions: Set<MockControlAction>,
-    enabledMockControlActions: Set<MockControlAction>,
+    mockControlState: MockControlState,
     cameraPositionState: CameraPositionState,
     controlsAreExpanded: Boolean,
     setControlsAreExpanded: (Boolean) -> Unit,
@@ -131,8 +131,7 @@ fun MapControlButtons(
                 .fillMaxSize()
         ) {
             MockLocationControls(
-                visibleMockControlActions = visibleMockControlActions,
-                enabledMockControlActions = enabledMockControlActions,
+                mockControlState = mockControlState,
                 onClearLocationTarget = {
                     onClearLocationTarget()
                 },
@@ -171,7 +170,7 @@ fun MapControlButtons(
             modifier = Modifier
                 .fillMaxSize()
         ) {
-            if (MockControlAction.ADD_POINT in visibleMockControlActions) {
+            if (mockControlState.isAddPointVisible()) {
                 Crosshairs(color = crosshairsColor, modifier = Modifier.align(Alignment.Center))
             }
         }
@@ -193,14 +192,7 @@ fun MapControlButtonsPreview() {
         Surface {
             MapControlButtons(
                 navController = NavController(LocalContext.current),
-                visibleMockControlActions = setOf(
-                    MockControlAction.START,
-                    MockControlAction.ADD_POINT
-                ),
-                enabledMockControlActions = setOf(
-                    MockControlAction.START,
-                    MockControlAction.ADD_POINT
-                ),
+                mockControlState = MockControlState(),
                 cameraPositionState = CameraPositionState(),
                 controlsAreExpanded = false,
                 setControlsAreExpanded = { },

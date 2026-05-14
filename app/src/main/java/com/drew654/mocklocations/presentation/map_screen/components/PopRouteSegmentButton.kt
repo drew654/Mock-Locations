@@ -12,22 +12,21 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.R
-import com.drew654.mocklocations.domain.model.MockControlAction
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 
 @Composable
 fun PopRouteSegmentButton(
     onPopRouteSegment: () -> Unit,
-    enabledMockControlActions: Set<MockControlAction>
+    enabled: Boolean
 ) {
     DisableableSmallFloatingActionButton(
         onClick = { onPopRouteSegment() },
-        enabled = MockControlAction.POP_POINT in enabledMockControlActions
+        enabled = enabled
     ) {
         Icon(
             painter = painterResource(id = R.drawable.baseline_backspace_24),
             contentDescription = "Pop",
-            tint = if (MockControlAction.POP_POINT in enabledMockControlActions)
+            tint = if (enabled)
                 MaterialTheme.colorScheme.onPrimaryContainer
             else
                 MaterialTheme.colorScheme.onSurfaceVariant
@@ -51,12 +50,7 @@ fun PopRouteSegmentButtonPreview() {
             Box(modifier = Modifier.padding(4.dp)) {
                 PopRouteSegmentButton(
                     onPopRouteSegment = { },
-                    enabledMockControlActions = setOf(
-                        MockControlAction.START,
-                        MockControlAction.ADD_POINT,
-                        MockControlAction.POP_POINT,
-                        MockControlAction.CLEAR_LOCATION_TARGET
-                    )
+                    enabled = true
                 )
             }
         }

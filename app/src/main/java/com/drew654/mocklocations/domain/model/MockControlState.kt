@@ -9,61 +9,6 @@ data class MockControlState(
     val isWaitingForRouteFetch: Boolean = false
 )
 
-fun MockControlState.getVisibleActions(): Set<MockControlAction> {
-    val actions = mutableSetOf<MockControlAction>()
-    if (isStartVisible()) {
-        actions.add(MockControlAction.START)
-    }
-    if (isStopVisible()) {
-        actions.add(MockControlAction.STOP)
-    }
-    if (isPauseVisible()) {
-        actions.add(MockControlAction.PAUSE)
-    }
-    if (isResumeVisible()) {
-        actions.add(MockControlAction.RESUME)
-    }
-    if (isAddPointVisible()) {
-        actions.add(MockControlAction.ADD_POINT)
-    }
-    if (isPopPointVisible()) {
-        actions.add(MockControlAction.POP_POINT)
-    }
-    if (isClearLocationTargetVisible()) {
-        actions.add(MockControlAction.CLEAR_LOCATION_TARGET)
-    }
-    return actions
-}
-
-fun MockControlState.getEnabledActions(): Set<MockControlAction> {
-    val actions = mutableSetOf<MockControlAction>()
-    if (isStartEnabled()) {
-        actions.add(MockControlAction.START)
-    }
-    if (isStopEnabled()) {
-        actions.add(MockControlAction.STOP)
-    }
-    if (isPauseEnabled()) {
-        actions.add(MockControlAction.PAUSE)
-    }
-    if (isResumeEnabled()) {
-        actions.add(MockControlAction.RESUME)
-    }
-    if (isAddPointEnabled()) {
-        actions.add(MockControlAction.ADD_POINT)
-    }
-    if (isPopPointEnabled()) {
-        actions.add(MockControlAction.POP_POINT)
-    }
-    if (isLongPressAddPointEnabled()) {
-        actions.add(MockControlAction.LONG_PRESS_ADD_POINT)
-    }
-    if (isClearLocationTargetEnabled()) {
-        actions.add(MockControlAction.CLEAR_LOCATION_TARGET)
-    }
-    return actions
-}
-
 fun MockControlState.isStartVisible(): Boolean {
     return !isMocking
 }

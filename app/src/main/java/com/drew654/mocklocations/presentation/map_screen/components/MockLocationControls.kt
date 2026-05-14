@@ -18,14 +18,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.drew654.mocklocations.domain.model.MockControlAction
+import com.drew654.mocklocations.domain.model.LocationTarget
+import com.drew654.mocklocations.domain.model.MockControlState
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
+import com.google.android.gms.maps.model.LatLng
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MockLocationControls(
-    visibleMockControlActions: Set<MockControlAction>,
-    enabledMockControlActions: Set<MockControlAction>,
+    mockControlState: MockControlState,
     onClearLocationTarget: () -> Unit,
     onStart: () -> Unit,
     onStop: () -> Unit,
@@ -55,7 +56,7 @@ fun MockLocationControls(
     ) {
         Spacer(Modifier.height((64 + 8).dp))
         SecondaryMockLocationControls(
-            enabledMockControlActions = enabledMockControlActions,
+            mockControlState = mockControlState,
             onClearLocationTarget = onClearLocationTarget,
             onSaveLocationTarget = onSaveLocationTarget,
             onPopRouteSegment = onPopRouteSegment,
@@ -82,8 +83,7 @@ fun MockLocationControls(
                     )
 
                     PrimaryMockLocationControls(
-                        visibleMockControlActions = visibleMockControlActions,
-                        enabledMockControlActions = enabledMockControlActions,
+                        mockControlState = mockControlState,
                         onStart = onStart,
                         onStop = onStop,
                         onTogglePause = onTogglePause,
@@ -106,8 +106,7 @@ fun MockLocationControls(
                     )
 
                     PrimaryMockLocationControls(
-                        visibleMockControlActions = visibleMockControlActions,
-                        enabledMockControlActions = enabledMockControlActions,
+                        mockControlState = mockControlState,
                         onStart = onStart,
                         onStop = onStop,
                         onTogglePause = onTogglePause,
@@ -134,14 +133,7 @@ private fun MockLocationControlsPreview1() {
     MockLocationsTheme {
         Surface {
             MockLocationControls(
-                visibleMockControlActions = setOf(
-                    MockControlAction.START,
-                    MockControlAction.ADD_POINT
-                ),
-                enabledMockControlActions = setOf(
-                    MockControlAction.START,
-                    MockControlAction.ADD_POINT
-                ),
+                mockControlState = MockControlState(),
                 onClearLocationTarget = { },
                 onStart = { },
                 onStop = { },
@@ -172,13 +164,11 @@ private fun MockLocationControlsPreview2() {
     MockLocationsTheme {
         Surface {
             MockLocationControls(
-                visibleMockControlActions = setOf(
-                    MockControlAction.STOP,
-                    MockControlAction.PAUSE
-                ),
-                enabledMockControlActions = setOf(
-                    MockControlAction.STOP,
-                    MockControlAction.PAUSE
+                mockControlState = MockControlState(
+                    isMocking = true,
+                    activeLocationTarget = LocationTarget.SinglePoint(
+                        LatLng(0.0, 0.0)
+                    )
                 ),
                 onClearLocationTarget = { },
                 onStart = { },
@@ -212,14 +202,7 @@ private fun MockLocationControlsPreviewNarrow() {
     MockLocationsTheme {
         Surface {
             MockLocationControls(
-                visibleMockControlActions = setOf(
-                    MockControlAction.START,
-                    MockControlAction.ADD_POINT
-                ),
-                enabledMockControlActions = setOf(
-                    MockControlAction.START,
-                    MockControlAction.ADD_POINT
-                ),
+                mockControlState = MockControlState(),
                 onClearLocationTarget = { },
                 onStart = { },
                 onStop = { },

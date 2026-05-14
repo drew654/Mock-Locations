@@ -11,18 +11,17 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.R
-import com.drew654.mocklocations.domain.model.MockControlAction
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 
 @Composable
 fun StartMockingButton(
     onStart: () -> Unit,
-    enabledMockControlActions: Set<MockControlAction>,
+    enabled: Boolean,
     modifier: Modifier = Modifier
 ) {
     DisableableFloatingActionButton(
         onClick = { onStart() },
-        enabled = MockControlAction.START in enabledMockControlActions,
+        enabled = enabled,
         modifier = modifier
     ) {
         Icon(
@@ -48,10 +47,7 @@ fun StartMockingButtonPreview() {
             Box(modifier = Modifier.padding(8.dp)) {
                 StartMockingButton(
                     onStart = { },
-                    enabledMockControlActions = setOf(
-                        MockControlAction.START,
-                        MockControlAction.ADD_POINT
-                    ),
+                    enabled = true
                 )
             }
         }

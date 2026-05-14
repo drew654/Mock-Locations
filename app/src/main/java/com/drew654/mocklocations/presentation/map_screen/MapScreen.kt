@@ -32,11 +32,9 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import com.drew654.mocklocations.R
 import com.drew654.mocklocations.domain.model.LocationTarget
-import com.drew654.mocklocations.domain.model.MockControlAction
 import com.drew654.mocklocations.domain.model.Permission
-import com.drew654.mocklocations.domain.model.getEnabledActions
-import com.drew654.mocklocations.domain.model.getVisibleActions
 import com.drew654.mocklocations.domain.model.isGranted
+import com.drew654.mocklocations.domain.model.isLongPressAddPointEnabled
 import com.drew654.mocklocations.presentation.MockLocationsViewModel
 import com.drew654.mocklocations.presentation.NoRippleInteractionSource
 import com.drew654.mocklocations.presentation.map_screen.components.ExpandedControls
@@ -277,7 +275,7 @@ fun MapScreen(
                     },
                     onMapLongClick = {
                         focusManager.clearFocus()
-                        if (MockControlAction.LONG_PRESS_ADD_POINT in mockControlState.getEnabledActions()) {
+                        if (mockControlState.isLongPressAddPointEnabled()) {
                             scope.launch {
                                 viewModel.pushRouteSegment(it)
                             }
@@ -321,8 +319,7 @@ fun MapScreen(
                 }
                 MapControlButtons(
                     navController = navController,
-                    visibleMockControlActions = mockControlState.getVisibleActions(),
-                    enabledMockControlActions = mockControlState.getEnabledActions(),
+                    mockControlState = mockControlState,
                     cameraPositionState = cameraPositionState,
                     controlsAreExpanded = controlsAreExpanded,
                     setControlsAreExpanded = {

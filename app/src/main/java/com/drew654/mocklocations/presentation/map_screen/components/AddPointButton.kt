@@ -11,18 +11,17 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.R
-import com.drew654.mocklocations.domain.model.MockControlAction
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 
 @Composable
 fun AddPointButton(
     onAddCrosshairsPoint: () -> Unit,
-    enabledMockControlActions: Set<MockControlAction>,
+    enabled: Boolean,
     modifier: Modifier = Modifier
 ) {
     DisableableFloatingActionButton(
         onClick = { onAddCrosshairsPoint() },
-        enabled = MockControlAction.ADD_POINT in enabledMockControlActions,
+        enabled = enabled,
         modifier = modifier
     ) {
         Icon(
@@ -48,12 +47,7 @@ fun AddPointButtonPreview() {
             Box(modifier = Modifier.padding(8.dp)) {
                 AddPointButton(
                     onAddCrosshairsPoint = { },
-                    enabledMockControlActions = setOf(
-                        MockControlAction.START,
-                        MockControlAction.ADD_POINT,
-                        MockControlAction.POP_POINT,
-                        MockControlAction.CLEAR_LOCATION_TARGET
-                    )
+                    enabled = true
                 )
             }
         }
