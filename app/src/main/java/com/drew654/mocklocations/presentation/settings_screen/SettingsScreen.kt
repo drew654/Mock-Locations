@@ -120,21 +120,24 @@ fun SettingsScreen(
                 checked = isBuildRouteOnRoads,
                 onCheckedChange = {
                     viewModel.setBuildRouteOnRoads(it)
-                }
+                },
+                switchTestTag = "build_route_on_roads_switch"
             )
             SwitchRow(
                 label = "Use crosshairs",
                 checked = isUsingCrosshairs,
                 onCheckedChange = {
                     viewModel.setIsUsingCrosshairs(it)
-                }
+                },
+                switchTestTag = "use_crosshairs_switch"
             )
             SwitchRow(
                 label = "Clear route on stop",
                 checked = clearPointsOnStop,
                 onCheckedChange = {
                     viewModel.setClearRouteOnStop(it)
-                }
+                },
+                switchTestTag = "clear_route_on_stop_switch"
             )
             SwitchRow(
                 label = "Camera follows mocked location",
@@ -142,14 +145,16 @@ fun SettingsScreen(
                 onCheckedChange = {
                     viewModel.setIsCameraFollowingMockedLocation(it)
                     viewModel.setIsCameraCurrentlyFollowingMockedLocation(it)
-                }
+                },
+                switchTestTag = "camera_follows_mocked_location_switch"
             )
             SwitchRow(
                 label = "Wait at the end of a route",
                 checked = isGoingToWaitAtRouteFinish,
                 onCheckedChange = {
                     viewModel.setIsGoingToWaitAtRouteFinish(it)
-                }
+                },
+                switchTestTag = "wait_at_route_finish_switch"
             )
             TextRow(
                 label = "Map style",
