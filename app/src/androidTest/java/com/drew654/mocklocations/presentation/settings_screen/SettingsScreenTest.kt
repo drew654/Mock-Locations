@@ -1,12 +1,18 @@
 package com.drew654.mocklocations.presentation.settings_screen
 
 import android.content.Intent
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsFocused
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
+import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTextReplacement
 import androidx.navigation.NavController
 import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.intent.Intents.intended
@@ -54,12 +60,21 @@ class SettingsScreenTest {
 
         val mapStyle = MutableStateFlow<MapStyle?>(null)
         every { viewModel.mapStyle } returns mapStyle
+        every { viewModel.setMapStyle(any()) } answers {
+            mapStyle.value = firstArg()
+        }
 
         val locationAccuracyLevel = MutableStateFlow<LocationAccuracyLevel>(LocationAccuracyLevel.Perfect)
         every { viewModel.locationAccuracyLevel } returns locationAccuracyLevel
+        every { viewModel.setLocationAccuracyLevel(any()) } answers {
+            locationAccuracyLevel.value = firstArg()
+        }
 
         val locationUpdateDelay = MutableStateFlow(1f)
         every { viewModel.locationUpdateDelay } returns locationUpdateDelay
+        every { viewModel.setLocationUpdateDelay(any()) } answers {
+            locationUpdateDelay.value = firstArg()
+        }
 
         val isCameraFollowingMockedLocation = MutableStateFlow(true)
         every { viewModel.isCameraFollowingMockedLocation } returns isCameraFollowingMockedLocation
@@ -190,6 +205,80 @@ class SettingsScreenTest {
     }
 
     @Test
+    fun clickMapStyle_updatesUIState() {
+        setupMockFlows()
+
+        composeTestRule.setContent {
+            SettingsScreen(viewModel, navController)
+        }
+
+        composeTestRule
+            .onNodeWithText("Default")
+            .assertExists()
+
+        composeTestRule
+            .onNodeWithText("Map style")
+            .performClick()
+
+        listOf("Default (System)", "Standard", "Night", "Satellite", "Hybrid", "Terrain", "Aubergine", "Dark", "Retro", "Silver").forEach {
+            composeTestRule
+                .onNodeWithText(it)
+                .assertExists()
+        }
+
+        composeTestRule
+            .onNodeWithText("Hybrid")
+            .performClick()
+
+        verify { viewModel.setMapStyle(MapStyle.Hybrid) }
+
+        composeTestRule
+            .onNodeWithText("Default")
+            .assertDoesNotExist()
+
+        composeTestRule
+            .onNodeWithText("Hybrid")
+            .assertExists()
+    }
+
+    @Test
+    fun clickLocationAccuracyLevel_updatesUIState() {
+        setupMockFlows()
+
+        composeTestRule.setContent {
+            SettingsScreen(viewModel, navController)
+        }
+
+        composeTestRule
+            .onNodeWithText("Perfect")
+            .assertExists()
+
+        composeTestRule
+            .onNodeWithText("Location accuracy level")
+            .performClick()
+
+        listOf("Perfect (0 m)", "High (5 m)", "Medium (10 m)", "Low (20 m)").forEach {
+            composeTestRule
+                .onNodeWithText(it)
+                .assertExists()
+        }
+
+        composeTestRule
+            .onNodeWithText("High (5 m)")
+            .performClick()
+
+        verify { viewModel.setLocationAccuracyLevel(LocationAccuracyLevel.High) }
+
+        composeTestRule
+            .onNodeWithText("Perfect")
+            .assertDoesNotExist()
+
+        composeTestRule
+            .onNodeWithText("High")
+            .assertExists()
+    }
+
+    @Test
     fun clickLocationUpdateDelay_updatesUIState() {
         setupMockFlows()
 
@@ -216,6 +305,108 @@ class SettingsScreenTest {
         composeTestRule
             .onNodeWithText("Delay between location updates in seconds")
             .assertExists()
+
+        composeTestRule
+            .onNode(hasSetTextAction())
+            .assertIsFocused()
+
+        composeTestRule
+            .onNode(hasSetTextAction())
+            .performTextReplacement("")
+
+        composeTestRule
+            .onNodeWithText("Cancel")
+            .assertIsEnabled()
+
+        composeTestRule
+            .onNodeWithText("Save")
+            .assertIsNotEnabled()
+
+        composeTestRule
+            .onNode(hasSetTextAction())
+            .performTextInput("2")
+
+        composeTestRule
+            .onNodeWithText("Save")
+            .performClick()
+
+        verify { viewModel.setLocationUpdateDelay(2f) }
+
+        composeTestRule
+            .onNodeWithText("2 s")
+            .assertExists()
+    }
+
+    @Test
+    fun locationUpdateDelayDialog_handlesDecimalsAndCommas() {
+        setupMockFlows()
+
+        composeTestRule.setContent {
+            SettingsScreen(viewModel, navController)
+        }
+
+        composeTestRule
+            .onNodeWithText("Location update delay")
+            .performClick()
+
+        listOf("e", "1e", "1 .", "1 ,", "6 7", "1.2.3", "1,2,3", "1,2.3", "1.2,3").forEach {
+            composeTestRule
+                .onNode(hasSetTextAction())
+                .performTextReplacement(it)
+
+            composeTestRule
+                .onNodeWithText("Cancel")
+                .assertIsEnabled()
+
+            composeTestRule
+                .onNodeWithText("Save")
+                .assertIsNotEnabled()
+        }
+
+        composeTestRule
+            .onNodeWithText("Cancel")
+            .performClick()
+
+        listOf(
+            Triple(" 1", 1f, "1 s"),
+            Triple("1 ", 1f, "1 s"),
+            Triple(" 1 ", 1f, "1 s"),
+            Triple("1.", 1f, "1 s"),
+            Triple(" 1.", 1f, "1 s"),
+            Triple("1.2", 1.2f, "1.2 s"),
+            Triple("1,2", 1.2f, "1.2 s"),
+            Triple(" 1.2 ", 1.2f, "1.2 s"),
+            Triple(" 1,2 ", 1.2f, "1.2 s"),
+            Triple("1.23", 1.23f, "1.23 s"),
+            Triple("1.234", 1.23f, "1.23 s"),
+            Triple("1.235", 1.24f, "1.24 s")
+        ).forEach { (input, expectedFloat, expectedText) ->
+            composeTestRule
+                .onNodeWithText("Location update delay")
+                .performClick()
+
+            composeTestRule
+                .onNode(hasSetTextAction())
+                .performTextReplacement(input)
+
+            composeTestRule
+                .onNodeWithText("Cancel")
+                .assertIsEnabled()
+
+            composeTestRule
+                .onNodeWithText("Save")
+                .assertIsEnabled()
+
+            composeTestRule
+                .onNodeWithText("Save")
+                .performClick()
+
+            verify { viewModel.setLocationUpdateDelay(expectedFloat) }
+
+            composeTestRule
+                .onNodeWithText(expectedText)
+                .assertExists()
+        }
     }
 
     @Test
