@@ -75,7 +75,7 @@ class SettingsScreenTest {
     }
 
     @Test
-    fun toggleBuildRouteOnRoads_worksCorrectly() {
+    fun toggleBuildRouteOnRoads_updatesUIState() {
         setupMockFlows()
 
         composeTestRule.setContent {
@@ -167,7 +167,7 @@ class SettingsScreenTest {
     }
 
     @Test
-    fun toggleWaitAtRouteFinish_updatesUIState() {
+    fun toggleWaitAtTheEndOfARoute_updatesUIState() {
         setupMockFlows()
 
         composeTestRule.setContent {
@@ -175,7 +175,7 @@ class SettingsScreenTest {
         }
 
         composeTestRule
-            .onNodeWithTag("wait_at_route_finish_switch")
+            .onNodeWithTag("wait_at_the_end_of_a_route_switch")
             .assertIsOff()
 
         composeTestRule
@@ -185,7 +185,7 @@ class SettingsScreenTest {
         verify { viewModel.setIsGoingToWaitAtRouteFinish(true) }
 
         composeTestRule
-            .onNodeWithTag("wait_at_route_finish_switch")
+            .onNodeWithTag("wait_at_the_end_of_a_route_switch")
             .assertIsOn()
     }
 
@@ -198,12 +198,20 @@ class SettingsScreenTest {
         }
 
         composeTestRule
+            .onNodeWithText("Location Update Delay")
+            .assertDoesNotExist()
+
+        composeTestRule
             .onNodeWithText("Delay between location updates in seconds")
             .assertDoesNotExist()
 
         composeTestRule
             .onNodeWithText("Location update delay")
             .performClick()
+
+        composeTestRule
+            .onNodeWithText("Location Update Delay")
+            .assertExists()
 
         composeTestRule
             .onNodeWithText("Delay between location updates in seconds")
@@ -219,12 +227,20 @@ class SettingsScreenTest {
         }
 
         composeTestRule
+            .onNodeWithText("Location Update Delay")
+            .assertDoesNotExist()
+
+        composeTestRule
             .onNodeWithText("Delay between location updates in seconds")
             .assertDoesNotExist()
 
         composeTestRule
             .onNodeWithText("Location update delay")
             .performClick()
+
+        composeTestRule
+            .onNodeWithText("Location Update Delay")
+            .assertExists()
 
         composeTestRule
             .onNodeWithText("Delay between location updates in seconds")
@@ -235,6 +251,10 @@ class SettingsScreenTest {
             .performClick()
 
         composeTestRule
+            .onNodeWithText("Location Update Delay")
+            .assertDoesNotExist()
+
+        composeTestRule
             .onNodeWithText("Delay between location updates in seconds")
             .assertDoesNotExist()
 
@@ -243,12 +263,20 @@ class SettingsScreenTest {
             .performClick()
 
         composeTestRule
+            .onNodeWithText("Location Update Delay")
+            .assertExists()
+
+        composeTestRule
             .onNodeWithText("Delay between location updates in seconds")
             .assertExists()
 
         composeTestRule
             .onNodeWithText("Save")
             .performClick()
+
+        composeTestRule
+            .onNodeWithText("Location Update Delay")
+            .assertDoesNotExist()
 
         composeTestRule
             .onNodeWithText("Delay between location updates in seconds")

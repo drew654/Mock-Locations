@@ -156,7 +156,7 @@ fun SettingsScreen(
                 onCheckedChange = {
                     viewModel.setIsGoingToWaitAtRouteFinish(it)
                 },
-                switchTestTag = "wait_at_route_finish_switch"
+                switchTestTag = "wait_at_the_end_of_a_route_switch"
             )
             TextRow(
                 label = "Map style",
