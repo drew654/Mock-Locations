@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -71,10 +72,18 @@ fun MapScreen(
     val systemInDarkTheme = isSystemInDarkTheme()
     val scope = rememberCoroutineScope()
     val mockControlState by viewModel.mockControlState.collectAsState()
-    val locationTarget = mockControlState.activeLocationTarget
-    val isMocking = mockControlState.isMocking
-    val isPaused = mockControlState.isPaused
-    val isUsingCrosshairs = mockControlState.isUsingCrosshairs
+    val activeLocationTarget by remember {
+        derivedStateOf { mockControlState.activeLocationTarget }
+    }
+    val isMocking by remember {
+        derivedStateOf { mockControlState.isMocking }
+    }
+    val isPaused by remember {
+        derivedStateOf { mockControlState.isPaused }
+    }
+    val isUsingCrosshairs by remember {
+        derivedStateOf { mockControlState.isUsingCrosshairs }
+    }
     val speedUnitValue by viewModel.speedUnitValue.collectAsState()
     var hasLocationPermission by remember {
         mutableStateOf(Permission.FineLocation.isGranted(context))
@@ -200,13 +209,13 @@ fun MapScreen(
 
     LaunchedEffect(Unit) {
         if (!isMapCenteredAfterLaunch) {
-            if (mockControlState.activeLocationTarget !is LocationTarget.Empty) {
+            if (activeLocationTarget !is LocationTarget.Empty) {
                 snapshotFlow { cameraPositionState.projection }
                     .filterNotNull()
                     .first()
 
                 try {
-                    MapUtils.focusMapToLocationTarget(mockControlState.activeLocationTarget, cameraPositionState)
+                    MapUtils.focusMapToLocationTarget(activeLocationTarget, cameraPositionState)
                     viewModel.setMapIsCenteredAfterLaunch()
                 } catch (e: Exception) {
                     Log.e("MapScreen", "Error centering map to active location target", e)
@@ -281,31 +290,21 @@ fun MapScreen(
                         }
                     }
                 ) {
-                    if (locationTarget !is LocationTarget.Empty) {
+                    if (activeLocationTarget.isRoute()) {
                         Polyline(
-                            points = locationTarget.getAllPoints().map {
-                                LatLng(
-                                    it.latitude,
-                                    it.longitude
-                                )
-                            },
+                            points = activeLocationTarget.getAllPoints(),
                             color = mapStyle?.polyLineStroke ?: MaterialTheme.colorScheme.onBackground,
                             width = 8f * context.resources.displayMetrics.density
                         )
                     }
 
-                    locationTarget.routeSegments.forEachIndexed { index, routeSegment ->
+                    activeLocationTarget.routeSegments.forEachIndexed { index, routeSegment ->
                         Marker(
-                            state = MarkerState(
-                                position = LatLng(
-                                    routeSegment.getMapMarkerPoint().latitude,
-                                    routeSegment.getMapMarkerPoint().longitude
-                                )
-                            ),
+                            state = MarkerState(position = routeSegment.getMapMarkerPoint()),
                             icon = BitmapDescriptorFactory.defaultMarker(
                                 MapUtils.getMarkerHue(
                                     index,
-                                    locationTarget.routeSegments.size
+                                    activeLocationTarget.routeSegments.size
                                 )
                             ),
                             snippet = "Lat: ${routeSegment.getMapMarkerPoint().latitude}, Lng: ${routeSegment.getMapMarkerPoint().longitude}",
@@ -356,14 +355,14 @@ fun MapScreen(
                             return@MapControlButtons
                         }
 
-                        if (isCameraFollowingMockedLocation && locationTarget.isRoute()) {
+                        if (isCameraFollowingMockedLocation && activeLocationTarget.isRoute()) {
                             viewModel.setIsCameraCurrentlyFollowingMockedLocation(true)
                             cameraPositionState.move(CameraUpdateFactory.zoomTo(15f))
                         }
                         scope.launch {
                             viewModel.startMockLocation(
                                 context = context,
-                                pushPoint = if (isUsingCrosshairs && locationTarget is LocationTarget.Empty) cameraPositionState.position.target else null
+                                pushPoint = if (isUsingCrosshairs && activeLocationTarget is LocationTarget.Empty) cameraPositionState.position.target else null
                             )
                         }
                     },
@@ -455,7 +454,7 @@ fun MapScreen(
         onRouteSaved = {
             viewModel.saveCurrentRoute(it)
         },
-        locationTarget = locationTarget,
+        locationTarget = activeLocationTarget,
         onRouteLoaded = {
             viewModel.loadSavedRoute(it)
             scope.launch {
