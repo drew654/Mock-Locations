@@ -89,7 +89,6 @@ fun MapScreen(
     val isUsingCrosshairs by remember {
         derivedStateOf { mockControlState.isUsingCrosshairs }
     }
-    val speedUnitValue by viewModel.speedUnitValue.collectAsState()
     var hasLocationPermission by remember {
         mutableStateOf(Permission.FineLocation.isGranted(context))
     }
@@ -114,14 +113,12 @@ fun MapScreen(
         myLocationButtonEnabled = false,
         zoomControlsEnabled = false
     )
-    val savedCameraPosition by viewModel.cameraPosition.collectAsState()
     var hasRestoredCamera by remember { mutableStateOf(false) }
-    val isMapCenteredAfterLaunch by viewModel.isMapCenteredAfterLaunch.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
     val cameraPositionState = rememberCameraPositionState()
     val lifecycleOwner = LocalLifecycleOwner.current
     var isShowingSavedRoutesDialog by rememberSaveable { mutableStateOf(false) }
     val savedRoutes by viewModel.savedRoutes.collectAsState()
-    val controlsAreExpanded by viewModel.controlsAreExpanded.collectAsState()
     var isShowingSearch by rememberSaveable { mutableStateOf(false) }
     val permissionsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
@@ -138,7 +135,6 @@ fun MapScreen(
     val isCameraFollowingMockedLocation by viewModel.isCameraFollowingMockedLocation.collectAsState()
     val isCameraCurrentlyFollowingMockedLocation by viewModel.isCameraCurrentlyFollowingMockedLocation.collectAsState()
     val currentMockedLocation by viewModel.currentMockedLocation.collectAsState()
-    val shouldFocusSearchBar by viewModel.shouldFocusSearchBar.collectAsState()
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -175,15 +171,12 @@ fun MapScreen(
         }
     }
 
-    LaunchedEffect(savedCameraPosition) {
-        if (!hasRestoredCamera && savedCameraPosition != null) {
+    LaunchedEffect(uiState.savedCameraPosition) {
+        if (!hasRestoredCamera && uiState.savedCameraPosition != null) {
             cameraPositionState.move(
                 CameraUpdateFactory.newLatLngZoom(
-                    LatLng(
-                        savedCameraPosition!!.latitude,
-                        savedCameraPosition!!.longitude
-                    ),
-                    savedCameraPosition!!.zoom
+                    uiState.savedCameraPosition!!.toLatLng(),
+                    uiState.savedCameraPosition!!.zoom
                 )
             )
             hasRestoredCamera = true
@@ -213,7 +206,7 @@ fun MapScreen(
     }
 
     LaunchedEffect(Unit) {
-        if (!isMapCenteredAfterLaunch) {
+        if (!uiState.isMapCenteredAfterLaunch) {
             if (activeLocationTarget !is LocationTarget.Empty) {
                 snapshotFlow { cameraPositionState.projection }
                     .filterNotNull()
@@ -262,7 +255,7 @@ fun MapScreen(
                 }
             }
         },
-        shouldFocusSearchBar = shouldFocusSearchBar,
+        shouldFocusSearchBar = uiState.shouldFocusSearchBar,
         cameraPositionState = cameraPositionState,
         mapProperties = mapProperties,
         mapUiSettings = mapUiSettings,
@@ -276,7 +269,7 @@ fun MapScreen(
         mapStyle = mapStyle,
         navController = navController,
         mockControlState = mockControlState,
-        controlsAreExpanded = controlsAreExpanded,
+        controlsAreExpanded = uiState.controlsAreExpanded,
         setControlsAreExpanded = {
             viewModel.setControlsAreExpanded(it)
         },
@@ -379,12 +372,13 @@ fun MapScreen(
             isShowingSearch = it
         },
         isCameraCurrentlyFollowingMockedLocation = isCameraCurrentlyFollowingMockedLocation,
-        speedUnitValue = speedUnitValue,
-        onSpeedChanged = {
-            viewModel.setSpeedUnitValue(speedUnitValue.copy(value = it))
+        speedUnitValue = uiState.speedUnitValue,
+        onSpeedChanged = { newSpeed ->
+            val oldValue = uiState.speedUnitValue
+            viewModel.updateUiState { it.copy(speedUnitValue = oldValue.copy(value = newSpeed)) }
         },
         onSpeedChangeFinished = {
-            viewModel.saveSpeedUnitValue(speedUnitValue)
+            viewModel.saveSpeedUnitValue(uiState.speedUnitValue)
         },
         speedSliderLowerEnd = speedSliderLowerEnd,
         speedSliderUpperEnd = speedSliderUpperEnd,

@@ -12,12 +12,12 @@ fun ExpandedControlsConfigurationScreen(
     viewModel: MockLocationsViewModel,
     navController: NavController
 ) {
-    val speedUnitValue by viewModel.speedUnitValue.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
     val speedSliderLowerEnd by viewModel.speedSliderLowerEnd.collectAsState()
     val speedSliderUpperEnd by viewModel.speedSliderUpperEnd.collectAsState()
 
     ExpandedControlsConfigurationContent(
-        originalSpeedUnitValue = speedUnitValue,
+        originalSpeedUnitValue = uiState.speedUnitValue,
         originalSpeedSliderLowerEnd = speedSliderLowerEnd,
         originalSpeedSliderUpperEnd = speedSliderUpperEnd,
         onSaved = { speedUnitValue, speedSliderLowerEnd, speedSliderUpperEnd ->

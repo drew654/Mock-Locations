@@ -18,10 +18,10 @@ import com.drew654.mocklocations.domain.model.LocationAccuracyLevel
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.MapStyle
 import com.drew654.mocklocations.domain.model.MockControlState
+import com.drew654.mocklocations.domain.model.MockLocationsUiState
 import com.drew654.mocklocations.domain.model.RoutePoint
 import com.drew654.mocklocations.domain.model.RouteSegment
 import com.drew654.mocklocations.domain.model.SavedCameraPosition
-import com.drew654.mocklocations.domain.model.SpeedUnit
 import com.drew654.mocklocations.domain.model.SpeedUnitValue
 import com.drew654.mocklocations.service.MockLocationService
 import com.drew654.mocklocations.service.MockLocationService.Companion.ACTION_RESTORE_STRAIGHT_LINE_MOCKING
@@ -32,28 +32,17 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 class MockLocationsViewModel(application: Application) : AndroidViewModel(application) {
-    private val _cameraPosition = MutableStateFlow<SavedCameraPosition?>(null)
-    val cameraPosition = _cameraPosition.asStateFlow()
-    private val _isMapCenteredAfterLaunch = MutableStateFlow(false)
-    val isMapCenteredAfterLaunch = _isMapCenteredAfterLaunch.asStateFlow()
-    private val _controlsAreExpanded = MutableStateFlow(false)
-    val controlsAreExpanded: StateFlow<Boolean> = _controlsAreExpanded.asStateFlow()
+    private val _uiState = MutableStateFlow(MockLocationsUiState())
+    val uiState: StateFlow<MockLocationsUiState> = _uiState
     private val settingsManager = SettingsManager(application)
     val exportRepository = ExportRepository(settingsManager)
     val routeRepository = RouteRepository()
-    private val _importUri = MutableStateFlow<Uri?>(null)
-    private val _shouldFocusSearchBar = MutableStateFlow(false)
-    val shouldFocusSearchBar: StateFlow<Boolean> = _shouldFocusSearchBar.asStateFlow()
-    private val _speedUnitValue =
-        MutableStateFlow(SpeedUnitValue(value = 30.0, speedUnit = SpeedUnit.MilesPerHour))
-    val speedUnitValue: StateFlow<SpeedUnitValue> = _speedUnitValue.asStateFlow()
     val mockControlState = settingsManager.mockControlStateFlow.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -115,7 +104,8 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
 
     init {
         viewModelScope.launch {
-            _speedUnitValue.value = settingsManager.speedUnitValueFlow.first()
+            val savedSpeedUnitValue = settingsManager.speedUnitValueFlow.first()
+            updateUiState { it.copy(speedUnitValue = savedSpeedUnitValue) }
             settingsManager.setMockControlState(mockControlState.value.copy(isWaitingForRouteFetch = false))
         }
 
@@ -177,16 +167,16 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     fun importDataFromUri(importSettings: Boolean, importRouteOption: ImportRouteOption?) {
         viewModelScope.launch(Dispatchers.IO) {
             val context = getApplication<Application>().applicationContext
-
             try {
                 val json = context.contentResolver
-                    .openInputStream(_importUri.value!!)
+                    .openInputStream(_uiState.value.importUri!!)
                     ?.bufferedReader()
                     ?.use { it.readText() }
                     ?: throw IllegalStateException("Unable to read file")
 
                 exportRepository.importFromJson(json, importSettings, importRouteOption)
-                _speedUnitValue.value = settingsManager.speedUnitValueFlow.first()
+                val savedSpeedUnitValue = settingsManager.speedUnitValueFlow.first()
+                updateUiState { it.copy(speedUnitValue = savedSpeedUnitValue) }
 
                 launch(Dispatchers.Main) {
                     Toast.makeText(context, "Import successful", Toast.LENGTH_SHORT).show()
@@ -206,7 +196,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
             val context = getApplication<Application>().applicationContext
             try {
                 val json = context.contentResolver
-                    .openInputStream(_importUri.value!!)
+                    .openInputStream(_uiState.value.importUri!!)
                     ?.bufferedReader()
                     ?.use { it.readText() }
                     ?: throw IllegalStateException("Unable to read file")
@@ -224,7 +214,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
             val context = getApplication<Application>().applicationContext
             try {
                 val json = context.contentResolver
-                    .openInputStream(_importUri.value!!)
+                    .openInputStream(_uiState.value.importUri!!)
                     ?.bufferedReader()
                     ?.use { it.readText() }
                     ?: throw IllegalStateException("Unable to read file")
@@ -243,7 +233,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
             val context = getApplication<Application>().applicationContext
             try {
                 val json = context.contentResolver
-                    .openInputStream(_importUri.value!!)
+                    .openInputStream(_uiState.value.importUri!!)
                     ?.bufferedReader()
                     ?.use { it.readText() }
                     ?: throw IllegalStateException("Unable to read file")
@@ -259,24 +249,35 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     fun resetSettingsToDefault() {
         viewModelScope.launch {
             settingsManager.resetToDefault()
-            _speedUnitValue.value = settingsManager.speedUnitValueFlow.first()
+            val savedSpeedUnitValue = settingsManager.speedUnitValueFlow.first()
+            updateUiState { it.copy(speedUnitValue = savedSpeedUnitValue) }
         }
     }
 
     fun updateCameraPosition(position: CameraPosition) {
-        _cameraPosition.value = SavedCameraPosition(
-            latitude = position.target.latitude,
-            longitude = position.target.longitude,
-            zoom = position.zoom
-        )
+        updateUiState {
+            it.copy(
+                savedCameraPosition = SavedCameraPosition(
+                    latitude = position.target.latitude,
+                    longitude = position.target.longitude,
+                    zoom = position.zoom
+                )
+            )
+        }
     }
 
     fun setMapIsCenteredAfterLaunch() {
-        _isMapCenteredAfterLaunch.value = true
+        updateUiState { it.copy(isMapCenteredAfterLaunch = true) }
+    }
+
+    fun updateUiState(transform: (MockLocationsUiState) -> MockLocationsUiState) {
+        val currentState = _uiState.value
+        val newState = transform(currentState)
+        _uiState.value = newState
     }
 
     fun setControlsAreExpanded(expanded: Boolean) {
-        _controlsAreExpanded.value = expanded
+        updateUiState { it.copy(controlsAreExpanded = expanded) }
     }
 
     private suspend fun updateMockControlState(transform: (MockControlState) -> MockControlState) {
@@ -327,15 +328,15 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     }
 
     fun setImportUri(uri: Uri?) {
-        _importUri.value = uri
+        updateUiState { it.copy(importUri = uri) }
     }
 
     fun setShouldFocusSearchBar(value: Boolean) {
-        _shouldFocusSearchBar.value = value
+        updateUiState { it.copy(shouldFocusSearchBar = value) }
     }
 
-    fun setSpeedUnitValue(speedUnitValue: SpeedUnitValue) {
-        _speedUnitValue.value = speedUnitValue
+    fun setSpeedUnitValue(newSpeedUnitValue: SpeedUnitValue) {
+        updateUiState { it.copy(speedUnitValue = newSpeedUnitValue) }
     }
 
     fun startMockLocation(context: Context, pushPoint: LatLng? = null) {
