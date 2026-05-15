@@ -19,7 +19,6 @@ import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 @Composable
 fun PermissionsDialog(
     permission: Permission,
-    setShowMockLocationDialog: (Boolean) -> Unit,
     onDismiss: () -> Unit,
     context: Context
 ) {
@@ -90,7 +89,7 @@ fun PermissionsDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = { setShowMockLocationDialog(false) }) {
+            TextButton(onClick = { onDismiss() }) {
                 Text("Cancel")
             }
         }
@@ -113,7 +112,6 @@ private fun PermissionsDialogPreview() {
         Surface {
             PermissionsDialog(
                 permission = Permission.FineLocation,
-                setShowMockLocationDialog = { },
                 onDismiss = { },
                 context = context
             )
