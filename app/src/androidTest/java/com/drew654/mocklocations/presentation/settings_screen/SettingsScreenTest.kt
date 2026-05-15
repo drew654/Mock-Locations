@@ -87,6 +87,17 @@ class SettingsScreenTest {
         every { viewModel.setIsGoingToWaitAtRouteFinish(any()) } answers {
             isGoingToWaitAtRouteFinish.value = firstArg()
         }
+
+        every { viewModel.resetSettingsToDefault() } answers {
+            mockControlStateFlow.value = MockControlState()
+            isBuildRoutesOnRoadFlow.value = false
+            clearPointsOnStop.value = false
+            mapStyle.value = null
+            locationAccuracyLevel.value = LocationAccuracyLevel.Perfect
+            locationUpdateDelay.value = 1f
+            isCameraFollowingMockedLocation.value = true
+            isGoingToWaitAtRouteFinish.value = false
+        }
     }
 
     @Test
@@ -502,6 +513,157 @@ class SettingsScreenTest {
             .performClick()
 
         verify { navController.navigate(Screen.ExportSettings.route) }
+    }
+
+    @Test
+    fun resetToDefaultDialog_worksCorrectly() {
+        setupMockFlows()
+
+        composeTestRule.setContent {
+            SettingsScreen(viewModel, navController)
+        }
+
+        composeTestRule
+            .onNodeWithText("Build route on roads")
+            .performClick()
+
+        composeTestRule
+            .onNodeWithText("Use crosshairs")
+            .performClick()
+
+        composeTestRule
+            .onNodeWithText("Clear route on stop")
+            .performClick()
+
+        composeTestRule
+            .onNodeWithText("Camera follows mocked location")
+            .performClick()
+
+        composeTestRule
+            .onNodeWithText("Wait at the end of a route")
+            .performClick()
+
+        composeTestRule
+            .onNodeWithText("Map style")
+            .performClick()
+
+        composeTestRule
+            .onNodeWithText("Terrain")
+            .performClick()
+
+        composeTestRule
+            .onNodeWithText("Location accuracy level")
+            .performClick()
+
+        composeTestRule
+            .onNodeWithText("Medium (10 m)")
+            .performClick()
+
+        composeTestRule
+            .onNodeWithText("Location update delay")
+            .performClick()
+
+        composeTestRule
+            .onNode(hasSetTextAction())
+            .performTextReplacement("1.67")
+
+        composeTestRule
+            .onNodeWithText("Save")
+            .performClick()
+
+        composeTestRule
+            .onNodeWithText("Reset to default")
+            .performClick()
+
+        composeTestRule
+            .onNodeWithText("Reset settings to default?")
+            .assertExists()
+
+        composeTestRule
+            .onNodeWithText("Cancel")
+            .performClick()
+
+        composeTestRule
+            .onNodeWithText("Reset settings to default?")
+            .assertDoesNotExist()
+
+        composeTestRule
+            .onNodeWithTag("build_route_on_roads_switch")
+            .assertIsOn()
+
+        composeTestRule
+            .onNodeWithTag("use_crosshairs_switch")
+            .assertIsOff()
+
+        composeTestRule
+            .onNodeWithTag("clear_route_on_stop_switch")
+            .assertIsOn()
+
+        composeTestRule
+            .onNodeWithTag("camera_follows_mocked_location_switch")
+            .assertIsOff()
+
+        composeTestRule
+            .onNodeWithTag("wait_at_the_end_of_a_route_switch")
+            .assertIsOn()
+
+        composeTestRule
+            .onNodeWithText("Terrain")
+            .assertExists()
+
+        composeTestRule
+            .onNodeWithText("Medium")
+            .assertExists()
+
+        composeTestRule
+            .onNodeWithText("1.67 s")
+            .assertExists()
+
+        composeTestRule
+            .onNodeWithText("Reset to default")
+            .performClick()
+
+        composeTestRule
+            .onNodeWithText("Reset Settings")
+            .performClick()
+
+        verify { viewModel.resetSettingsToDefault() }
+
+        composeTestRule
+            .onNodeWithText("Reset settings to default?")
+            .assertDoesNotExist()
+
+        composeTestRule
+            .onNodeWithTag("build_route_on_roads_switch")
+            .assertIsOff()
+
+        composeTestRule
+            .onNodeWithTag("use_crosshairs_switch")
+            .assertIsOn()
+
+        composeTestRule
+            .onNodeWithTag("clear_route_on_stop_switch")
+            .assertIsOff()
+
+        composeTestRule
+            .onNodeWithTag("camera_follows_mocked_location_switch")
+            .assertIsOn()
+
+        composeTestRule
+            .onNodeWithTag("wait_at_the_end_of_a_route_switch")
+            .assertIsOff()
+
+        composeTestRule
+            .onNodeWithText("Default")
+            .assertExists()
+
+        composeTestRule
+            .onNodeWithText("Perfect")
+            .assertExists()
+
+        composeTestRule
+            .onNodeWithText("1 s")
+            .assertExists()
     }
 
     @Test
