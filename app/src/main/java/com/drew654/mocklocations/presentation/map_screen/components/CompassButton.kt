@@ -16,17 +16,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.R
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.model.CameraPosition
-import com.google.maps.android.compose.CameraPositionState
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 @Composable
 fun CompassButton(
-    scope: CoroutineScope,
-    cameraPositionState: CameraPositionState
+    bearing: Float,
+    onClick: () -> Unit
 ) {
     Surface(
         modifier = Modifier.padding(4.dp),
@@ -36,26 +30,14 @@ fun CompassButton(
     ) {
         IconButton(
             onClick = {
-                scope.launch {
-                    val currentPos = cameraPositionState.position
-                    cameraPositionState.animate(
-                        CameraUpdateFactory.newCameraPosition(
-                            CameraPosition.Builder()
-                                .target(currentPos.target)
-                                .zoom(currentPos.zoom)
-                                .bearing(0f)
-                                .tilt(0f)
-                                .build()
-                        )
-                    )
-                }
+                onClick()
             },
             modifier = Modifier.size(40.dp)
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.baseline_north_24),
                 contentDescription = "Align North",
-                modifier = Modifier.rotate(360f - cameraPositionState.position.bearing),
+                modifier = Modifier.rotate(360f - bearing),
                 tint = MaterialTheme.colorScheme.onSurface
             )
         }
@@ -76,8 +58,8 @@ fun CompassButtonPreview() {
     MockLocationsTheme {
         Surface {
             CompassButton(
-                scope = CoroutineScope(Dispatchers.Main),
-                cameraPositionState = CameraPositionState()
+                bearing = 0f,
+                onClick = { }
             )
         }
     }

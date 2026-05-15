@@ -33,6 +33,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import com.drew654.mocklocations.R
+import com.drew654.mocklocations.domain.model.CompassState
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.MapStyle
 import com.drew654.mocklocations.domain.model.MockControlState
@@ -51,6 +52,7 @@ import com.drew654.mocklocations.util.MapUtils
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.maps.android.compose.CameraMoveStartedReason
@@ -406,7 +408,26 @@ fun MapScreen(
         permissionToBeRequested = permissionToBeRequested,
         onDismissPermissionsDialog = {
             permissionToBeRequested = null
-        }
+        },
+        onClickCompass = {
+            scope.launch {
+                val currentPos = cameraPositionState.position
+                cameraPositionState.animate(
+                    CameraUpdateFactory.newCameraPosition(
+                        CameraPosition.Builder()
+                            .target(currentPos.target)
+                            .zoom(currentPos.zoom)
+                            .bearing(0f)
+                            .tilt(0f)
+                            .build()
+                    )
+                )
+            }
+        },
+        compassState = CompassState(
+            isVisible = cameraPositionState.position.bearing != 0f || cameraPositionState.position.tilt != 0f,
+            bearing = cameraPositionState.position.bearing
+        )
     )
 }
 
@@ -449,7 +470,9 @@ private fun MapContent(
     onRouteLoaded: (LocationTarget.SavedRoute) -> Unit,
     onRouteDeleted: (LocationTarget.SavedRoute) -> Unit,
     permissionToBeRequested: Permission?,
-    onDismissPermissionsDialog: () -> Unit
+    onDismissPermissionsDialog: () -> Unit,
+    onClickCompass: () -> Unit,
+    compassState: CompassState
 ) {
     val context = LocalContext.current
     val activeLocationTarget = mockControlState.activeLocationTarget
@@ -554,7 +577,11 @@ private fun MapContent(
                     },
                     isShowingSearch = isShowingSearch,
                     isCameraCurrentlyFollowingMockedLocation = isCameraCurrentlyFollowingMockedLocation,
-                    crosshairsColor = mapStyle?.polyLineStroke ?: MaterialTheme.colorScheme.onBackground
+                    crosshairsColor = mapStyle?.polyLineStroke ?: MaterialTheme.colorScheme.onBackground,
+                    onClickCompass = {
+                        onClickCompass()
+                    },
+                    compassState = compassState
                 )
             }
             ExpandedControls(

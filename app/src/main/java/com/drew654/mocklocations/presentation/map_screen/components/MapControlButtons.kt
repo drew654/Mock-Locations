@@ -28,6 +28,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.drew654.mocklocations.R
+import com.drew654.mocklocations.domain.model.CompassState
 import com.drew654.mocklocations.domain.model.MockControlState
 import com.drew654.mocklocations.domain.model.isAddPointVisible
 import com.drew654.mocklocations.presentation.Screen
@@ -53,7 +54,9 @@ fun MapControlButtons(
     setShowSearch: (Boolean) -> Unit,
     isShowingSearch: Boolean,
     isCameraCurrentlyFollowingMockedLocation: Boolean,
-    crosshairsColor: Color
+    crosshairsColor: Color,
+    compassState: CompassState,
+    onClickCompass: () -> Unit
 ) {
     val focusManager = LocalFocusManager.current
     val scope = rememberCoroutineScope()
@@ -84,11 +87,11 @@ fun MapControlButtons(
                             onUserLocationFocus()
                         }
                     )
-                    if (cameraPositionState.position.bearing != 0f || cameraPositionState.position.tilt != 0f) {
+                    if (compassState.isVisible) {
                         Spacer(Modifier.height(4.dp))
                         CompassButton(
-                            scope = scope,
-                            cameraPositionState = cameraPositionState
+                            bearing = compassState.bearing,
+                            onClick = { onClickCompass() }
                         )
                     }
                 }
@@ -208,7 +211,9 @@ fun MapControlButtonsPreview() {
                 setShowSearch = { },
                 isShowingSearch = false,
                 isCameraCurrentlyFollowingMockedLocation = false,
-                crosshairsColor = MaterialTheme.colorScheme.onSurface
+                crosshairsColor = MaterialTheme.colorScheme.onSurface,
+                onClickCompass = { },
+                compassState = CompassState(isVisible = true, bearing = 0f)
             )
         }
     }
