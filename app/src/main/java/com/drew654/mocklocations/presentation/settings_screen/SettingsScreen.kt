@@ -29,6 +29,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.core.net.toUri
 import androidx.navigation.NavController
@@ -50,6 +51,7 @@ fun SettingsScreen(
     viewModel: MockLocationsViewModel,
     navController: NavController
 ) {
+    val context = LocalContext.current
     val mockControlState by viewModel.mockControlState.collectAsState()
     val isBuildRouteOnRoads by viewModel.isBuildRoutesOnRoad.collectAsState()
     val isUsingCrosshairs = mockControlState.isUsingCrosshairs
@@ -208,7 +210,8 @@ fun SettingsScreen(
                         action = Intent.ACTION_VIEW
                         data = "https://github.com/drew654/Mock-Locations/blob/master/README.md".toUri()
                         flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                        navController.context.startActivity(this)
+                    }.also {
+                        context.startActivity(it)
                     }
                 }
             )
@@ -219,7 +222,8 @@ fun SettingsScreen(
                         action = Intent.ACTION_VIEW
                         data = "https://github.com/drew654/Mock-Locations/blob/master/PRIVACY_POLICY.md".toUri()
                         flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                        navController.context.startActivity(this)
+                    }.also {
+                        context.startActivity(it)
                     }
                 }
             )
