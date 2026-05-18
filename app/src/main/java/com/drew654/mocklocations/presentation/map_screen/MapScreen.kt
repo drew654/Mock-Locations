@@ -43,6 +43,7 @@ import com.drew654.mocklocations.domain.model.isGranted
 import com.drew654.mocklocations.domain.model.isLongPressAddPointEnabled
 import com.drew654.mocklocations.presentation.MockLocationsViewModel
 import com.drew654.mocklocations.presentation.NoRippleInteractionSource
+import com.drew654.mocklocations.presentation.Screen
 import com.drew654.mocklocations.presentation.map_screen.components.ExpandedControls
 import com.drew654.mocklocations.presentation.map_screen.components.MapControlButtons
 import com.drew654.mocklocations.presentation.map_screen.components.PermissionsDialog
@@ -269,7 +270,6 @@ fun MapScreen(
             }
         },
         mapStyle = mapStyle,
-        navController = navController,
         mockControlState = mockControlState,
         controlsAreExpanded = uiState.controlsAreExpanded,
         setControlsAreExpanded = {
@@ -427,7 +427,11 @@ fun MapScreen(
         compassState = CompassState(
             isVisible = cameraPositionState.position.bearing != 0f || cameraPositionState.position.tilt != 0f,
             bearing = cameraPositionState.position.bearing
-        )
+        ),
+        onSettingsClick = {
+            focusManager.clearFocus()
+            navController.navigate(Screen.Settings.route)
+        }
     )
 }
 
@@ -442,7 +446,6 @@ private fun MapContent(
     mapUiSettings: MapUiSettings,
     onMapLongClick: (LatLng) -> Unit,
     mapStyle: MapStyle?,
-    navController: NavController,
     mockControlState: MockControlState,
     controlsAreExpanded: Boolean,
     setControlsAreExpanded: (Boolean) -> Unit,
@@ -472,7 +475,8 @@ private fun MapContent(
     permissionToBeRequested: Permission?,
     onDismissPermissionsDialog: () -> Unit,
     onClickCompass: () -> Unit,
-    compassState: CompassState
+    compassState: CompassState,
+    onSettingsClick: () -> Unit
 ) {
     val context = LocalContext.current
     val activeLocationTarget = mockControlState.activeLocationTarget
@@ -540,7 +544,6 @@ private fun MapContent(
                     }
                 }
                 MapControlButtons(
-                    navController = navController,
                     mockControlState = mockControlState,
                     cameraPositionState = cameraPositionState,
                     controlsAreExpanded = controlsAreExpanded,
@@ -581,7 +584,10 @@ private fun MapContent(
                     onClickCompass = {
                         onClickCompass()
                     },
-                    compassState = compassState
+                    compassState = compassState,
+                    onSettingsClick = {
+                        onSettingsClick()
+                    }
                 )
             }
             ExpandedControls(

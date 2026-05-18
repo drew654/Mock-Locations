@@ -21,23 +21,18 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import com.drew654.mocklocations.R
 import com.drew654.mocklocations.domain.model.CompassState
 import com.drew654.mocklocations.domain.model.MockControlState
 import com.drew654.mocklocations.domain.model.isAddPointVisible
-import com.drew654.mocklocations.presentation.Screen
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 import com.google.maps.android.compose.CameraPositionState
 
 @Composable
 fun MapControlButtons(
-    navController: NavController,
     mockControlState: MockControlState,
     cameraPositionState: CameraPositionState,
     controlsAreExpanded: Boolean,
@@ -56,9 +51,9 @@ fun MapControlButtons(
     isCameraCurrentlyFollowingMockedLocation: Boolean,
     crosshairsColor: Color,
     compassState: CompassState,
-    onClickCompass: () -> Unit
+    onClickCompass: () -> Unit,
+    onSettingsClick: () -> Unit
 ) {
-    val focusManager = LocalFocusManager.current
     val scope = rememberCoroutineScope()
 
     Box(
@@ -112,8 +107,7 @@ fun MapControlButtons(
             ) {
                 SmallFloatingActionButton(
                     onClick = {
-                        focusManager.clearFocus()
-                        navController.navigate(Screen.Settings.route)
+                        onSettingsClick()
                     },
                     modifier = Modifier
                         .align(Alignment.End)
@@ -194,7 +188,6 @@ fun MapControlButtonsPreview() {
     MockLocationsTheme {
         Surface {
             MapControlButtons(
-                navController = NavController(LocalContext.current),
                 mockControlState = MockControlState(),
                 cameraPositionState = CameraPositionState(),
                 controlsAreExpanded = false,
@@ -213,7 +206,8 @@ fun MapControlButtonsPreview() {
                 isCameraCurrentlyFollowingMockedLocation = false,
                 crosshairsColor = MaterialTheme.colorScheme.onSurface,
                 onClickCompass = { },
-                compassState = CompassState(isVisible = true, bearing = 0f)
+                compassState = CompassState(isVisible = true, bearing = 0f),
+                onSettingsClick = { }
             )
         }
     }
