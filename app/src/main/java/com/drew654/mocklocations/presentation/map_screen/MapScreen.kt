@@ -35,11 +35,11 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import com.drew654.mocklocations.R
 import com.drew654.mocklocations.domain.model.CompassState
+import com.drew654.mocklocations.domain.model.ExpandedControlsState
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.MapStyle
 import com.drew654.mocklocations.domain.model.MockControlState
 import com.drew654.mocklocations.domain.model.Permission
-import com.drew654.mocklocations.domain.model.SpeedUnit
 import com.drew654.mocklocations.domain.model.SpeedUnitValue
 import com.drew654.mocklocations.domain.model.isGranted
 import com.drew654.mocklocations.domain.model.isLongPressAddPointEnabled
@@ -135,8 +135,6 @@ fun MapScreen(
         }
     }
     var isNamingRoute by rememberSaveable { mutableStateOf(false) }
-    val speedSliderLowerEnd by viewModel.speedSliderLowerEnd.collectAsState()
-    val speedSliderUpperEnd by viewModel.speedSliderUpperEnd.collectAsState()
     val isCameraFollowingMockedLocation by viewModel.isCameraFollowingMockedLocation.collectAsState()
     val isCameraCurrentlyFollowingMockedLocation by viewModel.isCameraCurrentlyFollowingMockedLocation.collectAsState()
     val currentMockedLocation by viewModel.currentMockedLocation.collectAsState()
@@ -272,7 +270,7 @@ fun MapScreen(
         },
         mapStyle = mapStyle,
         mockControlState = mockControlState,
-        controlsAreExpanded = uiState.controlsAreExpanded,
+        expandedControlsState = uiState.expandedControlsState,
         setControlsAreExpanded = {
             viewModel.setControlsAreExpanded(it)
         },
@@ -374,16 +372,13 @@ fun MapScreen(
             viewModel.setShouldFocusSearchBar(it)
             isShowingSearch = it
         },
-        speedUnitValue = uiState.speedUnitValue,
         onSpeedChanged = { newSpeed ->
-            val oldValue = uiState.speedUnitValue
-            viewModel.updateUiState { it.copy(speedUnitValue = oldValue.copy(value = newSpeed)) }
+            val oldValue = uiState.expandedControlsState.speedUnitValue
+            viewModel.updateExpandedControlsState { it.copy(speedUnitValue = oldValue.copy(value = newSpeed)) }
         },
         onSpeedChangeFinished = {
-            viewModel.saveSpeedUnitValue(uiState.speedUnitValue)
+            viewModel.saveSpeedUnitValue(uiState.expandedControlsState.speedUnitValue)
         },
-        speedSliderLowerEnd = speedSliderLowerEnd,
-        speedSliderUpperEnd = speedSliderUpperEnd,
         isShowingSavedRoutesDialog = isShowingSavedRoutesDialog,
         isNamingRoute = isNamingRoute,
         onSetIsNamingRoute = {
@@ -464,10 +459,7 @@ private fun MapContent(
     mapUiSettings: MapUiSettings,
     mapStyle: MapStyle?,
     mockControlState: MockControlState,
-    controlsAreExpanded: Boolean,
-    speedUnitValue: SpeedUnitValue,
-    speedSliderLowerEnd: Int,
-    speedSliderUpperEnd: Int,
+    expandedControlsState: ExpandedControlsState,
     isShowingSavedRoutesDialog: Boolean,
     isNamingRoute: Boolean,
     savedRoutes: List<LocationTarget.SavedRoute>,
@@ -566,7 +558,7 @@ private fun MapContent(
                 }
                 MapControlButtons(
                     mockControlState = mockControlState,
-                    controlsAreExpanded = controlsAreExpanded,
+                    controlsAreExpanded = expandedControlsState.isExpanded,
                     setControlsAreExpanded = {
                         setControlsAreExpanded(it)
                     },
@@ -616,16 +608,13 @@ private fun MapContent(
                 )
             }
             ExpandedControls(
-                isExpanded = controlsAreExpanded,
-                speedUnitValue = speedUnitValue,
+                state = expandedControlsState,
                 onSpeedChanged = {
                     onSpeedChanged(it)
                 },
                 onSpeedChangeFinished = {
                     onSpeedChangeFinished(it)
-                },
-                sliderLowerEnd = speedSliderLowerEnd,
-                sliderUpperEnd = speedSliderUpperEnd
+                }
             )
         }
     }
@@ -650,7 +639,7 @@ private fun MapContent(
             onRouteDeleted(it)
         },
         isMocking = isMocking,
-        speedUnit = speedUnitValue.speedUnit
+        speedUnit = expandedControlsState.speedUnitValue.speedUnit
     )
     permissionToBeRequested?.let { permission ->
         PermissionsDialog(
@@ -683,10 +672,7 @@ private fun MapScreenPreview() {
         mapUiSettings = MapUiSettings(),
         mapStyle = null,
         mockControlState = MockControlState(),
-        controlsAreExpanded = false,
-        speedUnitValue = SpeedUnitValue(0.0, SpeedUnit.MilesPerHour),
-        speedSliderLowerEnd = 0,
-        speedSliderUpperEnd = 100,
+        expandedControlsState = ExpandedControlsState(),
         isShowingSavedRoutesDialog = false,
         isNamingRoute = false,
         savedRoutes = emptyList(),

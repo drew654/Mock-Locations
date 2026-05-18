@@ -13,14 +13,13 @@ fun ExpandedControlsConfigurationScreen(
     navController: NavController
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val speedSliderLowerEnd by viewModel.speedSliderLowerEnd.collectAsState()
-    val speedSliderUpperEnd by viewModel.speedSliderUpperEnd.collectAsState()
 
     ExpandedControlsConfigurationContent(
-        originalSpeedUnitValue = uiState.speedUnitValue,
-        originalSpeedSliderLowerEnd = speedSliderLowerEnd,
-        originalSpeedSliderUpperEnd = speedSliderUpperEnd,
-        onSaved = { speedUnitValue, speedSliderLowerEnd, speedSliderUpperEnd ->
+        originalState = uiState.expandedControlsState,
+        onSaved = { expandedControlsState ->
+            val speedUnitValue = expandedControlsState.speedUnitValue
+            val speedSliderLowerEnd = expandedControlsState.speedSliderLowerEnd
+            val speedSliderUpperEnd = expandedControlsState.speedSliderUpperEnd
             viewModel.setSpeedUnitValue(speedUnitValue)
             viewModel.saveSpeedUnitValue(speedUnitValue)
             if (speedUnitValue.value < speedSliderLowerEnd) {
@@ -32,7 +31,9 @@ fun ExpandedControlsConfigurationScreen(
                 viewModel.saveSpeedUnitValue(speedUnitValue.copy(value = speedSliderUpperEnd.toDouble()))
             }
             viewModel.setSpeedSliderLowerEnd(speedSliderLowerEnd)
+            viewModel.saveSpeedSliderLowerEnd(speedSliderLowerEnd)
             viewModel.setSpeedSliderUpperEnd(speedSliderUpperEnd)
+            viewModel.saveSpeedSliderUpperEnd(speedSliderUpperEnd)
             navController.popBackStack()
         },
         onBack = {

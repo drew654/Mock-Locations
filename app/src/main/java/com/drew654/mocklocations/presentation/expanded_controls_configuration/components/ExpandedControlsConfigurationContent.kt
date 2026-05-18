@@ -44,7 +44,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.R
-import com.drew654.mocklocations.domain.model.SpeedUnit
+import com.drew654.mocklocations.domain.model.ExpandedControlsState
 import com.drew654.mocklocations.domain.model.SpeedUnitValue
 import com.drew654.mocklocations.domain.model.getSpeedUnitByName
 import com.drew654.mocklocations.presentation.settings_screen.components.SpeedUnitDialog
@@ -64,24 +64,22 @@ val SpeedUnitValueSaver = listSaver<SpeedUnitValue, Any>(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExpandedControlsConfigurationContent(
-    originalSpeedUnitValue: SpeedUnitValue,
-    originalSpeedSliderLowerEnd: Int,
-    originalSpeedSliderUpperEnd: Int,
-    onSaved: (SpeedUnitValue, Int, Int) -> Unit = { _, _, _ -> },
+    originalState: ExpandedControlsState = ExpandedControlsState(),
+    onSaved: (ExpandedControlsState) -> Unit = { },
     onBack: () -> Unit = { }
 ) {
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
     val scrollState = rememberScrollState()
     var isShowingSpeedUnitDialog by rememberSaveable { mutableStateOf(false) }
-    var speedUnitValue by rememberSaveable(originalSpeedUnitValue, stateSaver = SpeedUnitValueSaver) {
-        mutableStateOf(originalSpeedUnitValue)
+    var speedUnitValue by rememberSaveable(originalState.speedUnitValue, stateSaver = SpeedUnitValueSaver) {
+        mutableStateOf(originalState.speedUnitValue)
     }
-    var speedSliderLowerEnd by rememberSaveable(originalSpeedSliderLowerEnd) {
-        mutableStateOf(originalSpeedSliderLowerEnd.toString())
+    var speedSliderLowerEnd by rememberSaveable(originalState.speedSliderLowerEnd) {
+        mutableStateOf(originalState.speedSliderLowerEnd.toString())
     }
-    var speedSliderUpperEnd by rememberSaveable(originalSpeedSliderUpperEnd) {
-        mutableStateOf(originalSpeedSliderUpperEnd.toString())
+    var speedSliderUpperEnd by rememberSaveable(originalState.speedSliderUpperEnd) {
+        mutableStateOf(originalState.speedSliderUpperEnd.toString())
     }
 
     fun formIsValid(): Boolean {
@@ -179,9 +177,11 @@ fun ExpandedControlsConfigurationContent(
                 onClick = {
                     if (formIsValid()) {
                         onSaved(
-                            speedUnitValue,
-                            speedSliderLowerEnd.toInt(),
-                            speedSliderUpperEnd.toInt()
+                            ExpandedControlsState(
+                                speedUnitValue = speedUnitValue,
+                                speedSliderLowerEnd = speedSliderLowerEnd.toInt(),
+                                speedSliderUpperEnd = speedSliderUpperEnd.toInt()
+                            )
                         )
                     } else {
                         Toast.makeText(context, "Invalid values", Toast.LENGTH_SHORT).show()
@@ -220,11 +220,7 @@ fun ExpandedControlsConfigurationContent(
 private fun ExpandableControlsConfigurationContentPreview() {
     MockLocationsTheme {
         Surface {
-            ExpandedControlsConfigurationContent(
-                originalSpeedUnitValue = SpeedUnitValue(30.0, SpeedUnit.MilesPerHour),
-                originalSpeedSliderLowerEnd = 0,
-                originalSpeedSliderUpperEnd = 100
-            )
+            ExpandedControlsConfigurationContent()
         }
     }
 }

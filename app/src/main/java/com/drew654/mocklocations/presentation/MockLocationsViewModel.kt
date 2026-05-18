@@ -13,6 +13,7 @@ import androidx.lifecycle.viewModelScope
 import com.drew654.mocklocations.data.repository.ExportRepository
 import com.drew654.mocklocations.data.repository.RouteRepository
 import com.drew654.mocklocations.domain.SettingsManager
+import com.drew654.mocklocations.domain.model.ExpandedControlsState
 import com.drew654.mocklocations.domain.model.ImportRouteOption
 import com.drew654.mocklocations.domain.model.LocationAccuracyLevel
 import com.drew654.mocklocations.domain.model.LocationTarget
@@ -63,16 +64,6 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = runBlocking { settingsManager.locationAccuracyLevelFlow.first() }
     )
-    val speedSliderLowerEnd: StateFlow<Int> = settingsManager.speedSliderLowerEndFlow.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = runBlocking { settingsManager.speedSliderLowerEndFlow.first() }
-    )
-    val speedSliderUpperEnd: StateFlow<Int> = settingsManager.speedSliderUpperEndFlow.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = runBlocking { settingsManager.speedSliderUpperEndFlow.first() }
-    )
     val isCameraFollowingMockedLocation: StateFlow<Boolean> =
         settingsManager.isCameraFollowingMockedLocation.stateIn(
             scope = viewModelScope,
@@ -105,7 +96,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     init {
         viewModelScope.launch {
             val savedSpeedUnitValue = settingsManager.speedUnitValueFlow.first()
-            updateUiState { it.copy(speedUnitValue = savedSpeedUnitValue) }
+            updateExpandedControlsState { it.copy(speedUnitValue = savedSpeedUnitValue) }
             settingsManager.setMockControlState(mockControlState.value.copy(isWaitingForRouteFetch = false))
         }
 
@@ -176,7 +167,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
 
                 exportRepository.importFromJson(json, importSettings, importRouteOption)
                 val savedSpeedUnitValue = settingsManager.speedUnitValueFlow.first()
-                updateUiState { it.copy(speedUnitValue = savedSpeedUnitValue) }
+                updateExpandedControlsState { it.copy(speedUnitValue = savedSpeedUnitValue) }
 
                 launch(Dispatchers.Main) {
                     Toast.makeText(context, "Import successful", Toast.LENGTH_SHORT).show()
@@ -250,7 +241,15 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         viewModelScope.launch {
             settingsManager.resetToDefault()
             val savedSpeedUnitValue = settingsManager.speedUnitValueFlow.first()
-            updateUiState { it.copy(speedUnitValue = savedSpeedUnitValue) }
+            val savedSpeedSliderLowerEnd = settingsManager.speedSliderLowerEndFlow.first()
+            val savedSpeedSliderUpperEnd = settingsManager.speedSliderUpperEndFlow.first()
+            updateExpandedControlsState {
+                it.copy(
+                    speedUnitValue = savedSpeedUnitValue,
+                    speedSliderLowerEnd = savedSpeedSliderLowerEnd,
+                    speedSliderUpperEnd = savedSpeedSliderUpperEnd
+                )
+            }
         }
     }
 
@@ -276,8 +275,14 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         _uiState.value = newState
     }
 
+    fun updateExpandedControlsState(transform: (ExpandedControlsState) -> ExpandedControlsState) {
+        val currentState = _uiState.value.expandedControlsState
+        val newState = transform(currentState)
+        updateUiState { it.copy(expandedControlsState = newState) }
+    }
+
     fun setControlsAreExpanded(expanded: Boolean) {
-        updateUiState { it.copy(controlsAreExpanded = expanded) }
+        updateExpandedControlsState { it.copy(isExpanded = expanded) }
     }
 
     private suspend fun updateMockControlState(transform: (MockControlState) -> MockControlState) {
@@ -336,7 +341,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     }
 
     fun setSpeedUnitValue(newSpeedUnitValue: SpeedUnitValue) {
-        updateUiState { it.copy(speedUnitValue = newSpeedUnitValue) }
+        updateExpandedControlsState { it.copy(speedUnitValue = newSpeedUnitValue) }
     }
 
     fun startMockLocation(context: Context, pushPoint: LatLng? = null) {
@@ -465,12 +470,20 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     }
 
     fun setSpeedSliderLowerEnd(value: Int) {
+        updateExpandedControlsState { it.copy(speedSliderLowerEnd = value) }
+    }
+
+    fun saveSpeedSliderLowerEnd(value: Int) {
         viewModelScope.launch {
             settingsManager.setSpeedSliderLowerEnd(value)
         }
     }
 
     fun setSpeedSliderUpperEnd(value: Int) {
+        updateExpandedControlsState { it.copy(speedSliderUpperEnd = value) }
+    }
+
+    fun saveSpeedSliderUpperEnd(value: Int) {
         viewModelScope.launch {
             settingsManager.setSpeedSliderUpperEnd(value)
         }
