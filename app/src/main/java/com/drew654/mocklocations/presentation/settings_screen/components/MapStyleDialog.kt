@@ -29,8 +29,8 @@ import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 fun MapStyleDialog(
     isVisible: Boolean,
     selectedStyle: MapStyle?,
-    onStyleSelected: (MapStyle?) -> Unit,
-    onDismiss: () -> Unit
+    onStyleSelected: (MapStyle?) -> Unit = { },
+    onDismiss: () -> Unit = { }
 ) {
     val scrollState = rememberScrollState()
     val mapStyles = listOf(
@@ -119,9 +119,7 @@ private fun MapStyleDialogPhonePreview() {
             Surface(modifier = Modifier.padding(innerPadding)) {
                 MapStyleDialog(
                     isVisible = true,
-                    selectedStyle = MapStyle.Standard,
-                    onStyleSelected = { },
-                    onDismiss = { }
+                    selectedStyle = MapStyle.Standard
                 )
             }
         }
@@ -148,9 +146,7 @@ private fun MapStyleDialogTabletPreview() {
             Surface(modifier = Modifier.padding(innerPadding)) {
                 MapStyleDialog(
                     isVisible = true,
-                    selectedStyle = MapStyle.Standard,
-                    onStyleSelected = { },
-                    onDismiss = { }
+                    selectedStyle = MapStyle.Standard
                 )
             }
         }

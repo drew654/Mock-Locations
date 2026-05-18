@@ -16,8 +16,8 @@ import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 
 @Composable
 fun ClearLocationTargetButton(
-    onClearLocationTarget: () -> Unit,
-    enabled: Boolean
+    onClearLocationTarget: () -> Unit = { },
+    enabled: Boolean = true
 ) {
     DisableableSmallFloatingActionButton(
         onClick = {
@@ -50,10 +50,7 @@ fun ClearLocationTargetButtonPreview() {
     MockLocationsTheme {
         Surface {
             Box(modifier = Modifier.padding(4.dp)) {
-                ClearLocationTargetButton(
-                    onClearLocationTarget = { },
-                    enabled = true
-                )
+                ClearLocationTargetButton()
             }
         }
     }

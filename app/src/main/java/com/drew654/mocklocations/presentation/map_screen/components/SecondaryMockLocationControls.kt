@@ -25,13 +25,13 @@ import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 @Composable
 fun SecondaryMockLocationControls(
     mockControlState: MockControlState,
-    onClearLocationTarget: () -> Unit,
-    onSaveLocationTarget: () -> Unit,
-    onPopRouteSegment: () -> Unit,
-    setShowSearch: (Boolean) -> Unit,
     isShowingSearch: Boolean,
     scrollState: ScrollState,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClearLocationTarget: () -> Unit = { },
+    onSaveLocationTarget: () -> Unit = { },
+    onPopRouteSegment: () -> Unit = { },
+    setShowSearch: (Boolean) -> Unit = { }
 ) {
     Column(
         modifier = modifier
@@ -51,7 +51,7 @@ fun SecondaryMockLocationControls(
         )
         Spacer(Modifier.height(4.dp))
         SavedRoutesButton(
-            onSaveLocationTarget = onSaveLocationTarget
+            onClick = onSaveLocationTarget
         )
         Spacer(Modifier.height(4.dp))
         ClearLocationTargetButton(
@@ -81,10 +81,6 @@ private fun SecondaryMockLocationControlsPreview() {
         Surface {
             SecondaryMockLocationControls(
                 mockControlState = MockControlState(),
-                onClearLocationTarget = { },
-                onSaveLocationTarget = { },
-                onPopRouteSegment = { },
-                setShowSearch = { },
                 isShowingSearch = false,
                 scrollState = ScrollState(0)
             )

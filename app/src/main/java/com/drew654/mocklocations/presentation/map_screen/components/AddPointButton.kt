@@ -15,12 +15,12 @@ import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 
 @Composable
 fun AddPointButton(
-    onAddCrosshairsPoint: () -> Unit,
-    enabled: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = { },
+    enabled: Boolean = true
 ) {
     DisableableFloatingActionButton(
-        onClick = { onAddCrosshairsPoint() },
+        onClick = { onClick() },
         enabled = enabled,
         modifier = modifier
     ) {
@@ -45,10 +45,7 @@ fun AddPointButtonPreview() {
     MockLocationsTheme {
         Surface {
             Box(modifier = Modifier.padding(8.dp)) {
-                AddPointButton(
-                    onAddCrosshairsPoint = { },
-                    enabled = true
-                )
+                AddPointButton()
             }
         }
     }

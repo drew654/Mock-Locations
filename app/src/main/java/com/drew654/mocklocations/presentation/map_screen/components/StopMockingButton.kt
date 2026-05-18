@@ -15,9 +15,9 @@ import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 
 @Composable
 fun StopMockingButton(
-    onStop: () -> Unit,
-    enabled: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onStop: () -> Unit = { },
+    enabled: Boolean = true
 ) {
     DisableableFloatingActionButton(
         onClick = { onStop() },
@@ -45,10 +45,7 @@ fun StopMockingButtonPreview() {
     MockLocationsTheme {
         Surface {
             Box(modifier = Modifier.padding(8.dp)) {
-                StopMockingButton(
-                    onStop = { },
-                    enabled = true
-                )
+                StopMockingButton()
             }
         }
     }

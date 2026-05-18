@@ -25,12 +25,12 @@ import com.google.android.gms.maps.model.LatLng
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun RouteListItem(
+    route: LocationTarget.SavedRoute,
     selected: Boolean,
     shouldShowCheckbox: Boolean,
-    route: LocationTarget.SavedRoute,
-    onClick: (route: LocationTarget.SavedRoute) -> Unit,
-    onLongClick: (route: LocationTarget.SavedRoute) -> Unit,
-    speedUnit: SpeedUnit
+    speedUnit: SpeedUnit,
+    onClick: (route: LocationTarget.SavedRoute) -> Unit = { },
+    onLongClick: (route: LocationTarget.SavedRoute) -> Unit = { }
 ) {
     ListItem(
         headlineContent = { Text(route.name) },
@@ -115,7 +115,6 @@ private fun RouteListItemSelectedPreview() {
     MockLocationsTheme {
         Surface {
             RouteListItem(
-                selected = true,
                 route = LocationTarget.SavedRoute(
                     name = "Route 1",
                     routeSegments = listOf(
@@ -127,8 +126,7 @@ private fun RouteListItemSelectedPreview() {
                         )
                     )
                 ),
-                onClick = { },
-                onLongClick = { },
+                selected = true,
                 shouldShowCheckbox = true,
                 speedUnit = SpeedUnit.MilesPerHour
             )

@@ -17,7 +17,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -29,33 +28,30 @@ import com.drew654.mocklocations.domain.model.CompassState
 import com.drew654.mocklocations.domain.model.MockControlState
 import com.drew654.mocklocations.domain.model.isAddPointVisible
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
-import com.google.maps.android.compose.CameraPositionState
 
 @Composable
 fun MapControlButtons(
     mockControlState: MockControlState,
-    cameraPositionState: CameraPositionState,
     controlsAreExpanded: Boolean,
-    setControlsAreExpanded: (Boolean) -> Unit,
-    onClearLocationTarget: () -> Unit,
-    onStart: () -> Unit,
-    onStop: () -> Unit,
-    onPopRouteSegment: () -> Unit,
-    onTogglePause: () -> Unit,
-    onSaveLocationTarget: () -> Unit,
     isPaused: Boolean,
-    onAddCrosshairsPoint: () -> Unit,
-    onUserLocationFocus: () -> Unit,
-    setShowSearch: (Boolean) -> Unit,
     isShowingSearch: Boolean,
-    isCameraCurrentlyFollowingMockedLocation: Boolean,
-    crosshairsColor: Color,
     compassState: CompassState,
-    onClickCompass: () -> Unit,
-    onSettingsClick: () -> Unit
+    crosshairsColor: Color,
+    onStart: () -> Unit = { },
+    onStop: () -> Unit = { },
+    onTogglePause: () -> Unit = { },
+    onAddCrosshairsPoint: () -> Unit = { },
+    onPopRouteSegment: () -> Unit = { },
+    onClearLocationTarget: () -> Unit = { },
+    onSaveLocationTarget: () -> Unit = { },
+    setShowSearch: (Boolean) -> Unit = { },
+    setControlsAreExpanded: (Boolean) -> Unit = { },
+    onUserLocationFocus: () -> Unit = { },
+    onClickCompass: () -> Unit = { },
+    onSettingsClick: () -> Unit = { },
+    onZoomIn: () -> Unit = { },
+    onZoomOut: () -> Unit = { }
 ) {
-    val scope = rememberCoroutineScope()
-
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -92,12 +88,15 @@ fun MapControlButtons(
                 }
                 Spacer(Modifier.weight(1f))
                 MapZoomButtons(
-                    cameraPositionState = cameraPositionState,
-                    scope = scope,
-                    isCameraCurrentlyFollowingMockedLocation = isCameraCurrentlyFollowingMockedLocation,
                     modifier = Modifier
                         .padding(12.dp)
-                        .padding(bottom = 32.dp)
+                        .padding(bottom = 32.dp),
+                    onZoomIn = {
+                        onZoomIn()
+                    },
+                    onZoomOut = {
+                        onZoomOut()
+                    }
                 )
             }
 
@@ -189,25 +188,11 @@ fun MapControlButtonsPreview() {
         Surface {
             MapControlButtons(
                 mockControlState = MockControlState(),
-                cameraPositionState = CameraPositionState(),
                 controlsAreExpanded = false,
-                setControlsAreExpanded = { },
-                onClearLocationTarget = { },
-                onStart = { },
-                onStop = { },
-                onPopRouteSegment = { },
-                onTogglePause = { },
-                onSaveLocationTarget = { },
                 isPaused = false,
-                onAddCrosshairsPoint = { },
-                onUserLocationFocus = { },
-                setShowSearch = { },
                 isShowingSearch = false,
-                isCameraCurrentlyFollowingMockedLocation = false,
                 crosshairsColor = MaterialTheme.colorScheme.onSurface,
-                onClickCompass = { },
-                compassState = CompassState(isVisible = true, bearing = 0f),
-                onSettingsClick = { }
+                compassState = CompassState(isVisible = true, bearing = 0f)
             )
         }
     }

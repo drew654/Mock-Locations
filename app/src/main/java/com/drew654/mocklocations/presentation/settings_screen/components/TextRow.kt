@@ -20,7 +20,7 @@ import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 fun TextRow(
     label: String,
     value: String? = null,
-    onClick: () -> Unit
+    onClick: () -> Unit = { }
 ) {
     Row(
         modifier = Modifier
@@ -54,7 +54,6 @@ private fun TextRowPreview1() {
     MockLocationsTheme {
         Surface {
             TextRow(
-                onClick = { },
                 label = "Manual"
             )
         }
@@ -75,7 +74,6 @@ private fun TextRowPreview2() {
     MockLocationsTheme {
         Surface {
             TextRow(
-                onClick = { },
                 label = "Speed unit",
                 value = "mph"
             )

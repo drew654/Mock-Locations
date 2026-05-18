@@ -19,8 +19,8 @@ import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 
 @Composable
 fun CompassButton(
-    bearing: Float,
-    onClick: () -> Unit
+    onClick: () -> Unit = { },
+    bearing: Float
 ) {
     Surface(
         modifier = Modifier.padding(4.dp),
@@ -58,8 +58,7 @@ fun CompassButtonPreview() {
     MockLocationsTheme {
         Surface {
             CompassButton(
-                bearing = 0f,
-                onClick = { }
+                bearing = 0f
             )
         }
     }

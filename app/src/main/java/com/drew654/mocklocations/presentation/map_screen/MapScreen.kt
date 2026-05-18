@@ -1,6 +1,7 @@
 package com.drew654.mocklocations.presentation.map_screen
 
 import android.Manifest
+import android.content.res.Configuration
 import android.os.Build
 import android.util.Log
 import android.widget.Toast
@@ -25,9 +26,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -38,6 +39,7 @@ import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.MapStyle
 import com.drew654.mocklocations.domain.model.MockControlState
 import com.drew654.mocklocations.domain.model.Permission
+import com.drew654.mocklocations.domain.model.SpeedUnit
 import com.drew654.mocklocations.domain.model.SpeedUnitValue
 import com.drew654.mocklocations.domain.model.isGranted
 import com.drew654.mocklocations.domain.model.isLongPressAddPointEnabled
@@ -244,7 +246,6 @@ fun MapScreen(
     }
 
     MapContent(
-        focusManager = focusManager,
         isShowingSearch = isShowingSearch,
         onSearchAddress = { address ->
             scope.launch {
@@ -373,7 +374,6 @@ fun MapScreen(
             viewModel.setShouldFocusSearchBar(it)
             isShowingSearch = it
         },
-        isCameraCurrentlyFollowingMockedLocation = isCameraCurrentlyFollowingMockedLocation,
         speedUnitValue = uiState.speedUnitValue,
         onSpeedChanged = { newSpeed ->
             val oldValue = uiState.speedUnitValue
@@ -431,54 +431,75 @@ fun MapScreen(
         onSettingsClick = {
             focusManager.clearFocus()
             navController.navigate(Screen.Settings.route)
+        },
+        onZoomIn = {
+            focusManager.clearFocus()
+            scope.launch {
+                if (isCameraCurrentlyFollowingMockedLocation) {
+                    cameraPositionState.move(CameraUpdateFactory.zoomIn())
+                } else {
+                    cameraPositionState.animate(CameraUpdateFactory.zoomIn())
+                }
+            }
+        },
+        onZoomOut = {
+            focusManager.clearFocus()
+            scope.launch {
+                if (isCameraCurrentlyFollowingMockedLocation) {
+                    cameraPositionState.move(CameraUpdateFactory.zoomOut())
+                } else {
+                    cameraPositionState.animate(CameraUpdateFactory.zoomOut())
+                }
+            }
         }
     )
 }
 
 @Composable
 private fun MapContent(
-    focusManager: FocusManager,
     isShowingSearch: Boolean,
-    onSearchAddress: (String) -> Unit,
     shouldFocusSearchBar: Boolean,
     cameraPositionState: CameraPositionState,
     mapProperties: MapProperties,
     mapUiSettings: MapUiSettings,
-    onMapLongClick: (LatLng) -> Unit,
     mapStyle: MapStyle?,
     mockControlState: MockControlState,
     controlsAreExpanded: Boolean,
-    setControlsAreExpanded: (Boolean) -> Unit,
-    onClearLocationTarget: () -> Unit,
-    onStart: () -> Unit,
-    onStop: () -> Unit,
-    onPopRouteSegment: () -> Unit,
-    onTogglePause: () -> Unit,
-    onSaveLocationTarget: () -> Unit,
-    onAddCrosshairsPoint: () -> Unit,
-    onUserLocationFocus: () -> Unit,
-    onShowSearch: (Boolean) -> Unit,
-    isCameraCurrentlyFollowingMockedLocation: Boolean,
     speedUnitValue: SpeedUnitValue,
-    onSpeedChanged: (Double) -> Unit,
-    onSpeedChangeFinished: (SpeedUnitValue) -> Unit,
     speedSliderLowerEnd: Int,
     speedSliderUpperEnd: Int,
     isShowingSavedRoutesDialog: Boolean,
     isNamingRoute: Boolean,
-    onSetIsNamingRoute: (Boolean) -> Unit,
-    onDismissSavedRouteDialog: () -> Unit,
     savedRoutes: List<LocationTarget.SavedRoute>,
-    onRouteSaved: (String) -> Unit,
-    onRouteLoaded: (LocationTarget.SavedRoute) -> Unit,
-    onRouteDeleted: (LocationTarget.SavedRoute) -> Unit,
     permissionToBeRequested: Permission?,
-    onDismissPermissionsDialog: () -> Unit,
-    onClickCompass: () -> Unit,
     compassState: CompassState,
-    onSettingsClick: () -> Unit
+    onSearchAddress: (String) -> Unit = { },
+    onMapLongClick: (LatLng) -> Unit = { },
+    setControlsAreExpanded: (Boolean) -> Unit = { },
+    onClearLocationTarget: () -> Unit = { },
+    onStart: () -> Unit = { },
+    onStop: () -> Unit = { },
+    onPopRouteSegment: () -> Unit = { },
+    onTogglePause: () -> Unit = { },
+    onSaveLocationTarget: () -> Unit = { },
+    onAddCrosshairsPoint: () -> Unit = { },
+    onUserLocationFocus: () -> Unit = { },
+    onShowSearch: (Boolean) -> Unit = { },
+    onSpeedChanged: (Double) -> Unit = { },
+    onSpeedChangeFinished: (SpeedUnitValue) -> Unit = { },
+    onSetIsNamingRoute: (Boolean) -> Unit = { },
+    onDismissSavedRouteDialog: () -> Unit = { },
+    onRouteSaved: (String) -> Unit = { },
+    onRouteLoaded: (LocationTarget.SavedRoute) -> Unit = { },
+    onRouteDeleted: (LocationTarget.SavedRoute) -> Unit = { },
+    onDismissPermissionsDialog: () -> Unit = { },
+    onClickCompass: () -> Unit = { },
+    onSettingsClick: () -> Unit = { },
+    onZoomIn: () -> Unit = { },
+    onZoomOut: () -> Unit = { }
 ) {
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
     val activeLocationTarget = mockControlState.activeLocationTarget
     val isPaused = mockControlState.isPaused
     val isMocking = mockControlState.isMocking
@@ -545,7 +566,6 @@ private fun MapContent(
                 }
                 MapControlButtons(
                     mockControlState = mockControlState,
-                    cameraPositionState = cameraPositionState,
                     controlsAreExpanded = controlsAreExpanded,
                     setControlsAreExpanded = {
                         setControlsAreExpanded(it)
@@ -579,7 +599,6 @@ private fun MapContent(
                         onShowSearch(it)
                     },
                     isShowingSearch = isShowingSearch,
-                    isCameraCurrentlyFollowingMockedLocation = isCameraCurrentlyFollowingMockedLocation,
                     crosshairsColor = mapStyle?.polyLineStroke ?: MaterialTheme.colorScheme.onBackground,
                     onClickCompass = {
                         onClickCompass()
@@ -587,6 +606,12 @@ private fun MapContent(
                     compassState = compassState,
                     onSettingsClick = {
                         onSettingsClick()
+                    },
+                    onZoomIn = {
+                        onZoomIn()
+                    },
+                    onZoomOut = {
+                        onZoomOut()
                     }
                 )
             }
@@ -632,8 +657,40 @@ private fun MapContent(
             permission = permission,
             onDismiss = {
                 onDismissPermissionsDialog()
-            },
-            context = context
+            }
         )
     }
+}
+
+@Preview(
+    name = "Light Mode",
+    showBackground = true,
+    showSystemUi = true
+)
+@Preview(
+    name = "Dark Mode",
+    showBackground = true,
+    showSystemUi = true,
+    uiMode = Configuration.UI_MODE_NIGHT_YES
+)
+@Composable
+private fun MapScreenPreview() {
+    MapContent(
+        isShowingSearch = false,
+        shouldFocusSearchBar = true,
+        cameraPositionState = CameraPositionState(),
+        mapProperties = MapProperties(),
+        mapUiSettings = MapUiSettings(),
+        mapStyle = null,
+        mockControlState = MockControlState(),
+        controlsAreExpanded = false,
+        speedUnitValue = SpeedUnitValue(0.0, SpeedUnit.MilesPerHour),
+        speedSliderLowerEnd = 0,
+        speedSliderUpperEnd = 100,
+        isShowingSavedRoutesDialog = false,
+        isNamingRoute = false,
+        savedRoutes = emptyList(),
+        permissionToBeRequested = null,
+        compassState = CompassState(isVisible = true, bearing = 0f)
+    )
 }

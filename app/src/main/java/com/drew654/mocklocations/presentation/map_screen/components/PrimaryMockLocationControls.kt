@@ -31,11 +31,11 @@ import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 @Composable
 fun PrimaryMockLocationControls(
     mockControlState: MockControlState,
-    onStart: () -> Unit,
-    onStop: () -> Unit,
-    onTogglePause: () -> Unit,
-    onAddCrosshairsPoint: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onStart: () -> Unit = { },
+    onStop: () -> Unit = { },
+    onTogglePause: () -> Unit = { },
+    onAddCrosshairsPoint: () -> Unit = { }
 ) {
     Box(
         modifier = modifier
@@ -52,7 +52,7 @@ fun PrimaryMockLocationControls(
         ) {
             if (mockControlState.isAddPointVisible()) {
                 AddPointButton(
-                    onAddCrosshairsPoint = onAddCrosshairsPoint,
+                    onClick = onAddCrosshairsPoint,
                     enabled = mockControlState.isAddPointEnabled(),
                     modifier = Modifier.padding(end = 12.dp, bottom = 12.dp)
                 )
@@ -68,7 +68,7 @@ fun PrimaryMockLocationControls(
 
             if (mockControlState.isPauseVisible()) {
                 PauseMockingButton(
-                    onTogglePause = onTogglePause,
+                    onClick = onTogglePause,
                     enabled = mockControlState.isPauseEnabled(),
                     modifier = Modifier.padding(end = 12.dp, bottom = 12.dp)
                 )
@@ -107,11 +107,7 @@ private fun PrimaryMockLocationControlsPreview() {
     MockLocationsTheme {
         Surface {
             PrimaryMockLocationControls(
-                mockControlState = MockControlState(),
-                onStart = { },
-                onStop = { },
-                onTogglePause = { },
-                onAddCrosshairsPoint = { }
+                mockControlState = MockControlState()
             )
         }
     }

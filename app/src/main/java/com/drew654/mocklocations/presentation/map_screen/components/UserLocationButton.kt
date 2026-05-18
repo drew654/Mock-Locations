@@ -14,7 +14,7 @@ import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 
 @Composable
 fun UserLocationButton(
-    onClick: () -> Unit
+    onClick: () -> Unit = { }
 ) {
     val focusManager = LocalFocusManager.current
 
@@ -46,9 +46,7 @@ fun UserLocationButton(
 fun UserLocationButtonPreview() {
     MockLocationsTheme {
         Surface {
-            UserLocationButton(
-                onClick = { }
-            )
+            UserLocationButton()
         }
     }
 }

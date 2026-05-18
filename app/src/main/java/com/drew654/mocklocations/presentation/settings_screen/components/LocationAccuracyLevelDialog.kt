@@ -27,8 +27,8 @@ import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 fun LocationAccuracyLevelDialog(
     isVisible: Boolean,
     selectedLevel: LocationAccuracyLevel,
-    onLevelSelected: (LocationAccuracyLevel) -> Unit,
-    onDismiss: () -> Unit
+    onLevelSelected: (LocationAccuracyLevel) -> Unit = { },
+    onDismiss: () -> Unit = { }
 ) {
     val locationAccuracyLevels = listOf(
         LocationAccuracyLevel.Perfect,
@@ -91,9 +91,7 @@ private fun LocationAccuracyLevelDialogPhonePreview() {
             Surface(modifier = Modifier.padding(innerPadding)) {
                 LocationAccuracyLevelDialog(
                     isVisible = true,
-                    selectedLevel = LocationAccuracyLevel.Perfect,
-                    onLevelSelected = { },
-                    onDismiss = { }
+                    selectedLevel = LocationAccuracyLevel.Perfect
                 )
             }
         }
@@ -120,9 +118,7 @@ private fun LocationAccuracyLevelDialogTabletPreview() {
             Surface(modifier = Modifier.padding(innerPadding)) {
                 LocationAccuracyLevelDialog(
                     isVisible = true,
-                    selectedLevel = LocationAccuracyLevel.Perfect,
-                    onLevelSelected = { },
-                    onDismiss = { }
+                    selectedLevel = LocationAccuracyLevel.Perfect
                 )
             }
         }

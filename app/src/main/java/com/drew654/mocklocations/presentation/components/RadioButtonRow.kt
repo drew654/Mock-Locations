@@ -21,7 +21,7 @@ import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 fun RadioButtonRow(
     label: String,
     selected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit = { }
 ) {
     Row(
         modifier = Modifier
@@ -55,8 +55,7 @@ private fun RadioButtonRowPreview() {
         Surface {
             RadioButtonRow(
                 label = "Merge routes",
-                selected = true,
-                onClick = { }
+                selected = true
             )
         }
     }

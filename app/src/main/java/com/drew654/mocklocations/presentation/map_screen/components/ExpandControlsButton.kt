@@ -20,9 +20,9 @@ import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 
 @Composable
 fun ExpandControlsButton(
-    onClick: () -> Unit,
     controlsAreExpanded: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = { }
 ) {
     Surface(
         modifier = modifier
@@ -63,7 +63,6 @@ fun ExpandControlsButtonPreview() {
         Surface {
             Box(modifier = Modifier.padding(4.dp)) {
                 ExpandControlsButton(
-                    onClick = { },
                     controlsAreExpanded = false
                 )
             }

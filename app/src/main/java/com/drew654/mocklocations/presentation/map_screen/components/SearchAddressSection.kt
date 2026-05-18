@@ -33,8 +33,8 @@ import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 
 @Composable
 fun SearchAddressSection(
-    onSearchAddress: (String) -> Unit,
-    shouldFocusSearchBar: Boolean
+    shouldFocusSearchBar: Boolean,
+    onSearchAddress: (String) -> Unit = { }
 ) {
     val focusManager = LocalFocusManager.current
     val focusRequester = remember { FocusRequester() }
@@ -110,7 +110,6 @@ private fun SearchAddressSectionPreview() {
     MockLocationsTheme {
         Surface {
             SearchAddressSection(
-                onSearchAddress = { },
                 shouldFocusSearchBar = true
             )
         }

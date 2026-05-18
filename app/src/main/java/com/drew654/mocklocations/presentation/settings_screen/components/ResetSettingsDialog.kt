@@ -16,8 +16,8 @@ import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 @Composable
 fun ResetSettingsDialog(
     isVisible: Boolean,
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit
+    onConfirm: () -> Unit = { },
+    onDismiss: () -> Unit = { }
 ) {
     if (isVisible) {
         AlertDialog(
@@ -58,9 +58,7 @@ private fun ResetSettingsDialogPhonePreview() {
         Scaffold { innerPadding ->
             Surface(modifier = Modifier.padding(innerPadding)) {
                 ResetSettingsDialog(
-                    isVisible = true,
-                    onConfirm = { },
-                    onDismiss = { }
+                    isVisible = true
                 )
             }
         }
@@ -86,9 +84,7 @@ private fun ResetSettingsDialogTabletPreview() {
         Scaffold { innerPadding ->
             Surface(modifier = Modifier.padding(innerPadding)) {
                 ResetSettingsDialog(
-                    isVisible = true,
-                    onConfirm = { },
-                    onDismiss = { }
+                    isVisible = true
                 )
             }
         }

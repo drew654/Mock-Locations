@@ -16,12 +16,12 @@ import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 
 @Composable
 fun PauseMockingButton(
-    onTogglePause: () -> Unit,
-    enabled: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = { },
+    enabled: Boolean = true
 ) {
     DisableableSmallFloatingActionButton(
-        onClick = { onTogglePause() },
+        onClick = { onClick() },
         enabled = enabled,
         modifier = modifier
     ) {
@@ -47,10 +47,7 @@ fun PauseMockingButtonPreview() {
     MockLocationsTheme {
         Surface {
             Box(modifier = Modifier.padding(4.dp)) {
-                PauseMockingButton(
-                    onTogglePause = { },
-                    enabled = true
-                )
+                PauseMockingButton()
             }
         }
     }

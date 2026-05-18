@@ -16,8 +16,8 @@ import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 
 @Composable
 fun PopRouteSegmentButton(
-    onPopRouteSegment: () -> Unit,
-    enabled: Boolean
+    onPopRouteSegment: () -> Unit = { },
+    enabled: Boolean = true
 ) {
     DisableableSmallFloatingActionButton(
         onClick = { onPopRouteSegment() },
@@ -48,10 +48,7 @@ fun PopRouteSegmentButtonPreview() {
     MockLocationsTheme {
         Surface {
             Box(modifier = Modifier.padding(4.dp)) {
-                PopRouteSegmentButton(
-                    onPopRouteSegment = { },
-                    enabled = true
-                )
+                PopRouteSegmentButton()
             }
         }
     }

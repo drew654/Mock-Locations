@@ -67,8 +67,8 @@ fun ExpandedControlsConfigurationContent(
     originalSpeedUnitValue: SpeedUnitValue,
     originalSpeedSliderLowerEnd: Int,
     originalSpeedSliderUpperEnd: Int,
-    onSaved: (SpeedUnitValue, Int, Int) -> Unit,
-    onBack: () -> Unit
+    onSaved: (SpeedUnitValue, Int, Int) -> Unit = { _, _, _ -> },
+    onBack: () -> Unit = { }
 ) {
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
@@ -223,9 +223,7 @@ private fun ExpandableControlsConfigurationContentPreview() {
             ExpandedControlsConfigurationContent(
                 originalSpeedUnitValue = SpeedUnitValue(30.0, SpeedUnit.MilesPerHour),
                 originalSpeedSliderLowerEnd = 0,
-                originalSpeedSliderUpperEnd = 100,
-                onSaved = { _, _, _ -> },
-                onBack = { }
+                originalSpeedSliderUpperEnd = 100
             )
         }
     }

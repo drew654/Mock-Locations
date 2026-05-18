@@ -27,18 +27,18 @@ import com.google.android.gms.maps.model.LatLng
 @Composable
 fun MockLocationControls(
     mockControlState: MockControlState,
-    onClearLocationTarget: () -> Unit,
-    onStart: () -> Unit,
-    onStop: () -> Unit,
-    onPopRouteSegment: () -> Unit,
-    onTogglePause: () -> Unit,
-    onSaveLocationTarget: () -> Unit,
-    onAddCrosshairsPoint: () -> Unit,
-    setShowSearch: (Boolean) -> Unit,
-    isShowingSearch: Boolean,
     controlsAreExpanded: Boolean,
-    setControlsAreExpanded: (Boolean) -> Unit,
-    modifier: Modifier = Modifier
+    isShowingSearch: Boolean,
+    modifier: Modifier = Modifier,
+    onStart: () -> Unit = { },
+    onStop: () -> Unit = { },
+    onTogglePause: () -> Unit = { },
+    onAddCrosshairsPoint: () -> Unit = { },
+    onPopRouteSegment: () -> Unit = { },
+    onClearLocationTarget: () -> Unit = { },
+    onSaveLocationTarget: () -> Unit = { },
+    setShowSearch: (Boolean) -> Unit = { },
+    setControlsAreExpanded: (Boolean) -> Unit = { }
 ) {
     val focusManager = LocalFocusManager.current
     val minWidth = 384.dp
@@ -134,17 +134,8 @@ private fun MockLocationControlsPreview1() {
         Surface {
             MockLocationControls(
                 mockControlState = MockControlState(),
-                onClearLocationTarget = { },
-                onStart = { },
-                onStop = { },
-                onPopRouteSegment = { },
-                onTogglePause = { },
-                onSaveLocationTarget = { },
-                onAddCrosshairsPoint = { },
-                setShowSearch = { },
                 isShowingSearch = false,
-                controlsAreExpanded = false,
-                setControlsAreExpanded = { }
+                controlsAreExpanded = false
             )
         }
     }
@@ -170,17 +161,8 @@ private fun MockLocationControlsPreview2() {
                         LatLng(0.0, 0.0)
                     )
                 ),
-                onClearLocationTarget = { },
-                onStart = { },
-                onStop = { },
-                onPopRouteSegment = { },
-                onTogglePause = { },
-                onSaveLocationTarget = { },
-                onAddCrosshairsPoint = { },
-                setShowSearch = { },
                 isShowingSearch = false,
-                controlsAreExpanded = false,
-                setControlsAreExpanded = { }
+                controlsAreExpanded = false
             )
         }
     }
@@ -203,17 +185,8 @@ private fun MockLocationControlsPreviewNarrow() {
         Surface {
             MockLocationControls(
                 mockControlState = MockControlState(),
-                onClearLocationTarget = { },
-                onStart = { },
-                onStop = { },
-                onPopRouteSegment = { },
-                onTogglePause = { },
-                onSaveLocationTarget = { },
-                onAddCrosshairsPoint = { },
-                setShowSearch = { },
                 isShowingSearch = false,
-                controlsAreExpanded = false,
-                setControlsAreExpanded = { }
+                controlsAreExpanded = false
             )
         }
     }

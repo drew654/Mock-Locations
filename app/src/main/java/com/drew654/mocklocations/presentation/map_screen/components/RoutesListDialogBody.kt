@@ -30,16 +30,16 @@ import com.google.android.gms.maps.model.LatLng
 @Composable
 fun RoutesListDialogBody(
     savedRoutes: List<LocationTarget.SavedRoute>,
-    onDismiss: () -> Unit,
-    locationTarget: LocationTarget,
-    onConfirm: () -> Unit,
-    onRouteLoaded: (LocationTarget.SavedRoute) -> Unit,
     selectedRoutes: List<LocationTarget.SavedRoute>,
-    onRouteSelected: (LocationTarget.SavedRoute) -> Unit,
-    onRouteDeselected: (LocationTarget.SavedRoute) -> Unit,
-    onClearSelectedRoutes: () -> Unit,
-    onDeleteSelectedRoutes: () -> Unit,
-    speedUnit: SpeedUnit
+    isSaveRouteEnabled: Boolean,
+    speedUnit: SpeedUnit,
+    onDismiss: () -> Unit = { },
+    onConfirm: () -> Unit = { },
+    onRouteLoaded: (LocationTarget.SavedRoute) -> Unit = { },
+    onRouteSelected: (LocationTarget.SavedRoute) -> Unit = { },
+    onRouteDeselected: (LocationTarget.SavedRoute) -> Unit = { },
+    onClearSelectedRoutes: () -> Unit = { },
+    onDeleteSelectedRoutes: () -> Unit = { }
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -106,7 +106,7 @@ fun RoutesListDialogBody(
                         onConfirm()
                     },
                     modifier = Modifier.padding(8.dp),
-                    enabled = locationTarget.isRoute()
+                    enabled = isSaveRouteEnabled
                 ) {
                     Text(text = "Save Route")
                 }
@@ -177,25 +177,9 @@ private fun RoutesDialogBodyUnselectedPreview() {
             Card {
                 RoutesListDialogBody(
                     savedRoutes = savedRoutes,
-                    onDismiss = { },
-                    locationTarget = LocationTarget.Route(
-                        routeSegments = listOf(
-                            RouteSegment(
-                                points = listOf(
-                                    LatLng(0.0, 0.0),
-                                    LatLng(0.0, 0.1)
-                                )
-                            )
-                        )
-                    ),
-                    onConfirm = { },
-                    onRouteLoaded = { },
                     selectedRoutes = emptyList(),
-                    onRouteSelected = { },
-                    onRouteDeselected = { },
-                    onClearSelectedRoutes = { },
-                    onDeleteSelectedRoutes = { },
-                    speedUnit = SpeedUnit.MilesPerHour
+                    speedUnit = SpeedUnit.MilesPerHour,
+                    isSaveRouteEnabled = true
                 )
             }
         }
@@ -243,25 +227,9 @@ private fun RoutesDialogBodySelectedPreview() {
             Card {
                 RoutesListDialogBody(
                     savedRoutes = savedRoutes,
-                    onDismiss = { },
-                    locationTarget = LocationTarget.Route(
-                        routeSegments = listOf(
-                            RouteSegment(
-                                points = listOf(
-                                    LatLng(0.0, 0.0),
-                                    LatLng(0.0, 0.1)
-                                )
-                            )
-                        )
-                    ),
-                    onConfirm = { },
-                    onRouteLoaded = { },
                     selectedRoutes = listOf(savedRoutes[0]),
-                    onRouteSelected = { },
-                    onRouteDeselected = { },
-                    onClearSelectedRoutes = { },
-                    onDeleteSelectedRoutes = { },
-                    speedUnit = SpeedUnit.MilesPerHour
+                    speedUnit = SpeedUnit.MilesPerHour,
+                    isSaveRouteEnabled = true
                 )
             }
         }

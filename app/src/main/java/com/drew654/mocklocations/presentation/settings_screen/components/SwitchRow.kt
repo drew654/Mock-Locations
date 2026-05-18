@@ -23,7 +23,7 @@ import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 fun SwitchRow(
     label: String,
     checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
+    onCheckedChange: (Boolean) -> Unit = { },
     switchTestTag: String? = null
 ) {
     Row(
@@ -63,8 +63,7 @@ fun SwitchRowPreview() {
         Surface {
             SwitchRow(
                 label = "Clear route on stop",
-                checked = true,
-                onCheckedChange = { }
+                checked = true
             )
         }
     }

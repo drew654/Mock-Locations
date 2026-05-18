@@ -16,10 +16,10 @@ import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 
 @Composable
 fun SavedRoutesButton(
-    onSaveLocationTarget: () -> Unit
+    onClick: () -> Unit = { }
 ) {
     DisableableSmallFloatingActionButton(
-        onClick = { onSaveLocationTarget() },
+        onClick = { onClick() },
         enabled = true
     ) {
         Icon(
@@ -44,9 +44,7 @@ fun SavedRoutesButtonPreview() {
     MockLocationsTheme {
         Surface {
             Box(modifier = Modifier.padding(4.dp)) {
-                SavedRoutesButton(
-                    onSaveLocationTarget = { }
-                )
+                SavedRoutesButton()
             }
         }
     }

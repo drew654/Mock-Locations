@@ -44,8 +44,8 @@ import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 fun LocationUpdateDelayDialog(
     isVisible: Boolean,
     locationUpdateDelay: Float,
-    onLocationUpdateDelayChanged: (Float) -> Unit,
-    onDismiss: () -> Unit
+    onLocationUpdateDelayChanged: (Float) -> Unit = { },
+    onDismiss: () -> Unit = { }
 ) {
     if (isVisible) {
         Dialog(
@@ -160,9 +160,7 @@ private fun LocationUpdateDelayDialogPhonePreview() {
             Surface(modifier = Modifier.padding(innerPadding)) {
                 LocationUpdateDelayDialog(
                     isVisible = true,
-                    locationUpdateDelay = 1f,
-                    onLocationUpdateDelayChanged = { },
-                    onDismiss = { }
+                    locationUpdateDelay = 1f
                 )
             }
         }
@@ -189,9 +187,7 @@ private fun LocationUpdateDelayDialogTabletPreview() {
             Surface(modifier = Modifier.padding(innerPadding)) {
                 LocationUpdateDelayDialog(
                     isVisible = true,
-                    locationUpdateDelay = 1f,
-                    onLocationUpdateDelayChanged = { },
-                    onDismiss = { }
+                    locationUpdateDelay = 1f
                 )
             }
         }

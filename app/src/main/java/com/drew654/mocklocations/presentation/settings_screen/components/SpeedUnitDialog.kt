@@ -28,8 +28,8 @@ import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 fun SpeedUnitDialog(
     isVisible: Boolean,
     selectedSpeedUnitValue: SpeedUnitValue,
-    onSpeedUnitValueSelected: (SpeedUnitValue) -> Unit,
-    onDismiss: () -> Unit
+    onSpeedUnitValueSelected: (SpeedUnitValue) -> Unit = { },
+    onDismiss: () -> Unit = { }
 ) {
     val speedUnits = listOf(
         SpeedUnit.KilometersPerHour,
@@ -91,9 +91,7 @@ private fun SpeedUnitDialogPhonePreview() {
             Surface(modifier = Modifier.padding(innerPadding)) {
                 SpeedUnitDialog(
                     isVisible = true,
-                    selectedSpeedUnitValue = SpeedUnitValue(30.0, SpeedUnit.MilesPerHour),
-                    onSpeedUnitValueSelected = { },
-                    onDismiss = { }
+                    selectedSpeedUnitValue = SpeedUnitValue(30.0, SpeedUnit.MilesPerHour)
                 )
             }
         }
@@ -120,9 +118,7 @@ private fun SpeedUnitDialogTabletPreview() {
             Surface(modifier = Modifier.padding(innerPadding)) {
                 SpeedUnitDialog(
                     isVisible = true,
-                    selectedSpeedUnitValue = SpeedUnitValue(30.0, SpeedUnit.MilesPerHour),
-                    onSpeedUnitValueSelected = { },
-                    onDismiss = { }
+                    selectedSpeedUnitValue = SpeedUnitValue(30.0, SpeedUnit.MilesPerHour)
                 )
             }
         }

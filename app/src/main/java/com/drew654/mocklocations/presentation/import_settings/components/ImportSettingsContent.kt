@@ -41,10 +41,10 @@ import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ImportSettingsContent(
-    onBack: () -> Unit,
-    onImport: (Boolean, ImportRouteOption?) -> Unit,
+    routesToImport: Int,
     isWithSettingsToImport: Boolean,
-    routesToImport: Int
+    onImport: (Boolean, ImportRouteOption?) -> Unit = { _, _ ->},
+    onBack: () -> Unit = { }
 ) {
     val scrollState = rememberScrollState()
     var isImportingRoutes by rememberSaveable { mutableStateOf(routesToImport > 0) }
@@ -150,8 +150,6 @@ private fun ImportSettingsContentPreview1() {
     MockLocationsTheme {
         Surface {
             ImportSettingsContent(
-                onBack = { },
-                onImport = { _, _ -> },
                 isWithSettingsToImport = true,
                 routesToImport = 5
             )
@@ -173,8 +171,6 @@ private fun ImportSettingsContentPreview2() {
     MockLocationsTheme {
         Surface {
             ImportSettingsContent(
-                onBack = { },
-                onImport = { _, _ -> },
                 isWithSettingsToImport = false,
                 routesToImport = 5
             )
@@ -196,8 +192,6 @@ private fun ImportSettingsContentPreview3() {
     MockLocationsTheme {
         Surface {
             ImportSettingsContent(
-                onBack = { },
-                onImport = { _, _ -> },
                 isWithSettingsToImport = true,
                 routesToImport = 0
             )

@@ -35,10 +35,10 @@ import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 @Composable
 fun NamingRouteDialogBody(
     routeName: TextFieldValue,
-    onRouteNameChange: (TextFieldValue) -> Unit,
-    onBack: () -> Unit,
-    onConfirm: () -> Unit,
-    savedRoutes: List<LocationTarget.SavedRoute>
+    savedRoutes: List<LocationTarget.SavedRoute>,
+    onRouteNameChange: (TextFieldValue) -> Unit = { },
+    onConfirm: () -> Unit = { },
+    onBack: () -> Unit = { }
 ) {
     val focusManager = LocalFocusManager.current
     val focusRequester = remember { FocusRequester() }
@@ -124,9 +124,6 @@ private fun NamingRouteDialogBodyPreview() {
             Card {
                 NamingRouteDialogBody(
                     routeName = TextFieldValue("Route 1"),
-                    onRouteNameChange = { },
-                    onBack = { },
-                    onConfirm = { },
                     savedRoutes = emptyList()
                 )
             }

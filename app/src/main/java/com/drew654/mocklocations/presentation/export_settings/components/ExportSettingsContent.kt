@@ -39,9 +39,9 @@ import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExportSettingsContent(
-    onBack: () -> Unit,
-    onExport: (Boolean, Boolean) -> Unit,
-    routesToExport: Int
+    routesToExport: Int,
+    onExport: (Boolean, Boolean) -> Unit = { _, _ -> },
+    onBack: () -> Unit = { }
 ) {
     val scrollState = rememberScrollState()
     var isExportingRoutes by remember { mutableStateOf(routesToExport > 0) }
@@ -132,8 +132,6 @@ private fun ExportSettingsContentPreview1() {
     MockLocationsTheme {
         Surface {
             ExportSettingsContent(
-                onBack = { },
-                onExport = { _, _ -> },
                 routesToExport = 5
             )
         }
@@ -154,8 +152,6 @@ private fun ExportSettingsContentPreview2() {
     MockLocationsTheme {
         Surface {
             ExportSettingsContent(
-                onBack = { },
-                onExport = { _, _ -> },
                 routesToExport = 0
             )
         }

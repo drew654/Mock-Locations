@@ -23,7 +23,7 @@ import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 fun CheckboxRow(
     label: String,
     checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
+    onCheckedChange: (Boolean) -> Unit = { },
     enabled: Boolean = true
 ) {
     Row(
@@ -70,8 +70,7 @@ private fun CheckboxRowPreview1() {
         Surface {
             CheckboxRow(
                 label = "Export 5 routes",
-                checked = true,
-                onCheckedChange = { }
+                checked = true
             )
         }
     }
@@ -93,7 +92,6 @@ private fun CheckboxRowPreview2() {
             CheckboxRow(
                 label = "Export 0 routes",
                 checked = false,
-                onCheckedChange = { },
                 enabled = false
             )
         }

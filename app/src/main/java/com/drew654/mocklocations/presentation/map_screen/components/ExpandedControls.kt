@@ -27,10 +27,10 @@ import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 fun ExpandedControls(
     isExpanded: Boolean,
     speedUnitValue: SpeedUnitValue,
-    onSpeedChanged: (Double) -> Unit,
-    onSpeedChangeFinished: (SpeedUnitValue) -> Unit,
     sliderLowerEnd: Int,
-    sliderUpperEnd: Int
+    sliderUpperEnd: Int,
+    onSpeedChanged: (Double) -> Unit = { },
+    onSpeedChangeFinished: (SpeedUnitValue) -> Unit = { }
 ) {
     if (isExpanded) {
         Row(
@@ -103,10 +103,8 @@ private fun ExpandedControlsPreview() {
                     value = 30.0,
                     speedUnit = SpeedUnit.MilesPerHour
                 ),
-                onSpeedChanged = { },
-                onSpeedChangeFinished = { },
-                0,
-                100
+                sliderLowerEnd = 0,
+                sliderUpperEnd = 100
             )
         }
     }

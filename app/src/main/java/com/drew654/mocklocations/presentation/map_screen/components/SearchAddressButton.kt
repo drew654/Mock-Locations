@@ -16,8 +16,8 @@ import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 
 @Composable
 fun SearchAddressButton(
-    setShowSearch: (Boolean) -> Unit,
-    isShowingSearch: Boolean
+    isShowingSearch: Boolean,
+    setShowSearch: (Boolean) -> Unit = { }
 ) {
     DisableableSmallFloatingActionButton(
         onClick = { setShowSearch(!isShowingSearch) },
@@ -54,7 +54,6 @@ fun SearchAddressButtonPreview() {
         Surface {
             Box(modifier = Modifier.padding(4.dp)) {
                 SearchAddressButton(
-                    setShowSearch = { },
                     isShowingSearch = false
                 )
             }

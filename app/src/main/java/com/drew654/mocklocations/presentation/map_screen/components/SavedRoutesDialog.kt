@@ -20,15 +20,15 @@ import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 fun SavedRoutesDialog(
     isVisible: Boolean,
     isNamingRoute: Boolean,
-    onSetIsNamingRoute: (Boolean) -> Unit,
-    onDismiss: () -> Unit,
     savedRoutes: List<LocationTarget.SavedRoute>,
-    onRouteSaved: (String) -> Unit,
     locationTarget: LocationTarget,
-    onRouteLoaded: (LocationTarget.SavedRoute) -> Unit,
-    onRouteDeleted: (LocationTarget.SavedRoute) -> Unit,
     isMocking: Boolean,
-    speedUnit: SpeedUnit
+    speedUnit: SpeedUnit,
+    onSetIsNamingRoute: (Boolean) -> Unit = { },
+    onDismiss: () -> Unit = { },
+    onRouteSaved: (String) -> Unit = { },
+    onRouteLoaded: (LocationTarget.SavedRoute) -> Unit = { },
+    onRouteDeleted: (LocationTarget.SavedRoute) -> Unit = { }
 ) {
     var routeName by rememberSaveable(stateSaver = TextFieldValue.Saver) {
         mutableStateOf(TextFieldValue(""))
@@ -71,7 +71,6 @@ fun SavedRoutesDialog(
                             onSetIsNamingRoute(false)
                             routeName = TextFieldValue("")
                         },
-                        locationTarget = locationTarget,
                         onConfirm = {
                             onSetIsNamingRoute(true)
                         },
@@ -97,7 +96,8 @@ fun SavedRoutesDialog(
                             }
                             selectedRoutes = emptyList()
                         },
-                        speedUnit = speedUnit
+                        speedUnit = speedUnit,
+                        isSaveRouteEnabled = locationTarget.isRoute()
                     )
                 }
             }
@@ -107,12 +107,14 @@ fun SavedRoutesDialog(
 
 @Preview(
     name = "Light Mode",
-    showBackground = true
+    showBackground = true,
+    showSystemUi = true
 )
 @Preview(
     name = "Dark Mode",
     uiMode = Configuration.UI_MODE_NIGHT_YES,
-    showBackground = true
+    showBackground = true,
+    showSystemUi = true
 )
 @Composable
 private fun SavedRoutesDialogPreview() {
@@ -121,13 +123,8 @@ private fun SavedRoutesDialogPreview() {
             SavedRoutesDialog(
                 isVisible = true,
                 isNamingRoute = false,
-                onSetIsNamingRoute = { },
-                onDismiss = { },
                 savedRoutes = emptyList(),
-                onRouteSaved = { },
                 locationTarget = LocationTarget.Empty,
-                onRouteLoaded = { },
-                onRouteDeleted = { },
                 isMocking = false,
                 speedUnit = SpeedUnit.MilesPerHour
             )

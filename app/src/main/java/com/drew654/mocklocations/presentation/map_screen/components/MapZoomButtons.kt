@@ -13,27 +13,18 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.R
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.maps.android.compose.CameraPositionState
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 @Composable
 fun MapZoomButtons(
-    cameraPositionState: CameraPositionState,
-    scope: CoroutineScope,
-    isCameraCurrentlyFollowingMockedLocation: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onZoomIn: () -> Unit = { },
+    onZoomOut: () -> Unit = { }
 ) {
-    val focusManager = LocalFocusManager.current
-
     Surface(
         modifier = modifier,
         shape = MaterialTheme.shapes.medium,
@@ -51,14 +42,7 @@ fun MapZoomButtons(
         ) {
             IconButton(
                 onClick = {
-                    focusManager.clearFocus()
-                    scope.launch {
-                        if (isCameraCurrentlyFollowingMockedLocation) {
-                            cameraPositionState.move(CameraUpdateFactory.zoomIn())
-                        } else {
-                            cameraPositionState.animate(CameraUpdateFactory.zoomIn())
-                        }
-                    }
+                    onZoomIn()
                 },
                 modifier = Modifier.size(40.dp)
             ) {
@@ -77,14 +61,7 @@ fun MapZoomButtons(
 
             IconButton(
                 onClick = {
-                    focusManager.clearFocus()
-                    scope.launch {
-                        if (isCameraCurrentlyFollowingMockedLocation) {
-                            cameraPositionState.move(CameraUpdateFactory.zoomOut())
-                        } else {
-                            cameraPositionState.animate(CameraUpdateFactory.zoomOut())
-                        }
-                    }
+                    onZoomOut()
                 },
                 modifier = Modifier.size(40.dp)
             ) {
@@ -111,11 +88,7 @@ fun MapZoomButtons(
 fun MapZoomButtonsPreview() {
     MockLocationsTheme {
         Surface {
-            MapZoomButtons(
-                cameraPositionState = CameraPositionState(),
-                scope = CoroutineScope(Dispatchers.Main),
-                isCameraCurrentlyFollowingMockedLocation = false
-            )
+            MapZoomButtons()
         }
     }
 }

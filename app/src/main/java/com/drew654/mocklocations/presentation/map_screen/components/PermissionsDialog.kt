@@ -1,16 +1,18 @@
 package com.drew654.mocklocations.presentation.map_screen.components
 
-import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.net.Uri
 import android.provider.Settings
 import android.util.Log
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Surface
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import com.drew654.mocklocations.domain.model.Permission
@@ -19,9 +21,9 @@ import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 @Composable
 fun PermissionsDialog(
     permission: Permission,
-    onDismiss: () -> Unit,
-    context: Context
+    onDismiss: () -> Unit = { }
 ) {
+    val context = LocalContext.current
     val (bodyText, buttonText, titleText) = when (permission) {
         is Permission.FineLocation -> Triple(
             "To use this app, you must grant \"Fine Location\" permission in App Settings.",
@@ -98,23 +100,24 @@ fun PermissionsDialog(
 
 @Preview(
     name = "Light Mode",
-    showBackground = true
+    showBackground = true,
+    showSystemUi = true
 )
 @Preview(
     name = "Dark Mode",
     uiMode = Configuration.UI_MODE_NIGHT_YES,
-    showBackground = true
+    showBackground = true,
+    showSystemUi = true
 )
 @Composable
 private fun PermissionsDialogPreview() {
-    val context = LocalContext.current
     MockLocationsTheme {
-        Surface {
-            PermissionsDialog(
-                permission = Permission.FineLocation,
-                onDismiss = { },
-                context = context
-            )
+        Scaffold { innerPadding ->
+            Box(modifier = Modifier.padding(innerPadding)) {
+                PermissionsDialog(
+                    permission = Permission.FineLocation
+                )
+            }
         }
     }
 }
