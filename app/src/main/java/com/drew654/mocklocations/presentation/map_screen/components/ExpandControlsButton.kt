@@ -1,6 +1,5 @@
 package com.drew654.mocklocations.presentation.map_screen.components
 
-import android.content.res.Configuration
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
@@ -13,10 +12,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.R
-import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
+import com.drew654.mocklocations.presentation.ui.theme.DayNightPreviews
+import com.drew654.mocklocations.presentation.ui.theme.ThemePreview
 
 @Composable
 fun ExpandControlsButton(
@@ -48,24 +47,14 @@ fun ExpandControlsButton(
     }
 }
 
-@Preview(
-    name = "Light Mode",
-    showBackground = true
-)
-@Preview(
-    name = "Dark Mode",
-    uiMode = Configuration.UI_MODE_NIGHT_YES,
-    showBackground = true
-)
+@DayNightPreviews
 @Composable
-fun ExpandControlsButtonPreview() {
-    MockLocationsTheme {
-        Surface {
-            Box(modifier = Modifier.padding(4.dp)) {
-                ExpandControlsButton(
-                    controlsAreExpanded = false
-                )
-            }
+private fun ExpandControlsButtonPreview() {
+    ThemePreview {
+        Box(modifier = Modifier.padding(4.dp)) {
+            ExpandControlsButton(
+                controlsAreExpanded = false
+            )
         }
     }
 }

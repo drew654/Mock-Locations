@@ -1,6 +1,5 @@
 package com.drew654.mocklocations.presentation.export_settings.components
 
-import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -20,7 +19,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -30,11 +28,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.R
 import com.drew654.mocklocations.presentation.components.CheckboxRow
-import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
+import com.drew654.mocklocations.presentation.ui.theme.DayNightDevicePreviews
+import com.drew654.mocklocations.presentation.ui.theme.DeviceThemePreview
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -118,42 +116,22 @@ fun ExportSettingsContent(
     }
 }
 
-@Preview(
-    name = "Light Mode",
-    showBackground = true
-)
-@Preview(
-    name = "Dark Mode",
-    uiMode = Configuration.UI_MODE_NIGHT_YES,
-    showBackground = true
-)
+@DayNightDevicePreviews
 @Composable
 private fun ExportSettingsContentPreview1() {
-    MockLocationsTheme {
-        Surface {
-            ExportSettingsContent(
-                routesToExport = 5
-            )
-        }
+    DeviceThemePreview {
+        ExportSettingsContent(
+            routesToExport = 5
+        )
     }
 }
 
-@Preview(
-    name = "Light Mode",
-    showBackground = true
-)
-@Preview(
-    name = "Dark Mode",
-    uiMode = Configuration.UI_MODE_NIGHT_YES,
-    showBackground = true
-)
+@DayNightDevicePreviews
 @Composable
 private fun ExportSettingsContentPreview2() {
-    MockLocationsTheme {
-        Surface {
-            ExportSettingsContent(
-                routesToExport = 0
-            )
-        }
+    DeviceThemePreview {
+        ExportSettingsContent(
+            routesToExport = 0
+        )
     }
 }

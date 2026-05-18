@@ -1,6 +1,5 @@
 package com.drew654.mocklocations.presentation.map_screen.components
 
-import android.content.res.Configuration
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -9,17 +8,16 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.RouteSegment
 import com.drew654.mocklocations.domain.model.SpeedUnit
-import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
+import com.drew654.mocklocations.presentation.ui.theme.DayNightPreviews
+import com.drew654.mocklocations.presentation.ui.theme.ThemePreview
 import com.google.android.gms.maps.model.LatLng
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -66,70 +64,48 @@ fun RouteListItem(
     )
 }
 
-@Preview(
-    name = "Light Mode",
-    showBackground = true
-)
-@Preview(
-    name = "Dark Mode",
-    uiMode = Configuration.UI_MODE_NIGHT_YES,
-    showBackground = true
-)
+@DayNightPreviews
 @Composable
 private fun RouteListItemUnselectedPreview() {
-    MockLocationsTheme {
-        Surface {
-            RouteListItem(
-                selected = false,
-                route = LocationTarget.SavedRoute(
-                    name = "Route 1",
-                    routeSegments = listOf(
-                        RouteSegment(
-                            points = listOf(
-                                LatLng(0.0, 0.0),
-                                LatLng(0.0, 0.1)
-                            )
+    ThemePreview {
+        RouteListItem(
+            selected = false,
+            route = LocationTarget.SavedRoute(
+                name = "Route 1",
+                routeSegments = listOf(
+                    RouteSegment(
+                        points = listOf(
+                            LatLng(0.0, 0.0),
+                            LatLng(0.0, 0.1)
                         )
                     )
-                ),
-                onClick = { },
-                onLongClick = { },
-                shouldShowCheckbox = false,
-                speedUnit = SpeedUnit.MilesPerHour
-            )
-        }
+                )
+            ),
+            shouldShowCheckbox = false,
+            speedUnit = SpeedUnit.MilesPerHour
+        )
     }
 }
 
-@Preview(
-    name = "Light Mode",
-    showBackground = true
-)
-@Preview(
-    name = "Dark Mode",
-    uiMode = Configuration.UI_MODE_NIGHT_YES,
-    showBackground = true
-)
+@DayNightPreviews
 @Composable
 private fun RouteListItemSelectedPreview() {
-    MockLocationsTheme {
-        Surface {
-            RouteListItem(
-                route = LocationTarget.SavedRoute(
-                    name = "Route 1",
-                    routeSegments = listOf(
-                        RouteSegment(
-                            points = listOf(
-                                LatLng(0.0, 0.0),
-                                LatLng(0.0, 0.1)
-                            )
+    ThemePreview {
+        RouteListItem(
+            route = LocationTarget.SavedRoute(
+                name = "Route 1",
+                routeSegments = listOf(
+                    RouteSegment(
+                        points = listOf(
+                            LatLng(0.0, 0.0),
+                            LatLng(0.0, 0.1)
                         )
                     )
-                ),
-                selected = true,
-                shouldShowCheckbox = true,
-                speedUnit = SpeedUnit.MilesPerHour
-            )
-        }
+                )
+            ),
+            selected = true,
+            shouldShowCheckbox = true,
+            speedUnit = SpeedUnit.MilesPerHour
+        )
     }
 }

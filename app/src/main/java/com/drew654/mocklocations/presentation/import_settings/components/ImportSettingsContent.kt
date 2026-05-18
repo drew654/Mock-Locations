@@ -36,6 +36,8 @@ import com.drew654.mocklocations.R
 import com.drew654.mocklocations.domain.model.ImportRouteOption
 import com.drew654.mocklocations.presentation.components.CheckboxRow
 import com.drew654.mocklocations.presentation.components.RadioButtonRow
+import com.drew654.mocklocations.presentation.ui.theme.DayNightDevicePreviews
+import com.drew654.mocklocations.presentation.ui.theme.DeviceThemePreview
 import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -157,44 +159,24 @@ private fun ImportSettingsContentPreview1() {
     }
 }
 
-@Preview(
-    name = "Light Mode",
-    showBackground = true
-)
-@Preview(
-    name = "Dark Mode",
-    uiMode = Configuration.UI_MODE_NIGHT_YES,
-    showBackground = true
-)
+@DayNightDevicePreviews
 @Composable
 private fun ImportSettingsContentPreview2() {
-    MockLocationsTheme {
-        Surface {
-            ImportSettingsContent(
-                isWithSettingsToImport = false,
-                routesToImport = 5
-            )
-        }
+    DeviceThemePreview {
+        ImportSettingsContent(
+            isWithSettingsToImport = false,
+            routesToImport = 5
+        )
     }
 }
 
-@Preview(
-    name = "Light Mode",
-    showBackground = true
-)
-@Preview(
-    name = "Dark Mode",
-    uiMode = Configuration.UI_MODE_NIGHT_YES,
-    showBackground = true
-)
+@DayNightDevicePreviews
 @Composable
 private fun ImportSettingsContentPreview3() {
-    MockLocationsTheme {
-        Surface {
-            ImportSettingsContent(
-                isWithSettingsToImport = true,
-                routesToImport = 0
-            )
-        }
+    DeviceThemePreview {
+        ImportSettingsContent(
+            isWithSettingsToImport = true,
+            routesToImport = 0
+        )
     }
 }

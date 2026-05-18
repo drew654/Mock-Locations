@@ -1,6 +1,5 @@
 package com.drew654.mocklocations.presentation.map_screen.components
 
-import android.content.res.Configuration
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -9,11 +8,9 @@ import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.domain.model.MockControlState
 import com.drew654.mocklocations.domain.model.isAddPointEnabled
@@ -26,7 +23,8 @@ import com.drew654.mocklocations.domain.model.isStartEnabled
 import com.drew654.mocklocations.domain.model.isStartVisible
 import com.drew654.mocklocations.domain.model.isStopEnabled
 import com.drew654.mocklocations.domain.model.isStopVisible
-import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
+import com.drew654.mocklocations.presentation.ui.theme.DayNightPreviews
+import com.drew654.mocklocations.presentation.ui.theme.ThemePreview
 
 @Composable
 fun PrimaryMockLocationControls(
@@ -93,22 +91,12 @@ fun PrimaryMockLocationControls(
     }
 }
 
-@Preview(
-    name = "Light Mode",
-    showBackground = true
-)
-@Preview(
-    name = "Dark Mode",
-    uiMode = Configuration.UI_MODE_NIGHT_YES,
-    showBackground = true
-)
+@DayNightPreviews
 @Composable
 private fun PrimaryMockLocationControlsPreview() {
-    MockLocationsTheme {
-        Surface {
-            PrimaryMockLocationControls(
-                mockControlState = MockControlState()
-            )
-        }
+    ThemePreview {
+        PrimaryMockLocationControls(
+            mockControlState = MockControlState()
+        )
     }
 }

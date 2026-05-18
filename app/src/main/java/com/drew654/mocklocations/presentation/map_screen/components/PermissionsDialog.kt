@@ -1,22 +1,17 @@
 package com.drew654.mocklocations.presentation.map_screen.components
 
 import android.content.Intent
-import android.content.res.Configuration
 import android.net.Uri
 import android.provider.Settings
 import android.util.Log
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import com.drew654.mocklocations.domain.model.Permission
-import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
+import com.drew654.mocklocations.presentation.ui.theme.DayNightDevicePreviews
+import com.drew654.mocklocations.presentation.ui.theme.DeviceThemePreview
 
 @Composable
 fun PermissionsDialog(
@@ -98,26 +93,12 @@ fun PermissionsDialog(
     )
 }
 
-@Preview(
-    name = "Light Mode",
-    showBackground = true,
-    showSystemUi = true
-)
-@Preview(
-    name = "Dark Mode",
-    uiMode = Configuration.UI_MODE_NIGHT_YES,
-    showBackground = true,
-    showSystemUi = true
-)
+@DayNightDevicePreviews
 @Composable
 private fun PermissionsDialogPreview() {
-    MockLocationsTheme {
-        Scaffold { innerPadding ->
-            Box(modifier = Modifier.padding(innerPadding)) {
-                PermissionsDialog(
-                    permission = Permission.FineLocation
-                )
-            }
-        }
+    DeviceThemePreview {
+        PermissionsDialog(
+            permission = Permission.FineLocation
+        )
     }
 }

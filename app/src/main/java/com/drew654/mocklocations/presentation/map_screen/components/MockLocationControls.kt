@@ -1,6 +1,5 @@
 package com.drew654.mocklocations.presentation.map_screen.components
 
-import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -10,17 +9,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.MockControlState
-import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
+import com.drew654.mocklocations.presentation.ui.theme.DayNightPreviews
+import com.drew654.mocklocations.presentation.ui.theme.ThemePreview
 import com.google.android.gms.maps.model.LatLng
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -119,75 +117,43 @@ fun MockLocationControls(
     }
 }
 
-@Preview(
-    name = "Light Mode",
-    showBackground = true
-)
-@Preview(
-    name = "Dark Mode",
-    uiMode = Configuration.UI_MODE_NIGHT_YES,
-    showBackground = true
-)
+@DayNightPreviews
 @Composable
 private fun MockLocationControlsPreview1() {
-    MockLocationsTheme {
-        Surface {
-            MockLocationControls(
-                mockControlState = MockControlState(),
-                isShowingSearch = false,
-                controlsAreExpanded = false
-            )
-        }
+    ThemePreview {
+        MockLocationControls(
+            mockControlState = MockControlState(),
+            isShowingSearch = false,
+            controlsAreExpanded = false
+        )
     }
 }
 
-@Preview(
-    name = "Light Mode",
-    showBackground = true
-)
-@Preview(
-    name = "Dark Mode",
-    uiMode = Configuration.UI_MODE_NIGHT_YES,
-    showBackground = true
-)
+@DayNightPreviews
 @Composable
 private fun MockLocationControlsPreview2() {
-    MockLocationsTheme {
-        Surface {
-            MockLocationControls(
-                mockControlState = MockControlState(
-                    isMocking = true,
-                    activeLocationTarget = LocationTarget.SinglePoint(
-                        LatLng(0.0, 0.0)
-                    )
-                ),
-                isShowingSearch = false,
-                controlsAreExpanded = false
-            )
-        }
+    ThemePreview {
+        MockLocationControls(
+            mockControlState = MockControlState(
+                isMocking = true,
+                activeLocationTarget = LocationTarget.SinglePoint(
+                    LatLng(0.0, 0.0)
+                )
+            ),
+            isShowingSearch = false,
+            controlsAreExpanded = false
+        )
     }
 }
 
-@Preview(
-    name = "Light Mode",
-    showBackground = true,
-    widthDp = 360
-)
-@Preview(
-    name = "Dark Mode",
-    uiMode = Configuration.UI_MODE_NIGHT_YES,
-    showBackground = true,
-    widthDp = 360
-)
+@DayNightPreviews
 @Composable
 private fun MockLocationControlsPreviewNarrow() {
-    MockLocationsTheme {
-        Surface {
-            MockLocationControls(
-                mockControlState = MockControlState(),
-                isShowingSearch = false,
-                controlsAreExpanded = false
-            )
-        }
+    ThemePreview {
+        MockLocationControls(
+            mockControlState = MockControlState(),
+            isShowingSearch = false,
+            controlsAreExpanded = false
+        )
     }
 }

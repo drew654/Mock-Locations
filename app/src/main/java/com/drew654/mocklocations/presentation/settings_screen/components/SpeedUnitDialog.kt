@@ -1,6 +1,5 @@
 package com.drew654.mocklocations.presentation.settings_screen.components
 
-import android.content.res.Configuration
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,20 +8,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.tooling.preview.Devices
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.drew654.mocklocations.domain.model.SpeedUnit
 import com.drew654.mocklocations.domain.model.SpeedUnitValue
-import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
+import com.drew654.mocklocations.presentation.ui.theme.DayNightDevicePreviews
+import com.drew654.mocklocations.presentation.ui.theme.DayNightTabletPreviews
+import com.drew654.mocklocations.presentation.ui.theme.DeviceThemePreview
 
 @Composable
 fun SpeedUnitDialog(
@@ -73,54 +70,14 @@ fun SpeedUnitDialog(
     }
 }
 
-@Preview(
-    name = "Light Mode",
-    showBackground = true,
-    showSystemUi = true
-)
-@Preview(
-    name = "Dark Mode",
-    uiMode = Configuration.UI_MODE_NIGHT_YES,
-    showBackground = true,
-    showSystemUi = true
-)
+@DayNightDevicePreviews
+@DayNightTabletPreviews
 @Composable
 private fun SpeedUnitDialogPhonePreview() {
-    MockLocationsTheme {
-        Scaffold { innerPadding ->
-            Surface(modifier = Modifier.padding(innerPadding)) {
-                SpeedUnitDialog(
-                    isVisible = true,
-                    selectedSpeedUnitValue = SpeedUnitValue(30.0, SpeedUnit.MilesPerHour)
-                )
-            }
-        }
-    }
-}
-
-@Preview(
-    name = "Light Mode",
-    showBackground = true,
-    showSystemUi = true,
-    device = Devices.TABLET
-)
-@Preview(
-    name = "Dark Mode",
-    uiMode = Configuration.UI_MODE_NIGHT_YES,
-    showBackground = true,
-    showSystemUi = true,
-    device = Devices.TABLET
-)
-@Composable
-private fun SpeedUnitDialogTabletPreview() {
-    MockLocationsTheme {
-        Scaffold { innerPadding ->
-            Surface(modifier = Modifier.padding(innerPadding)) {
-                SpeedUnitDialog(
-                    isVisible = true,
-                    selectedSpeedUnitValue = SpeedUnitValue(30.0, SpeedUnit.MilesPerHour)
-                )
-            }
-        }
+    DeviceThemePreview {
+        SpeedUnitDialog(
+            isVisible = true,
+            selectedSpeedUnitValue = SpeedUnitValue(30.0, SpeedUnit.MilesPerHour)
+        )
     }
 }

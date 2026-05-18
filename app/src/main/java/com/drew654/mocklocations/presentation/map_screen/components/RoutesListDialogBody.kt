@@ -1,6 +1,5 @@
 package com.drew654.mocklocations.presentation.map_screen.components
 
-import android.content.res.Configuration
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,18 +12,17 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.RouteSegment
 import com.drew654.mocklocations.domain.model.SpeedUnit
-import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
+import com.drew654.mocklocations.presentation.ui.theme.DayNightPreviews
+import com.drew654.mocklocations.presentation.ui.theme.ThemePreview
 import com.google.android.gms.maps.model.LatLng
 
 @Composable
@@ -136,15 +134,7 @@ fun RoutesListDialogBody(
     }
 }
 
-@Preview(
-    name = "Light Mode",
-    showBackground = true
-)
-@Preview(
-    name = "Dark Mode",
-    uiMode = Configuration.UI_MODE_NIGHT_YES,
-    showBackground = true
-)
+@DayNightPreviews
 @Composable
 private fun RoutesDialogBodyUnselectedPreview() {
     val savedRoutes = listOf(
@@ -172,29 +162,19 @@ private fun RoutesDialogBodyUnselectedPreview() {
             )
         )
     )
-    MockLocationsTheme {
-        Surface {
-            Card {
-                RoutesListDialogBody(
-                    savedRoutes = savedRoutes,
-                    selectedRoutes = emptyList(),
-                    speedUnit = SpeedUnit.MilesPerHour,
-                    isSaveRouteEnabled = true
-                )
-            }
+    ThemePreview {
+        Card {
+            RoutesListDialogBody(
+                savedRoutes = savedRoutes,
+                selectedRoutes = emptyList(),
+                speedUnit = SpeedUnit.MilesPerHour,
+                isSaveRouteEnabled = true
+            )
         }
     }
 }
 
-@Preview(
-    name = "Light Mode",
-    showBackground = true
-)
-@Preview(
-    name = "Dark Mode",
-    uiMode = Configuration.UI_MODE_NIGHT_YES,
-    showBackground = true
-)
+@DayNightPreviews
 @Composable
 private fun RoutesDialogBodySelectedPreview() {
     val savedRoutes = listOf(
@@ -222,16 +202,14 @@ private fun RoutesDialogBodySelectedPreview() {
             )
         )
     )
-    MockLocationsTheme {
-        Surface {
-            Card {
-                RoutesListDialogBody(
-                    savedRoutes = savedRoutes,
-                    selectedRoutes = listOf(savedRoutes[0]),
-                    speedUnit = SpeedUnit.MilesPerHour,
-                    isSaveRouteEnabled = true
-                )
-            }
+    ThemePreview {
+        Card {
+            RoutesListDialogBody(
+                savedRoutes = savedRoutes,
+                selectedRoutes = listOf(savedRoutes[0]),
+                speedUnit = SpeedUnit.MilesPerHour,
+                isSaveRouteEnabled = true
+            )
         }
     }
 }

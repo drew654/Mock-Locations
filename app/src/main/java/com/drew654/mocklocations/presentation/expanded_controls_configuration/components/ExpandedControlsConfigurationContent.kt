@@ -1,6 +1,5 @@
 package com.drew654.mocklocations.presentation.expanded_controls_configuration.components
 
-import android.content.res.Configuration
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -26,7 +25,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -41,7 +39,6 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.R
 import com.drew654.mocklocations.domain.model.ExpandedControlsState
@@ -49,7 +46,8 @@ import com.drew654.mocklocations.domain.model.SpeedUnitValue
 import com.drew654.mocklocations.domain.model.getSpeedUnitByName
 import com.drew654.mocklocations.presentation.settings_screen.components.SpeedUnitDialog
 import com.drew654.mocklocations.presentation.settings_screen.components.TextRow
-import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
+import com.drew654.mocklocations.presentation.ui.theme.DayNightDevicePreviews
+import com.drew654.mocklocations.presentation.ui.theme.DeviceThemePreview
 
 val SpeedUnitValueSaver = listSaver<SpeedUnitValue, Any>(
     save = { listOf(it.value, it.speedUnit.name) },
@@ -207,20 +205,10 @@ fun ExpandedControlsConfigurationContent(
     )
 }
 
-@Preview(
-    name = "Light Mode",
-    showBackground = true
-)
-@Preview(
-    name = "Dark Mode",
-    uiMode = Configuration.UI_MODE_NIGHT_YES,
-    showBackground = true
-)
+@DayNightDevicePreviews
 @Composable
 private fun ExpandableControlsConfigurationContentPreview() {
-    MockLocationsTheme {
-        Surface {
-            ExpandedControlsConfigurationContent()
-        }
+    DeviceThemePreview {
+        ExpandedControlsConfigurationContent()
     }
 }

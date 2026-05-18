@@ -1,8 +1,6 @@
 package com.drew654.mocklocations.presentation.map_screen.components
 
-import android.content.res.Configuration
 import androidx.compose.material3.Card
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -10,11 +8,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.window.Dialog
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.SpeedUnit
-import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
+import com.drew654.mocklocations.presentation.ui.theme.DayNightDevicePreviews
+import com.drew654.mocklocations.presentation.ui.theme.DeviceThemePreview
 
 @Composable
 fun SavedRoutesDialog(
@@ -105,29 +103,17 @@ fun SavedRoutesDialog(
     }
 }
 
-@Preview(
-    name = "Light Mode",
-    showBackground = true,
-    showSystemUi = true
-)
-@Preview(
-    name = "Dark Mode",
-    uiMode = Configuration.UI_MODE_NIGHT_YES,
-    showBackground = true,
-    showSystemUi = true
-)
+@DayNightDevicePreviews
 @Composable
 private fun SavedRoutesDialogPreview() {
-    MockLocationsTheme {
-        Surface {
-            SavedRoutesDialog(
-                isVisible = true,
-                isNamingRoute = false,
-                savedRoutes = emptyList(),
-                locationTarget = LocationTarget.Empty,
-                isMocking = false,
-                speedUnit = SpeedUnit.MilesPerHour
-            )
-        }
+    DeviceThemePreview {
+        SavedRoutesDialog(
+            isVisible = true,
+            isNamingRoute = false,
+            savedRoutes = emptyList(),
+            locationTarget = LocationTarget.Empty,
+            isMocking = false,
+            speedUnit = SpeedUnit.MilesPerHour
+        )
     }
 }

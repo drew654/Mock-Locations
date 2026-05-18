@@ -1,7 +1,6 @@
 package com.drew654.mocklocations.presentation.map_screen
 
 import android.Manifest
-import android.content.res.Configuration
 import android.os.Build
 import android.util.Log
 import android.widget.Toast
@@ -28,7 +27,6 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -51,6 +49,8 @@ import com.drew654.mocklocations.presentation.map_screen.components.MapControlBu
 import com.drew654.mocklocations.presentation.map_screen.components.PermissionsDialog
 import com.drew654.mocklocations.presentation.map_screen.components.SavedRoutesDialog
 import com.drew654.mocklocations.presentation.map_screen.components.SearchAddressSection
+import com.drew654.mocklocations.presentation.ui.theme.DayNightDevicePreviews
+import com.drew654.mocklocations.presentation.ui.theme.DeviceThemePreview
 import com.drew654.mocklocations.util.MapUtils
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -651,32 +651,24 @@ private fun MapContent(
     }
 }
 
-@Preview(
-    name = "Light Mode",
-    showBackground = true,
-    showSystemUi = true
-)
-@Preview(
-    name = "Dark Mode",
-    showBackground = true,
-    showSystemUi = true,
-    uiMode = Configuration.UI_MODE_NIGHT_YES
-)
+@DayNightDevicePreviews
 @Composable
 private fun MapScreenPreview() {
-    MapContent(
-        isShowingSearch = false,
-        shouldFocusSearchBar = true,
-        cameraPositionState = CameraPositionState(),
-        mapProperties = MapProperties(),
-        mapUiSettings = MapUiSettings(),
-        mapStyle = null,
-        mockControlState = MockControlState(),
-        expandedControlsState = ExpandedControlsState(),
-        isShowingSavedRoutesDialog = false,
-        isNamingRoute = false,
-        savedRoutes = emptyList(),
-        permissionToBeRequested = null,
-        compassState = CompassState(isVisible = true, bearing = 0f)
-    )
+    DeviceThemePreview {
+        MapContent(
+            isShowingSearch = false,
+            shouldFocusSearchBar = true,
+            cameraPositionState = CameraPositionState(),
+            mapProperties = MapProperties(),
+            mapUiSettings = MapUiSettings(),
+            mapStyle = null,
+            mockControlState = MockControlState(),
+            expandedControlsState = ExpandedControlsState(),
+            isShowingSavedRoutesDialog = false,
+            isNamingRoute = false,
+            savedRoutes = emptyList(),
+            permissionToBeRequested = null,
+            compassState = CompassState(isVisible = true, bearing = 0f)
+        )
+    }
 }
