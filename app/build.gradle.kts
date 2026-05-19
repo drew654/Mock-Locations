@@ -16,8 +16,8 @@ android {
         applicationId = "com.drew654.mocklocations"
         minSdk = 31
         targetSdk = 36
-        versionCode = 16
-        versionName = "0.4.0"
+        versionCode = 17
+        versionName = "0.4.1"
         setProperty("archivesBaseName", "mock-locations")
 
         val localProperties = Properties()
