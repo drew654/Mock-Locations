@@ -13,6 +13,7 @@ import androidx.lifecycle.viewModelScope
 import com.drew654.mocklocations.data.repository.ExportRepository
 import com.drew654.mocklocations.data.repository.RouteRepository
 import com.drew654.mocklocations.domain.SettingsManager
+import com.drew654.mocklocations.domain.model.ExpandedControlsConfigurationState
 import com.drew654.mocklocations.domain.model.ExpandedControlsState
 import com.drew654.mocklocations.domain.model.ImportRouteOption
 import com.drew654.mocklocations.domain.model.LocationAccuracyLevel
@@ -33,6 +34,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -93,10 +95,22 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         initialValue = runBlocking { settingsManager.locationUpdateDelayFlow.first() }
     )
 
+    private val _expandedControlsConfigurationState = MutableStateFlow(ExpandedControlsConfigurationState())
+    val expandedControlsConfigurationState: StateFlow<ExpandedControlsConfigurationState> = _expandedControlsConfigurationState.asStateFlow()
+
     init {
         viewModelScope.launch {
             val savedSpeedUnitValue = settingsManager.speedUnitValueFlow.first()
-            updateExpandedControlsState { it.copy(speedUnitValue = savedSpeedUnitValue) }
+            val savedSpeedSliderLowerEnd = settingsManager.speedSliderLowerEndFlow.first()
+            val savedSpeedSliderUpperEnd = settingsManager.speedSliderUpperEndFlow.first()
+            updateExpandedControlsState {
+                it.copy(
+                    speedUnitValue = savedSpeedUnitValue,
+                    speedSliderLowerEnd = savedSpeedSliderLowerEnd,
+                    speedSliderUpperEnd = savedSpeedSliderUpperEnd
+                )
+            }
+            _expandedControlsConfigurationState.value = getExpandedControlsConfigurationState()
             settingsManager.setMockControlState(mockControlState.value.copy(isWaitingForRouteFetch = false))
         }
 
@@ -424,6 +438,57 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
             viewModelScope.launch {
                 settingsManager.saveRoute(route = routeToSave)
             }
+        }
+    }
+
+    suspend fun getExpandedControlsConfigurationState(): ExpandedControlsConfigurationState {
+        val speedUnitValue = settingsManager.speedUnitValueFlow.first()
+        val speedSliderLowerEnd = settingsManager.speedSliderLowerEndFlow.first()
+        val speedSliderUpperEnd = settingsManager.speedSliderUpperEndFlow.first()
+        return ExpandedControlsConfigurationState(
+            isShowingDialog = false,
+            speedUnitValue = speedUnitValue,
+            speedSliderLowerEnd = speedSliderLowerEnd.toString(),
+            speedSliderUpperEnd = speedSliderUpperEnd.toString()
+        )
+    }
+
+    fun updateExpandedControlsConfigurationState(transform: (ExpandedControlsConfigurationState) -> ExpandedControlsConfigurationState) {
+        _expandedControlsConfigurationState.value = transform(_expandedControlsConfigurationState.value)
+    }
+
+    fun refreshExpandedControlsConfigurationState() {
+        val currentExpandedControlsState = _uiState.value.expandedControlsState
+        _expandedControlsConfigurationState.value = ExpandedControlsConfigurationState(
+            isShowingDialog = false,
+            speedUnitValue = currentExpandedControlsState.speedUnitValue,
+            speedSliderLowerEnd = currentExpandedControlsState.speedSliderLowerEnd.toString(),
+            speedSliderUpperEnd = currentExpandedControlsState.speedSliderUpperEnd.toString()
+        )
+    }
+
+    fun saveExpandedControlsConfigurationState() {
+        val configState = expandedControlsConfigurationState.value
+        val speedSliderLowerEnd = configState.speedSliderLowerEnd.toIntOrNull() ?: 0
+        val speedSliderUpperEnd = configState.speedSliderUpperEnd.toIntOrNull() ?: 100
+        var speedUnitValue = configState.speedUnitValue
+
+        if (speedUnitValue.value < speedSliderLowerEnd) {
+            speedUnitValue = speedUnitValue.copy(value = speedSliderLowerEnd.toDouble())
+        } else if (speedUnitValue.value > speedSliderUpperEnd) {
+            speedUnitValue = speedUnitValue.copy(value = speedSliderUpperEnd.toDouble())
+        }
+
+        setSpeedUnitValue(speedUnitValue)
+        saveSpeedUnitValue(speedUnitValue)
+
+        setSpeedSliderLowerEnd(speedSliderLowerEnd)
+        saveSpeedSliderLowerEnd(speedSliderLowerEnd)
+        setSpeedSliderUpperEnd(speedSliderUpperEnd)
+        saveSpeedSliderUpperEnd(speedSliderUpperEnd)
+
+        updateExpandedControlsConfigurationState {
+            it.copy(speedUnitValue = speedUnitValue)
         }
     }
 
