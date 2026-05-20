@@ -15,6 +15,7 @@ import com.drew654.mocklocations.data.repository.RouteRepository
 import com.drew654.mocklocations.domain.SettingsManager
 import com.drew654.mocklocations.domain.model.ExpandedControlsConfigurationState
 import com.drew654.mocklocations.domain.model.ExpandedControlsState
+import com.drew654.mocklocations.domain.model.ExportSettingsState
 import com.drew654.mocklocations.domain.model.ImportRouteOption
 import com.drew654.mocklocations.domain.model.LocationAccuracyLevel
 import com.drew654.mocklocations.domain.model.LocationTarget
@@ -97,6 +98,8 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
 
     private val _expandedControlsConfigurationState = MutableStateFlow(ExpandedControlsConfigurationState())
     val expandedControlsConfigurationState: StateFlow<ExpandedControlsConfigurationState> = _expandedControlsConfigurationState.asStateFlow()
+    private val _exportSettingsState = MutableStateFlow(ExportSettingsState())
+    val exportSettingsState: StateFlow<ExportSettingsState> = _exportSettingsState.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -490,6 +493,19 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         updateExpandedControlsConfigurationState {
             it.copy(speedUnitValue = speedUnitValue)
         }
+    }
+
+    fun refreshExportSettingsState() {
+        val currentRoutesCount = savedRoutes.value.size
+        _exportSettingsState.value = ExportSettingsState(
+            routesToExport = currentRoutesCount,
+            isExportSettings = true,
+            isExportRoutes = currentRoutesCount > 0
+        )
+    }
+
+    fun updateExportSettingsState(transform: (ExportSettingsState) -> ExportSettingsState) {
+        _exportSettingsState.value = transform(_exportSettingsState.value)
     }
 
     fun loadSavedRoute(route: LocationTarget.SavedRoute) {
