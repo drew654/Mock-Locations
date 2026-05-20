@@ -4,4 +4,8 @@ data class ExportSettingsState(
     val routesToExport: Int = 0,
     val isExportSettings: Boolean = false,
     val isExportRoutes: Boolean = false
-)
+) {
+    fun isFormValid(): Boolean {
+        return isExportRoutes || isExportSettings
+    }
+}

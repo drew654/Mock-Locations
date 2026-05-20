@@ -161,7 +161,7 @@ private fun ExportSettingsContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(8.dp),
-                enabled = state.isExportRoutes || state.isExportSettings
+                enabled = state.isFormValid()
             ) {
                 Text("Export")
             }

@@ -17,6 +17,7 @@ import com.drew654.mocklocations.domain.model.ExpandedControlsConfigurationState
 import com.drew654.mocklocations.domain.model.ExpandedControlsState
 import com.drew654.mocklocations.domain.model.ExportSettingsState
 import com.drew654.mocklocations.domain.model.ImportRouteOption
+import com.drew654.mocklocations.domain.model.ImportSettingsState
 import com.drew654.mocklocations.domain.model.LocationAccuracyLevel
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.MapStyle
@@ -100,6 +101,8 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     val expandedControlsConfigurationState: StateFlow<ExpandedControlsConfigurationState> = _expandedControlsConfigurationState.asStateFlow()
     private val _exportSettingsState = MutableStateFlow(ExportSettingsState())
     val exportSettingsState: StateFlow<ExportSettingsState> = _exportSettingsState.asStateFlow()
+    private val _importSettingsState = MutableStateFlow(ImportSettingsState())
+    val importSettingsState: StateFlow<ImportSettingsState> = _importSettingsState.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -172,7 +175,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
-    fun importDataFromUri(importSettings: Boolean, importRouteOption: ImportRouteOption?) {
+    fun importDataFromUri(importSettingsState: ImportSettingsState) {
         viewModelScope.launch(Dispatchers.IO) {
             val context = getApplication<Application>().applicationContext
             try {
@@ -182,7 +185,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
                     ?.use { it.readText() }
                     ?: throw IllegalStateException("Unable to read file")
 
-                exportRepository.importFromJson(json, importSettings, importRouteOption)
+                exportRepository.importFromJson(json, importSettingsState.isImportSettings, importSettingsState.importRouteOption)
                 val savedSpeedUnitValue = settingsManager.speedUnitValueFlow.first()
                 updateExpandedControlsState { it.copy(speedUnitValue = savedSpeedUnitValue) }
 
@@ -506,6 +509,24 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
 
     fun updateExportSettingsState(transform: (ExportSettingsState) -> ExportSettingsState) {
         _exportSettingsState.value = transform(_exportSettingsState.value)
+    }
+
+    fun refreshImportSettingsState() {
+        val isImportSettingsEnabled = getIsWithSettingsToImportFromImportUri()
+        val routesToImport = getRouteCountFromImportUri()
+        val isImportRoutesEnabled = routesToImport > 0
+        _importSettingsState.value = ImportSettingsState(
+            isImportRoutesEnabled = isImportRoutesEnabled,
+            isImportRoutes = isImportRoutesEnabled,
+            isImportSettingsEnabled = isImportSettingsEnabled,
+            isImportSettings = isImportSettingsEnabled,
+            importRouteOption = if (isImportRoutesEnabled) ImportRouteOption.REPLACE else null,
+            routesToImport = routesToImport
+        )
+    }
+
+    fun updateImportSettingsState(transform: (ImportSettingsState) -> ImportSettingsState) {
+        _importSettingsState.value = transform(_importSettingsState.value)
     }
 
     fun loadSavedRoute(route: LocationTarget.SavedRoute) {
