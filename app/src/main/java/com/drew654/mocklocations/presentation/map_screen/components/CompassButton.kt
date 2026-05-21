@@ -9,7 +9,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.R
@@ -19,7 +19,7 @@ import com.drew654.mocklocations.presentation.ui.theme.ThemePreview
 @Composable
 fun CompassButton(
     onClick: () -> Unit = { },
-    bearing: Float
+    bearing: () -> Float
 ) {
     Surface(
         modifier = Modifier.padding(4.dp),
@@ -36,7 +36,11 @@ fun CompassButton(
             Icon(
                 painter = painterResource(id = R.drawable.baseline_north_24),
                 contentDescription = "Align North",
-                modifier = Modifier.rotate(360f - bearing),
+                modifier = Modifier
+                    .graphicsLayer {
+                        rotationZ = 360f - bearing()
+                    }
+                ,
                 tint = MaterialTheme.colorScheme.onSurface
             )
         }
@@ -48,7 +52,7 @@ fun CompassButton(
 fun CompassButtonPreview() {
     ThemePreview {
         CompassButton(
-            bearing = 0f
+            bearing = { 0f }
         )
     }
 }

@@ -385,8 +385,8 @@ fun MapScreen(
             }
         },
         compassState = CompassState(
-            isVisible = cameraPositionState.position.bearing != 0f || cameraPositionState.position.tilt != 0f,
-            bearing = cameraPositionState.position.bearing
+            isVisible = { cameraPositionState.position.bearing != 0f || cameraPositionState.position.tilt != 0f },
+            bearing = { cameraPositionState.position.bearing }
         ),
         onSettingsClick = {
             focusManager.clearFocus()
@@ -615,7 +615,7 @@ private fun MapScreenPreview() {
             state = MapState(),
             cameraPositionState = CameraPositionState(),
             mockControlState = MockControlState(),
-            compassState = CompassState(isVisible = true, bearing = 0f)
+            compassState = CompassState(isVisible = { true }, bearing = { 0f })
         )
     }
 }

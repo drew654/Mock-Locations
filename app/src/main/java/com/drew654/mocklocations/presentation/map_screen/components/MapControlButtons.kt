@@ -76,10 +76,10 @@ fun MapControlButtons(
                             onUserLocationFocus()
                         }
                     )
-                    if (compassState.isVisible) {
+                    if (compassState.isVisible()) {
                         Spacer(Modifier.height(4.dp))
                         CompassButton(
-                            bearing = compassState.bearing,
+                            bearing = { compassState.bearing() },
                             onClick = { onClickCompass() }
                         )
                     }
@@ -181,7 +181,7 @@ fun MapControlButtonsPreview() {
             isPaused = false,
             isShowingSearch = false,
             crosshairsColor = MaterialTheme.colorScheme.onSurface,
-            compassState = CompassState(isVisible = true, bearing = 0f)
+            compassState = CompassState(isVisible = { true }, bearing = { 0f })
         )
     }
 }
