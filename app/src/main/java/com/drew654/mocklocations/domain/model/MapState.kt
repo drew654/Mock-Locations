@@ -1,11 +1,15 @@
 package com.drew654.mocklocations.domain.model
 
 import android.net.Uri
+import androidx.compose.runtime.Immutable
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapType
 import com.google.maps.android.compose.MapUiSettings
 
+@Immutable
 data class MapState(
+    val mockControlState: MockControlState = MockControlState(),
+    val currentMockedLocation: RoutePoint? = null,
     val savedCameraPosition: SavedCameraPosition? = null,
     val isMapCenteredAfterLaunch: Boolean = false,
     val hasRestoredCamera: Boolean = false,

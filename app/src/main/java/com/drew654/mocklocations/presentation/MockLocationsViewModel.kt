@@ -25,7 +25,6 @@ import com.drew654.mocklocations.domain.model.MapState
 import com.drew654.mocklocations.domain.model.MapStyle
 import com.drew654.mocklocations.domain.model.MockControlState
 import com.drew654.mocklocations.domain.model.Permission
-import com.drew654.mocklocations.domain.model.RoutePoint
 import com.drew654.mocklocations.domain.model.RouteSegment
 import com.drew654.mocklocations.domain.model.SavedCameraPosition
 import com.drew654.mocklocations.domain.model.SettingsState
@@ -44,44 +43,30 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 
 class MockLocationsViewModel(application: Application) : AndroidViewModel(application) {
     private val settingsManager = SettingsManager(application)
     val exportRepository = ExportRepository(settingsManager)
     val routeRepository = RouteRepository()
-    val mockControlState = settingsManager.mockControlStateFlow.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = runBlocking { settingsManager.mockControlStateFlow.first() }
-    )
-    val locationAccuracyLevel: StateFlow<LocationAccuracyLevel> = settingsManager.locationAccuracyLevelFlow.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = runBlocking { settingsManager.locationAccuracyLevelFlow.first() }
-    )
-    val isGoingToWaitAtRouteFinish: StateFlow<Boolean> = settingsManager.isGoingToWaitAtRouteFinishFlow.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = runBlocking { settingsManager.isGoingToWaitAtRouteFinishFlow.first() }
-    )
-    val currentMockedLocation: StateFlow<RoutePoint?> =
-        settingsManager.currentMockedLocationFlow.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = runBlocking { settingsManager.currentMockedLocationFlow.first() }
+    private val _uiMapState = MutableStateFlow(MapState())
+    val mapState: StateFlow<MapState> = combine(
+        _uiMapState,
+        settingsManager.mockControlStateFlow,
+        settingsManager.currentMockedLocationFlow
+    ) { uiMapState, mockControlState, currentMockedLocation ->
+        uiMapState.copy(
+            mockControlState = mockControlState,
+            currentMockedLocation = currentMockedLocation
         )
-    val locationUpdateDelay: StateFlow<Float> = settingsManager.locationUpdateDelayFlow.stateIn(
+    }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = runBlocking { settingsManager.locationUpdateDelayFlow.first() }
+        initialValue = MapState()
     )
-
-    private val _mapState = MutableStateFlow(MapState())
-    val mapState: StateFlow<MapState> = _mapState.asStateFlow()
     private val _expandedControlsConfigurationState = MutableStateFlow(ExpandedControlsConfigurationState())
     val expandedControlsConfigurationState: StateFlow<ExpandedControlsConfigurationState> = _expandedControlsConfigurationState.asStateFlow()
     private val _exportSettingsState = MutableStateFlow(ExportSettingsState())
@@ -104,7 +89,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
                 )
             }
             _expandedControlsConfigurationState.value = getExpandedControlsConfigurationState()
-            settingsManager.setMockControlState(mockControlState.value.copy(isWaitingForRouteFetch = false))
+            settingsManager.setMockControlState(mapState.value.mockControlState.copy(isWaitingForRouteFetch = false))
         }
 
         viewModelScope.launch {
@@ -168,7 +153,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
             val context = getApplication<Application>().applicationContext
             try {
                 val json = context.contentResolver
-                    .openInputStream(_mapState.value.importUri!!)
+                    .openInputStream(_uiMapState.value.importUri!!)
                     ?.bufferedReader()
                     ?.use { it.readText() }
                     ?: throw IllegalStateException("Unable to read file")
@@ -195,7 +180,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
             val context = getApplication<Application>().applicationContext
             try {
                 val json = context.contentResolver
-                    .openInputStream(_mapState.value.importUri!!)
+                    .openInputStream(_uiMapState.value.importUri!!)
                     ?.bufferedReader()
                     ?.use { it.readText() }
                     ?: throw IllegalStateException("Unable to read file")
@@ -213,7 +198,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
             val context = getApplication<Application>().applicationContext
             try {
                 val json = context.contentResolver
-                    .openInputStream(_mapState.value.importUri!!)
+                    .openInputStream(_uiMapState.value.importUri!!)
                     ?.bufferedReader()
                     ?.use { it.readText() }
                     ?: throw IllegalStateException("Unable to read file")
@@ -232,7 +217,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
             val context = getApplication<Application>().applicationContext
             try {
                 val json = context.contentResolver
-                    .openInputStream(_mapState.value.importUri!!)
+                    .openInputStream(_uiMapState.value.importUri!!)
                     ?.bufferedReader()
                     ?.use { it.readText() }
                     ?: throw IllegalStateException("Unable to read file")
@@ -279,9 +264,9 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     }
 
     fun updateMapState(transform: (MapState) -> MapState) {
-        val currentState = _mapState.value
+        val currentState = _uiMapState.value
         val newState = transform(currentState)
-        _mapState.value = newState
+        _uiMapState.value = newState
     }
 
     fun refreshMapState(
@@ -322,7 +307,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     }
 
     fun updateExpandedControlsState(transform: (ExpandedControlsState) -> ExpandedControlsState) {
-        val currentState = _mapState.value.expandedControlsState
+        val currentState = _uiMapState.value.expandedControlsState
         val newState = transform(currentState)
         updateMapState { it.copy(expandedControlsState = newState) }
     }
@@ -346,7 +331,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     suspend fun pushRouteSegment(point: LatLng) {
         val isBuildRoutesOnRoad = settingsManager.buildRouteOnRoadsFlow.first()
         if (isBuildRoutesOnRoad) {
-            if (mockControlState.value.activeLocationTarget is LocationTarget.Empty) {
+            if (mapState.value.mockControlState.activeLocationTarget is LocationTarget.Empty) {
                 updateMockControlState {
                     it.copy(
                         activeLocationTarget = LocationTarget.create(
@@ -358,7 +343,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
                 }
             } else {
                 fetchAndAppendRoute(
-                    start = mockControlState.value.activeLocationTarget.getLastPoint()!!,
+                    start = mapState.value.mockControlState.activeLocationTarget.getLastPoint()!!,
                     end = point
                 )
             }
@@ -454,7 +439,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     }
 
     fun saveCurrentRoute(name: String) {
-        val current = mockControlState.value.activeLocationTarget
+        val current = mapState.value.mockControlState.activeLocationTarget
         if (current.routeSegments.isNotEmpty()) {
             val routeToSave = LocationTarget.SavedRoute(name = name, routeSegments = current.routeSegments)
             viewModelScope.launch {
@@ -486,7 +471,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     }
 
     fun refreshExpandedControlsConfigurationState() {
-        val currentExpandedControlsState = _mapState.value.expandedControlsState
+        val currentExpandedControlsState = _uiMapState.value.expandedControlsState
         _expandedControlsConfigurationState.value = ExpandedControlsConfigurationState(
             isShowingDialog = false,
             speedUnitValue = currentExpandedControlsState.speedUnitValue,

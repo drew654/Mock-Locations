@@ -16,10 +16,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -34,7 +32,6 @@ import androidx.navigation.NavController
 import com.drew654.mocklocations.domain.model.CompassState
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.MapState
-import com.drew654.mocklocations.domain.model.MockControlState
 import com.drew654.mocklocations.domain.model.Permission
 import com.drew654.mocklocations.domain.model.SpeedUnitValue
 import com.drew654.mocklocations.domain.model.isGranted
@@ -88,18 +85,6 @@ fun MapScreen(
             viewModel.updateMapState { it.copy(permissionToBeRequested = Permission.FineLocation) }
         }
     }
-
-    val mockControlState by viewModel.mockControlState.collectAsState()
-    val activeLocationTarget by remember {
-        derivedStateOf { mockControlState.activeLocationTarget }
-    }
-    val isMocking by remember {
-        derivedStateOf { mockControlState.isMocking }
-    }
-    val isUsingCrosshairs by remember {
-        derivedStateOf { mockControlState.isUsingCrosshairs }
-    }
-    val currentMockedLocation by viewModel.currentMockedLocation.collectAsState()
 
     var isInitialized by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(Unit) {
@@ -172,23 +157,23 @@ fun MapScreen(
         }
     }
 
-    LaunchedEffect(currentMockedLocation, state.isCameraFollowingMockedLocation) {
-        if (isMocking && state.isCameraCurrentlyFollowingMockedLocation && currentMockedLocation != null) {
+    LaunchedEffect(state.currentMockedLocation, state.isCameraFollowingMockedLocation) {
+        if (state.mockControlState.isMocking && state.isCameraCurrentlyFollowingMockedLocation && state.currentMockedLocation != null) {
             cameraPositionState.move(
-                CameraUpdateFactory.newLatLng(currentMockedLocation!!.latLng)
+                CameraUpdateFactory.newLatLng(state.currentMockedLocation!!.latLng)
             )
         }
     }
 
-    LaunchedEffect(state.hasLocationPermission, activeLocationTarget) {
+    LaunchedEffect(state.hasLocationPermission, state.mockControlState.activeLocationTarget) {
         if (!state.isMapCenteredAfterLaunch) {
-            if (activeLocationTarget !is LocationTarget.Empty) {
+            if (state.mockControlState.activeLocationTarget !is LocationTarget.Empty) {
                 snapshotFlow { cameraPositionState.projection }
                     .filterNotNull()
                     .first()
 
                 try {
-                    MapUtils.focusMapToLocationTarget(activeLocationTarget, cameraPositionState)
+                    MapUtils.focusMapToLocationTarget(state.mockControlState.activeLocationTarget, cameraPositionState)
                     viewModel.setMapIsCenteredAfterLaunch()
                 } catch (e: Exception) {
                     Log.e("MapScreen", "Error centering map to active location target", e)
@@ -231,13 +216,12 @@ fun MapScreen(
         },
         cameraPositionState = cameraPositionState,
         onMapLongClick = { point ->
-            if (mockControlState.isLongPressAddPointEnabled()) {
+            if (state.mockControlState.isLongPressAddPointEnabled()) {
                 scope.launch {
                     viewModel.pushRouteSegment(point)
                 }
             }
         },
-        mockControlState = mockControlState,
         setControlsAreExpanded = {
             viewModel.setControlsAreExpanded(it)
         },
@@ -273,7 +257,7 @@ fun MapScreen(
                 return@MapContent
             }
 
-            if (state.isCameraFollowingMockedLocation && activeLocationTarget.isRoute()) {
+            if (state.isCameraFollowingMockedLocation && state.mockControlState.activeLocationTarget.isRoute()) {
                 viewModel.updateMapState { it.copy(isCameraCurrentlyFollowingMockedLocation = true) }
                 viewModel.setIsCameraCurrentlyFollowingMockedLocation(true)
                 cameraPositionState.move(CameraUpdateFactory.zoomTo(15f))
@@ -281,7 +265,7 @@ fun MapScreen(
             scope.launch {
                 viewModel.startMockLocation(
                     context = context,
-                    pushPoint = if (isUsingCrosshairs && activeLocationTarget is LocationTarget.Empty) cameraPositionState.position.target else null
+                    pushPoint = if (state.mockControlState.isUsingCrosshairs && state.mockControlState.activeLocationTarget is LocationTarget.Empty) cameraPositionState.position.target else null
                 )
             }
         },
@@ -296,7 +280,7 @@ fun MapScreen(
         },
         onSaveLocationTarget = {
             viewModel.updateMapState { it.copy(isShowingSavedRoutesDialog = true) }
-            if (isMocking) {
+            if (state.mockControlState.isMocking) {
                 viewModel.updateMapState { it.copy(isNamingRoute = true) }
             }
         },
@@ -419,7 +403,6 @@ fun MapScreen(
 private fun MapContent(
     state: MapState,
     cameraPositionState: CameraPositionState,
-    mockControlState: MockControlState,
     compassState: CompassState,
     onSearchAddress: (String) -> Unit = { },
     onMapLongClick: (LatLng) -> Unit = { },
@@ -448,9 +431,9 @@ private fun MapContent(
 ) {
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
-    val activeLocationTarget = mockControlState.activeLocationTarget
-    val isPaused = mockControlState.isPaused
-    val isMocking = mockControlState.isMocking
+    val activeLocationTarget = state.mockControlState.activeLocationTarget
+    val isPaused = state.mockControlState.isPaused
+    val isMocking = state.mockControlState.isMocking
 
     Box(
         modifier = Modifier
@@ -513,7 +496,7 @@ private fun MapContent(
                     }
                 }
                 MapControlButtons(
-                    mockControlState = mockControlState,
+                    mockControlState = state.mockControlState,
                     controlsAreExpanded = state.expandedControlsState.isExpanded,
                     setControlsAreExpanded = {
                         setControlsAreExpanded(it)
@@ -614,7 +597,6 @@ private fun MapScreenPreview() {
         MapContent(
             state = MapState(),
             cameraPositionState = CameraPositionState(),
-            mockControlState = MockControlState(),
             compassState = CompassState(isVisible = { true }, bearing = { 0f })
         )
     }
