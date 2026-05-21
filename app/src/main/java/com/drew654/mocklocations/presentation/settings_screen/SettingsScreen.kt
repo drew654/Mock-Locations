@@ -23,6 +23,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,6 +36,9 @@ import androidx.core.net.toUri
 import androidx.navigation.NavController
 import com.drew654.mocklocations.BuildConfig
 import com.drew654.mocklocations.R
+import com.drew654.mocklocations.domain.model.LocationAccuracyLevel
+import com.drew654.mocklocations.domain.model.MapStyle
+import com.drew654.mocklocations.domain.model.SettingsState
 import com.drew654.mocklocations.presentation.MockLocationsViewModel
 import com.drew654.mocklocations.presentation.Screen
 import com.drew654.mocklocations.presentation.settings_screen.components.LocationAccuracyLevelDialog
@@ -44,27 +48,15 @@ import com.drew654.mocklocations.presentation.settings_screen.components.ResetSe
 import com.drew654.mocklocations.presentation.settings_screen.components.SwitchRow
 import com.drew654.mocklocations.presentation.settings_screen.components.TextRow
 import com.drew654.mocklocations.presentation.toTrimmedString
+import com.drew654.mocklocations.presentation.ui.theme.DayNightDevicePreviews
+import com.drew654.mocklocations.presentation.ui.theme.DeviceThemePreview
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     viewModel: MockLocationsViewModel,
     navController: NavController
 ) {
-    val context = LocalContext.current
-    val mockControlState by viewModel.mockControlState.collectAsState()
-    val isBuildRouteOnRoads by viewModel.isBuildRoutesOnRoad.collectAsState()
-    val isUsingCrosshairs = mockControlState.isUsingCrosshairs
-    val clearPointsOnStop by viewModel.clearRouteOnStop.collectAsState()
-    var isShowingMapStylesDialog by rememberSaveable { mutableStateOf(false) }
-    var isShowingLocationAccuracyLevelDialog by rememberSaveable { mutableStateOf(false) }
-    val scrollState = rememberScrollState()
-    val mapStyle by viewModel.mapStyle.collectAsState()
-    val locationAccuracyLevel by viewModel.locationAccuracyLevel.collectAsState()
-    val locationUpdateDelay by viewModel.locationUpdateDelay.collectAsState()
-    var isShowingLocationUpdateDelayDialog by rememberSaveable { mutableStateOf(false) }
-    val isCameraFollowingMockedLocation by viewModel.isCameraFollowingMockedLocation.collectAsState()
-    val isGoingToWaitAtRouteFinish by viewModel.isGoingToWaitAtRouteFinish.collectAsState()
+    val state = viewModel.settingsState.collectAsState()
     val importLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
@@ -79,7 +71,105 @@ fun SettingsScreen(
             navController.navigate(Screen.ImportSettings.route)
         }
     }
-    var isShowingResetSettingsDialog by rememberSaveable { mutableStateOf(false) }
+
+    var isInitialized by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        if (!isInitialized) {
+            viewModel.refreshSettingsState()
+            isInitialized = true
+        }
+    }
+
+    SettingsContent(
+        state = state.value,
+        onBack = {
+            viewModel.setShouldFocusSearchBar(false)
+            navController.popBackStack()
+        },
+        setBuildRouteOnRoad = { newValue ->
+            viewModel.updateSettingsState { it.copy(isBuildRouteOnRoads = newValue) }
+            viewModel.setBuildRouteOnRoads(newValue)
+        },
+        setIsUsingCrosshairs = { newValue ->
+            viewModel.updateSettingsState { it.copy(isUsingCrosshairs = newValue) }
+            viewModel.setIsUsingCrosshairs(newValue)
+        },
+        setClearRouteOnStop = { newValue ->
+            viewModel.updateSettingsState { it.copy(clearPointsOnStop = newValue) }
+            viewModel.setClearRouteOnStop(newValue)
+        },
+        setIsCameraFollowingMockedLocation = { newValue ->
+            viewModel.updateSettingsState { it.copy(isCameraFollowingMockedLocation = newValue) }
+            viewModel.setIsCameraFollowingMockedLocation(newValue)
+            viewModel.setIsCameraCurrentlyFollowingMockedLocation(newValue)
+        },
+        setIsGoingToWaitAtRouteFinish = { newValue ->
+            viewModel.updateSettingsState { it.copy(isGoingToWaitAtRouteFinish = newValue) }
+            viewModel.setIsGoingToWaitAtRouteFinish(newValue)
+        },
+        setIsShowingMapStyleDialog = { newValue ->
+            viewModel.updateSettingsState { it.copy(isShowingMapStyleDialog = newValue) }
+        },
+        setIsShowingLocationAccuracyLevelDialog = { newValue ->
+            viewModel.updateSettingsState { it.copy(isShowingLocationAccuracyLevelDialog = newValue) }
+        },
+        setIsShowingLocationUpdateDelayDialog = { newValue ->
+            viewModel.updateSettingsState { it.copy(isShowingLocationUpdateDelayDialog = newValue) }
+        },
+        onConfigureExpandedControlsClicked = {
+            navController.navigate(Screen.ExpandedControlsConfiguration.route)
+        },
+        onExportSettingsClicked = {
+            navController.navigate(Screen.ExportSettings.route)
+        },
+        onImportSettingsClicked = {
+            importLauncher.launch(arrayOf("application/json"))
+        },
+        setIsShowingResetSettingsDialog = { newValue ->
+            viewModel.updateSettingsState { it.copy(isShowingResetSettingsDialog = newValue) }
+        },
+        onMapStyleSelected = { newValue ->
+            viewModel.updateSettingsState { it.copy(mapStyle = newValue) }
+            viewModel.setMapStyle(newValue)
+        },
+        onLocationAccuracyLevelSelected = { newValue ->
+            viewModel.updateSettingsState { it.copy(locationAccuracyLevel = newValue) }
+            viewModel.setLocationAccuracyLevel(newValue)
+        },
+        onLocationUpdateDelaySelected = { newValue ->
+            viewModel.updateSettingsState { it.copy(locationUpdateDelay = newValue) }
+            viewModel.setLocationUpdateDelay(newValue)
+        },
+        onResetSettingsToDefault = {
+            viewModel.resetSettingsToDefault()
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SettingsContent(
+    state: SettingsState,
+    onBack: () -> Unit = { },
+    setBuildRouteOnRoad: (Boolean) -> Unit = { },
+    setIsUsingCrosshairs: (Boolean) -> Unit = { },
+    setClearRouteOnStop: (Boolean) -> Unit = { },
+    setIsCameraFollowingMockedLocation: (Boolean) -> Unit = { },
+    setIsGoingToWaitAtRouteFinish: (Boolean) -> Unit = { },
+    setIsShowingMapStyleDialog: (Boolean) -> Unit = { },
+    setIsShowingLocationAccuracyLevelDialog: (Boolean) -> Unit = { },
+    setIsShowingLocationUpdateDelayDialog: (Boolean) -> Unit = { },
+    onConfigureExpandedControlsClicked: () -> Unit = { },
+    onExportSettingsClicked: () -> Unit = { },
+    onImportSettingsClicked: () -> Unit = { },
+    setIsShowingResetSettingsDialog: (Boolean) -> Unit = { },
+    onMapStyleSelected: (MapStyle?) -> Unit = { },
+    onLocationAccuracyLevelSelected: (LocationAccuracyLevel) -> Unit = { },
+    onLocationUpdateDelaySelected: (Float) -> Unit = { },
+    onResetSettingsToDefault: () -> Unit = { }
+) {
+    val context = LocalContext.current
+    val scrollState = rememberScrollState()
 
     Scaffold(
         modifier = Modifier
@@ -96,8 +186,7 @@ fun SettingsScreen(
                 navigationIcon = {
                     IconButton(
                         onClick = {
-                            viewModel.setShouldFocusSearchBar(false)
-                            navController.popBackStack()
+                            onBack()
                         }
                     ) {
                         Icon(
@@ -119,88 +208,87 @@ fun SettingsScreen(
         ) {
             SwitchRow(
                 label = "Build route on roads",
-                checked = isBuildRouteOnRoads,
+                checked = state.isBuildRouteOnRoads,
                 onCheckedChange = {
-                    viewModel.setBuildRouteOnRoads(it)
+                    setBuildRouteOnRoad(it)
                 },
                 switchTestTag = "build_route_on_roads_switch"
             )
             SwitchRow(
                 label = "Use crosshairs",
-                checked = isUsingCrosshairs,
+                checked = state.isUsingCrosshairs,
                 onCheckedChange = {
-                    viewModel.setIsUsingCrosshairs(it)
+                    setIsUsingCrosshairs(it)
                 },
                 switchTestTag = "use_crosshairs_switch"
             )
             SwitchRow(
                 label = "Clear route on stop",
-                checked = clearPointsOnStop,
+                checked = state.clearPointsOnStop,
                 onCheckedChange = {
-                    viewModel.setClearRouteOnStop(it)
+                    setClearRouteOnStop(it)
                 },
                 switchTestTag = "clear_route_on_stop_switch"
             )
             SwitchRow(
                 label = "Camera follows mocked location",
-                checked = isCameraFollowingMockedLocation,
+                checked = state.isCameraFollowingMockedLocation,
                 onCheckedChange = {
-                    viewModel.setIsCameraFollowingMockedLocation(it)
-                    viewModel.setIsCameraCurrentlyFollowingMockedLocation(it)
+                    setIsCameraFollowingMockedLocation(it)
                 },
                 switchTestTag = "camera_follows_mocked_location_switch"
             )
             SwitchRow(
                 label = "Wait at the end of a route",
-                checked = isGoingToWaitAtRouteFinish,
+                checked = state.isGoingToWaitAtRouteFinish,
                 onCheckedChange = {
-                    viewModel.setIsGoingToWaitAtRouteFinish(it)
+                    setIsGoingToWaitAtRouteFinish(it)
                 },
                 switchTestTag = "wait_at_the_end_of_a_route_switch"
             )
             TextRow(
                 label = "Map style",
                 onClick = {
-                    isShowingMapStylesDialog = true
+                    setIsShowingMapStyleDialog(true)
                 },
-                value = mapStyle?.name ?: "Default"
+                value = state.mapStyle?.name ?: "Default"
             )
             TextRow(
                 label = "Location accuracy level",
                 onClick = {
-                    isShowingLocationAccuracyLevelDialog = true
+                    setIsShowingLocationAccuracyLevelDialog(true)
                 },
-                value = locationAccuracyLevel.name
+                value = state.locationAccuracyLevel.name
             )
             TextRow(
                 label = "Location update delay",
                 onClick = {
-                    isShowingLocationUpdateDelayDialog = true
+                    setIsShowingLocationUpdateDelayDialog(true)
                 },
-                value = "${locationUpdateDelay.toTrimmedString()} s"
+                value = "${state.locationUpdateDelay.toTrimmedString()} s"
             )
             TextRow(
                 label = "Configure expanded controls",
                 onClick = {
-                    navController.navigate(Screen.ExpandedControlsConfiguration.route)
+                    onConfigureExpandedControlsClicked()
                 }
             )
             TextRow(
                 label = "Export settings",
                 onClick = {
-                    navController.navigate(Screen.ExportSettings.route)
+                    onExportSettingsClicked()
                 }
             )
             TextRow(
                 label = "Import settings",
                 onClick = {
-                    importLauncher.launch(arrayOf("application/json"))
+                    onImportSettingsClicked()
                 }
             )
             TextRow(
                 label = "Reset to default",
                 onClick = {
-                    isShowingResetSettingsDialog = true
+                    setIsShowingResetSettingsDialog(true)
                 }
             )
             TextRow(
@@ -231,42 +319,50 @@ fun SettingsScreen(
     }
 
     MapStyleDialog(
-        isVisible = isShowingMapStylesDialog,
-        onDismiss = { isShowingMapStylesDialog = false },
-        selectedStyle = mapStyle,
+        isVisible = state.isShowingMapStyleDialog,
+        onDismiss = { setIsShowingMapStyleDialog(false) },
+        selectedStyle = state.mapStyle,
         onStyleSelected = {
-            viewModel.setMapStyle(it)
-            isShowingMapStylesDialog = false
+            onMapStyleSelected(it)
         }
     )
 
     LocationAccuracyLevelDialog(
-        isVisible = isShowingLocationAccuracyLevelDialog,
-        onDismiss = { isShowingLocationAccuracyLevelDialog = false },
-        selectedLevel = locationAccuracyLevel,
+        isVisible = state.isShowingLocationAccuracyLevelDialog,
+        selectedLevel = state.locationAccuracyLevel,
+        onDismiss = { setIsShowingLocationAccuracyLevelDialog(false) },
         onLevelSelected = {
-            viewModel.setLocationAccuracyLevel(it)
-            isShowingLocationAccuracyLevelDialog = false
+            onLocationAccuracyLevelSelected(it)
         }
     )
 
     LocationUpdateDelayDialog(
-        isVisible = isShowingLocationUpdateDelayDialog,
-        onDismiss = { isShowingLocationUpdateDelayDialog = false },
-        locationUpdateDelay = locationUpdateDelay,
+        isVisible = state.isShowingLocationUpdateDelayDialog,
+        onDismiss = { setIsShowingLocationUpdateDelayDialog(false) },
+        locationUpdateDelay = state.locationUpdateDelay,
         onLocationUpdateDelayChanged = {
-            viewModel.setLocationUpdateDelay(it)
+            onLocationUpdateDelaySelected(it)
         }
     )
 
     ResetSettingsDialog(
-        isVisible = isShowingResetSettingsDialog,
+        isVisible = state.isShowingResetSettingsDialog,
         onConfirm = {
-            viewModel.resetSettingsToDefault()
-            isShowingResetSettingsDialog = false
+            onResetSettingsToDefault()
+            setIsShowingResetSettingsDialog(false)
         },
         onDismiss = {
-            isShowingResetSettingsDialog = false
+            setIsShowingResetSettingsDialog(false)
         }
     )
+}
+
+@DayNightDevicePreviews
+@Composable
+private fun SettingsScreenPreview() {
+    DeviceThemePreview {
+        SettingsContent(
+            state = SettingsState()
+        )
+    }
 }

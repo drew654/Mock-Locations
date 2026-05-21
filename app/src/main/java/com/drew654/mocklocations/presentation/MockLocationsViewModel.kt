@@ -26,6 +26,7 @@ import com.drew654.mocklocations.domain.model.MockLocationsUiState
 import com.drew654.mocklocations.domain.model.RoutePoint
 import com.drew654.mocklocations.domain.model.RouteSegment
 import com.drew654.mocklocations.domain.model.SavedCameraPosition
+import com.drew654.mocklocations.domain.model.SettingsState
 import com.drew654.mocklocations.domain.model.SpeedUnitValue
 import com.drew654.mocklocations.service.MockLocationService
 import com.drew654.mocklocations.service.MockLocationService.Companion.ACTION_RESTORE_STRAIGHT_LINE_MOCKING
@@ -52,11 +53,6 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = runBlocking { settingsManager.mockControlStateFlow.first() }
-    )
-    val isBuildRoutesOnRoad: StateFlow<Boolean> = settingsManager.buildRouteOnRoadsFlow.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = runBlocking { settingsManager.buildRouteOnRoadsFlow.first() }
     )
     val mapStyle: StateFlow<MapStyle?> = settingsManager.mapStyleFlow.stateIn(
         scope = viewModelScope,
@@ -103,6 +99,8 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     val exportSettingsState: StateFlow<ExportSettingsState> = _exportSettingsState.asStateFlow()
     private val _importSettingsState = MutableStateFlow(ImportSettingsState())
     val importSettingsState: StateFlow<ImportSettingsState> = _importSettingsState.asStateFlow()
+    private val _settingsState = MutableStateFlow(SettingsState())
+    val settingsState: StateFlow<SettingsState> = _settingsState.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -141,12 +139,13 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         ContextCompat.registerReceiver(application, object : BroadcastReceiver() {
             override fun onReceive(p0: Context?, p1: Intent?) {
                 viewModelScope.launch {
+                    val clearRouteOnStop = settingsManager.clearRouteOnStopFlow.first()
                     updateMockControlState {
                         it.copy(
                             isMocking = false,
                             isPaused = false,
                             isWaitingAtEndOfRoute = false,
-                            activeLocationTarget = if (clearRouteOnStop.value) LocationTarget.Empty else (it.activeLocationTarget)
+                            activeLocationTarget = if (clearRouteOnStop) LocationTarget.Empty else (it.activeLocationTarget)
                         )
                     }
                 }
@@ -270,6 +269,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
                     speedSliderUpperEnd = savedSpeedSliderUpperEnd
                 )
             }
+            refreshSettingsState()
         }
     }
 
@@ -318,7 +318,8 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     }
 
     suspend fun pushRouteSegment(point: LatLng) {
-        if (isBuildRoutesOnRoad.value) {
+        val isBuildRoutesOnRoad = settingsManager.buildRouteOnRoadsFlow.first()
+        if (isBuildRoutesOnRoad) {
             if (mockControlState.value.activeLocationTarget is LocationTarget.Empty) {
                 updateMockControlState {
                     it.copy(
@@ -384,12 +385,13 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
 
     fun stopMockLocation() {
         viewModelScope.launch {
+            val isClearRouteOnStop = settingsManager.clearRouteOnStopFlow.first()
             updateMockControlState {
                 it.copy(
                     isMocking = false,
                     isPaused = false,
                     isWaitingAtEndOfRoute = false,
-                    activeLocationTarget = if (clearRouteOnStop.value) LocationTarget.Empty else (it.activeLocationTarget)
+                    activeLocationTarget = if (isClearRouteOnStop) LocationTarget.Empty else (it.activeLocationTarget)
                 )
             }
         }
@@ -418,12 +420,6 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
             }
         }
     }
-
-    val clearRouteOnStop = settingsManager.clearRouteOnStopFlow.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = runBlocking { settingsManager.clearRouteOnStopFlow.first() }
-    )
 
     fun setClearRouteOnStop(enabled: Boolean) {
         viewModelScope.launch {
@@ -527,6 +523,38 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
 
     fun updateImportSettingsState(transform: (ImportSettingsState) -> ImportSettingsState) {
         _importSettingsState.value = transform(_importSettingsState.value)
+    }
+
+    fun refreshSettingsState() {
+        viewModelScope.launch {
+            val isBuildRouteOnRoads = settingsManager.buildRouteOnRoadsFlow.first()
+            val isUsingCrosshairs = settingsManager.mockControlStateFlow.first().isUsingCrosshairs
+            val clearPointsOnStop = settingsManager.clearRouteOnStopFlow.first()
+            val isCameraFollowingMockedLocation = settingsManager.isCameraFollowingMockedLocation.first()
+            val isGoingToWaitAtRouteFinish = settingsManager.isGoingToWaitAtRouteFinishFlow.first()
+            val mapStyle = settingsManager.mapStyleFlow.first()
+            val locationAccuracyLevel = settingsManager.locationAccuracyLevelFlow.first()
+            val locationUpdateDelay = settingsManager.locationUpdateDelayFlow.first()
+
+            _settingsState.value = SettingsState(
+                isBuildRouteOnRoads = isBuildRouteOnRoads,
+                isUsingCrosshairs = isUsingCrosshairs,
+                clearPointsOnStop = clearPointsOnStop,
+                isCameraFollowingMockedLocation = isCameraFollowingMockedLocation,
+                isGoingToWaitAtRouteFinish = isGoingToWaitAtRouteFinish,
+                mapStyle = mapStyle,
+                locationAccuracyLevel = locationAccuracyLevel,
+                locationUpdateDelay = locationUpdateDelay,
+                isShowingMapStyleDialog = false,
+                isShowingLocationAccuracyLevelDialog = false,
+                isShowingLocationUpdateDelayDialog = false,
+                isShowingResetSettingsDialog = false
+            )
+        }
+    }
+
+    fun updateSettingsState(transform: (SettingsState) -> SettingsState) {
+        _settingsState.value = transform(_settingsState.value)
     }
 
     fun loadSavedRoute(route: LocationTarget.SavedRoute) {
