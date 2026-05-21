@@ -20,14 +20,16 @@ import com.drew654.mocklocations.domain.model.ImportRouteOption
 import com.drew654.mocklocations.domain.model.ImportSettingsState
 import com.drew654.mocklocations.domain.model.LocationAccuracyLevel
 import com.drew654.mocklocations.domain.model.LocationTarget
+import com.drew654.mocklocations.domain.model.MapState
 import com.drew654.mocklocations.domain.model.MapStyle
 import com.drew654.mocklocations.domain.model.MockControlState
-import com.drew654.mocklocations.domain.model.MockLocationsUiState
+import com.drew654.mocklocations.domain.model.Permission
 import com.drew654.mocklocations.domain.model.RoutePoint
 import com.drew654.mocklocations.domain.model.RouteSegment
 import com.drew654.mocklocations.domain.model.SavedCameraPosition
 import com.drew654.mocklocations.domain.model.SettingsState
 import com.drew654.mocklocations.domain.model.SpeedUnitValue
+import com.drew654.mocklocations.domain.model.isGranted
 import com.drew654.mocklocations.service.MockLocationService
 import com.drew654.mocklocations.service.MockLocationService.Companion.ACTION_RESTORE_STRAIGHT_LINE_MOCKING
 import com.drew654.mocklocations.service.MockLocationService.Companion.ACTION_START_MOCKING
@@ -44,8 +46,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 class MockLocationsViewModel(application: Application) : AndroidViewModel(application) {
-    private val _uiState = MutableStateFlow(MockLocationsUiState())
-    val uiState: StateFlow<MockLocationsUiState> = _uiState
     private val settingsManager = SettingsManager(application)
     val exportRepository = ExportRepository(settingsManager)
     val routeRepository = RouteRepository()
@@ -53,11 +53,6 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = runBlocking { settingsManager.mockControlStateFlow.first() }
-    )
-    val mapStyle: StateFlow<MapStyle?> = settingsManager.mapStyleFlow.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = runBlocking { settingsManager.mapStyleFlow.first() }
     )
     val locationAccuracyLevel: StateFlow<LocationAccuracyLevel> = settingsManager.locationAccuracyLevelFlow.stateIn(
         scope = viewModelScope,
@@ -93,6 +88,8 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         initialValue = runBlocking { settingsManager.locationUpdateDelayFlow.first() }
     )
 
+    private val _mapState = MutableStateFlow(MapState())
+    val mapState: StateFlow<MapState> = _mapState.asStateFlow()
     private val _expandedControlsConfigurationState = MutableStateFlow(ExpandedControlsConfigurationState())
     val expandedControlsConfigurationState: StateFlow<ExpandedControlsConfigurationState> = _expandedControlsConfigurationState.asStateFlow()
     private val _exportSettingsState = MutableStateFlow(ExportSettingsState())
@@ -179,7 +176,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
             val context = getApplication<Application>().applicationContext
             try {
                 val json = context.contentResolver
-                    .openInputStream(_uiState.value.importUri!!)
+                    .openInputStream(_mapState.value.importUri!!)
                     ?.bufferedReader()
                     ?.use { it.readText() }
                     ?: throw IllegalStateException("Unable to read file")
@@ -206,7 +203,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
             val context = getApplication<Application>().applicationContext
             try {
                 val json = context.contentResolver
-                    .openInputStream(_uiState.value.importUri!!)
+                    .openInputStream(_mapState.value.importUri!!)
                     ?.bufferedReader()
                     ?.use { it.readText() }
                     ?: throw IllegalStateException("Unable to read file")
@@ -224,7 +221,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
             val context = getApplication<Application>().applicationContext
             try {
                 val json = context.contentResolver
-                    .openInputStream(_uiState.value.importUri!!)
+                    .openInputStream(_mapState.value.importUri!!)
                     ?.bufferedReader()
                     ?.use { it.readText() }
                     ?: throw IllegalStateException("Unable to read file")
@@ -243,7 +240,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
             val context = getApplication<Application>().applicationContext
             try {
                 val json = context.contentResolver
-                    .openInputStream(_uiState.value.importUri!!)
+                    .openInputStream(_mapState.value.importUri!!)
                     ?.bufferedReader()
                     ?.use { it.readText() }
                     ?: throw IllegalStateException("Unable to read file")
@@ -274,7 +271,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     }
 
     fun updateCameraPosition(position: CameraPosition) {
-        updateUiState {
+        updateMapState {
             it.copy(
                 savedCameraPosition = SavedCameraPosition(
                     latitude = position.target.latitude,
@@ -286,19 +283,32 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     }
 
     fun setMapIsCenteredAfterLaunch() {
-        updateUiState { it.copy(isMapCenteredAfterLaunch = true) }
+        updateMapState { it.copy(isMapCenteredAfterLaunch = true) }
     }
 
-    fun updateUiState(transform: (MockLocationsUiState) -> MockLocationsUiState) {
-        val currentState = _uiState.value
+    fun updateMapState(transform: (MapState) -> MapState) {
+        val currentState = _mapState.value
         val newState = transform(currentState)
-        _uiState.value = newState
+        _mapState.value = newState
+    }
+
+    fun refreshMapState(context: Context) {
+        viewModelScope.launch {
+            val mapStyle = settingsManager.mapStyleFlow.first()
+            val hasLocationPermission = Permission.FineLocation.isGranted(context)
+            updateMapState {
+                it.copy(
+                    mapStyle = mapStyle,
+                    hasLocationPermission = hasLocationPermission
+                )
+            }
+        }
     }
 
     fun updateExpandedControlsState(transform: (ExpandedControlsState) -> ExpandedControlsState) {
-        val currentState = _uiState.value.expandedControlsState
+        val currentState = _mapState.value.expandedControlsState
         val newState = transform(currentState)
-        updateUiState { it.copy(expandedControlsState = newState) }
+        updateMapState { it.copy(expandedControlsState = newState) }
     }
 
     fun setControlsAreExpanded(expanded: Boolean) {
@@ -354,11 +364,11 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     }
 
     fun setImportUri(uri: Uri?) {
-        updateUiState { it.copy(importUri = uri) }
+        updateMapState { it.copy(importUri = uri) }
     }
 
     fun setShouldFocusSearchBar(value: Boolean) {
-        updateUiState { it.copy(shouldFocusSearchBar = value) }
+        updateMapState { it.copy(shouldFocusSearchBar = value) }
     }
 
     fun setSpeedUnitValue(newSpeedUnitValue: SpeedUnitValue) {
@@ -460,7 +470,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     }
 
     fun refreshExpandedControlsConfigurationState() {
-        val currentExpandedControlsState = _uiState.value.expandedControlsState
+        val currentExpandedControlsState = _mapState.value.expandedControlsState
         _expandedControlsConfigurationState.value = ExpandedControlsConfigurationState(
             isShowingDialog = false,
             speedUnitValue = currentExpandedControlsState.speedUnitValue,
