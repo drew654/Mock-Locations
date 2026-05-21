@@ -10,6 +10,7 @@ import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.drew654.mocklocations.R
 import com.drew654.mocklocations.data.repository.ExportRepository
 import com.drew654.mocklocations.data.repository.RouteRepository
 import com.drew654.mocklocations.domain.SettingsManager
@@ -35,6 +36,9 @@ import com.drew654.mocklocations.service.MockLocationService.Companion.ACTION_RE
 import com.drew654.mocklocations.service.MockLocationService.Companion.ACTION_START_MOCKING
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MapStyleOptions
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -59,23 +63,11 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = runBlocking { settingsManager.locationAccuracyLevelFlow.first() }
     )
-    val isCameraFollowingMockedLocation: StateFlow<Boolean> =
-        settingsManager.isCameraFollowingMockedLocation.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = runBlocking { settingsManager.isCameraFollowingMockedLocation.first() }
-        )
     val isGoingToWaitAtRouteFinish: StateFlow<Boolean> = settingsManager.isGoingToWaitAtRouteFinishFlow.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = runBlocking { settingsManager.isGoingToWaitAtRouteFinishFlow.first() }
     )
-    val isCameraCurrentlyFollowingMockedLocation: StateFlow<Boolean> =
-        settingsManager.isCameraCurrentlyFollowingMockedLocationFlow.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = runBlocking { settingsManager.isCameraCurrentlyFollowingMockedLocationFlow.first() }
-        )
     val currentMockedLocation: StateFlow<RoutePoint?> =
         settingsManager.currentMockedLocationFlow.stateIn(
             scope = viewModelScope,
@@ -292,14 +284,38 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         _mapState.value = newState
     }
 
-    fun refreshMapState(context: Context) {
+    fun refreshMapState(
+        context: Context,
+        isSystemInDarkTheme: Boolean
+    ) {
         viewModelScope.launch {
             val mapStyle = settingsManager.mapStyleFlow.first()
             val hasLocationPermission = Permission.FineLocation.isGranted(context)
+            val isCameraFollowingMockedLocation = settingsManager.isCameraFollowingMockedLocation.first()
+            val isCameraCurrentlyFollowingMockedLocation = settingsManager.isCameraCurrentlyFollowingMockedLocationFlow.first()
+            val mapProperties = MapProperties(
+                isMyLocationEnabled = hasLocationPermission,
+                isBuildingEnabled = true,
+                mapStyleOptions = MapStyleOptions.loadRawResourceStyle(
+                    context,
+                    mapStyle?.resourceId
+                        ?: if (isSystemInDarkTheme) {
+                            R.raw.map_style_night
+                        } else {
+                            R.raw.map_style_standard
+                        }
+                ),
+                mapType = mapStyle?.mapType ?: MapType.NORMAL
+            )
+            val savedRoutes = settingsManager.savedRoutesFlow.first()
             updateMapState {
                 it.copy(
                     mapStyle = mapStyle,
-                    hasLocationPermission = hasLocationPermission
+                    isCameraFollowingMockedLocation = isCameraFollowingMockedLocation,
+                    isCameraCurrentlyFollowingMockedLocation = isCameraCurrentlyFollowingMockedLocation,
+                    hasLocationPermission = hasLocationPermission,
+                    mapProperties = mapProperties,
+                    savedRoutes = savedRoutes
                 )
             }
         }
@@ -437,18 +453,18 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
-    val savedRoutes = settingsManager.savedRoutesFlow.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = runBlocking { settingsManager.savedRoutesFlow.first() }
-    )
-
     fun saveCurrentRoute(name: String) {
         val current = mockControlState.value.activeLocationTarget
         if (current.routeSegments.isNotEmpty()) {
             val routeToSave = LocationTarget.SavedRoute(name = name, routeSegments = current.routeSegments)
             viewModelScope.launch {
                 settingsManager.saveRoute(route = routeToSave)
+                val newRoutes = settingsManager.savedRoutesFlow.first()
+                updateMapState {
+                    it.copy(
+                        savedRoutes = newRoutes
+                    )
+                }
             }
         }
     }
@@ -505,12 +521,14 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     }
 
     fun refreshExportSettingsState() {
-        val currentRoutesCount = savedRoutes.value.size
-        _exportSettingsState.value = ExportSettingsState(
-            routesToExport = currentRoutesCount,
-            isExportSettings = true,
-            isExportRoutes = currentRoutesCount > 0
-        )
+        viewModelScope.launch {
+            val currentRoutesCount = settingsManager.savedRoutesFlow.first().size
+            _exportSettingsState.value = ExportSettingsState(
+                routesToExport = currentRoutesCount,
+                isExportSettings = true,
+                isExportRoutes = currentRoutesCount > 0
+            )
+        }
     }
 
     fun updateExportSettingsState(transform: (ExportSettingsState) -> ExportSettingsState) {
@@ -576,6 +594,12 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     fun deleteSavedRoute(route: LocationTarget.SavedRoute) {
         viewModelScope.launch {
             settingsManager.deleteRoute(route)
+            val newRoutes = settingsManager.savedRoutesFlow.first()
+            updateMapState {
+                it.copy(
+                    savedRoutes = newRoutes
+                )
+            }
         }
     }
 

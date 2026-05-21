@@ -31,7 +31,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
-import com.drew654.mocklocations.R
 import com.drew654.mocklocations.domain.model.CompassState
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.MapState
@@ -56,12 +55,9 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.maps.android.compose.CameraMoveStartedReason
 import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.GoogleMap
-import com.google.maps.android.compose.MapProperties
-import com.google.maps.android.compose.MapType
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.Polyline
@@ -75,38 +71,13 @@ fun MapScreen(
     viewModel: MockLocationsViewModel,
     navController: NavController
 ) {
-    val state by viewModel.mapState.collectAsState()
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
-    val systemInDarkTheme = isSystemInDarkTheme()
-    val scope = rememberCoroutineScope()
-    val mockControlState by viewModel.mockControlState.collectAsState()
-    val activeLocationTarget by remember {
-        derivedStateOf { mockControlState.activeLocationTarget }
-    }
-    val isMocking by remember {
-        derivedStateOf { mockControlState.isMocking }
-    }
-    val isUsingCrosshairs by remember {
-        derivedStateOf { mockControlState.isUsingCrosshairs }
-    }
-    val mapProperties = MapProperties(
-        isMyLocationEnabled = state.hasLocationPermission,
-        isBuildingEnabled = true,
-        mapStyleOptions = MapStyleOptions.loadRawResourceStyle(
-            context,
-            state.mapStyle?.resourceId
-                ?: if (systemInDarkTheme) {
-                    R.raw.map_style_night
-                } else {
-                    R.raw.map_style_standard
-                }
-        ),
-        mapType = state.mapStyle?.mapType ?: MapType.NORMAL
-    )
-    val cameraPositionState = rememberCameraPositionState()
     val lifecycleOwner = LocalLifecycleOwner.current
-    val savedRoutes by viewModel.savedRoutes.collectAsState()
+    val isSystemInDarkTheme = isSystemInDarkTheme()
+    val scope = rememberCoroutineScope()
+    val cameraPositionState = rememberCameraPositionState()
+    val state by viewModel.mapState.collectAsState()
     val permissionsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { result ->
@@ -117,14 +88,23 @@ fun MapScreen(
             viewModel.updateMapState { it.copy(permissionToBeRequested = Permission.FineLocation) }
         }
     }
-    val isCameraFollowingMockedLocation by viewModel.isCameraFollowingMockedLocation.collectAsState()
-    val isCameraCurrentlyFollowingMockedLocation by viewModel.isCameraCurrentlyFollowingMockedLocation.collectAsState()
+
+    val mockControlState by viewModel.mockControlState.collectAsState()
+    val activeLocationTarget by remember {
+        derivedStateOf { mockControlState.activeLocationTarget }
+    }
+    val isMocking by remember {
+        derivedStateOf { mockControlState.isMocking }
+    }
+    val isUsingCrosshairs by remember {
+        derivedStateOf { mockControlState.isUsingCrosshairs }
+    }
     val currentMockedLocation by viewModel.currentMockedLocation.collectAsState()
 
     var isInitialized by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         if (!isInitialized) {
-            viewModel.refreshMapState(context = context)
+            viewModel.refreshMapState(context = context, isSystemInDarkTheme = isSystemInDarkTheme)
             isInitialized = true
         }
     }
@@ -137,7 +117,7 @@ fun MapScreen(
                 )
             }
             if (event == Lifecycle.Event.ON_RESUME || event == Lifecycle.Event.ON_START) {
-                viewModel.refreshMapState(context = context)
+                viewModel.refreshMapState(context = context, isSystemInDarkTheme)
                 if (
                     state.permissionToBeRequested == Permission.MockLocations
                     && Permission.MockLocations.isGranted(context)
@@ -182,6 +162,7 @@ fun MapScreen(
             cameraPositionState.isMoving to cameraPositionState.cameraMoveStartedReason
         }.collect { (isMoving, reason) ->
             if (isMoving && reason == CameraMoveStartedReason.GESTURE) {
+                viewModel.updateMapState { it.copy(isCameraCurrentlyFollowingMockedLocation = false) }
                 viewModel.setIsCameraCurrentlyFollowingMockedLocation(false)
             }
 
@@ -191,8 +172,8 @@ fun MapScreen(
         }
     }
 
-    LaunchedEffect(currentMockedLocation, isCameraFollowingMockedLocation) {
-        if (isMocking && isCameraCurrentlyFollowingMockedLocation && currentMockedLocation != null) {
+    LaunchedEffect(currentMockedLocation, state.isCameraFollowingMockedLocation) {
+        if (isMocking && state.isCameraCurrentlyFollowingMockedLocation && currentMockedLocation != null) {
             cameraPositionState.move(
                 CameraUpdateFactory.newLatLng(currentMockedLocation!!.latLng)
             )
@@ -249,7 +230,6 @@ fun MapScreen(
             }
         },
         cameraPositionState = cameraPositionState,
-        mapProperties = mapProperties,
         onMapLongClick = { point ->
             if (mockControlState.isLongPressAddPointEnabled()) {
                 scope.launch {
@@ -293,7 +273,8 @@ fun MapScreen(
                 return@MapContent
             }
 
-            if (isCameraFollowingMockedLocation && activeLocationTarget.isRoute()) {
+            if (state.isCameraFollowingMockedLocation && activeLocationTarget.isRoute()) {
+                viewModel.updateMapState { it.copy(isCameraCurrentlyFollowingMockedLocation = true) }
                 viewModel.setIsCameraCurrentlyFollowingMockedLocation(true)
                 cameraPositionState.move(CameraUpdateFactory.zoomTo(15f))
             }
@@ -330,7 +311,8 @@ fun MapScreen(
                 return@MapContent
             }
 
-            if (isCameraFollowingMockedLocation) {
+            if (state.isCameraFollowingMockedLocation) {
+                viewModel.updateMapState { it.copy(isCameraCurrentlyFollowingMockedLocation = true) }
                 viewModel.setIsCameraCurrentlyFollowingMockedLocation(true)
                 cameraPositionState.move(CameraUpdateFactory.zoomTo(15f))
             }
@@ -372,7 +354,6 @@ fun MapScreen(
         onDismissSavedRouteDialog = {
             viewModel.updateMapState { it.copy(isShowingSavedRoutesDialog = false) }
         },
-        savedRoutes = savedRoutes,
         onRouteSaved = { name ->
             viewModel.saveCurrentRoute(name)
         },
@@ -414,7 +395,7 @@ fun MapScreen(
         onZoomIn = {
             focusManager.clearFocus()
             scope.launch {
-                if (isCameraCurrentlyFollowingMockedLocation) {
+                if (state.isCameraCurrentlyFollowingMockedLocation) {
                     cameraPositionState.move(CameraUpdateFactory.zoomIn())
                 } else {
                     cameraPositionState.animate(CameraUpdateFactory.zoomIn())
@@ -424,7 +405,7 @@ fun MapScreen(
         onZoomOut = {
             focusManager.clearFocus()
             scope.launch {
-                if (isCameraCurrentlyFollowingMockedLocation) {
+                if (state.isCameraCurrentlyFollowingMockedLocation) {
                     cameraPositionState.move(CameraUpdateFactory.zoomOut())
                 } else {
                     cameraPositionState.animate(CameraUpdateFactory.zoomOut())
@@ -438,9 +419,7 @@ fun MapScreen(
 private fun MapContent(
     state: MapState,
     cameraPositionState: CameraPositionState,
-    mapProperties: MapProperties,
     mockControlState: MockControlState,
-    savedRoutes: List<LocationTarget.SavedRoute>,
     compassState: CompassState,
     onSearchAddress: (String) -> Unit = { },
     onMapLongClick: (LatLng) -> Unit = { },
@@ -498,7 +477,7 @@ private fun MapContent(
                 GoogleMap(
                     modifier = Modifier.fillMaxSize(),
                     cameraPositionState = cameraPositionState,
-                    properties = mapProperties,
+                    properties = state.mapProperties,
                     uiSettings = state.mapUiSettings,
                     onMapClick = {
                         focusManager.clearFocus()
@@ -604,7 +583,7 @@ private fun MapContent(
         onDismiss = {
             onDismissSavedRouteDialog()
         },
-        savedRoutes = savedRoutes,
+        savedRoutes = state.savedRoutes,
         onRouteSaved = {
             onRouteSaved(it)
         },
@@ -635,9 +614,7 @@ private fun MapScreenPreview() {
         MapContent(
             state = MapState(),
             cameraPositionState = CameraPositionState(),
-            mapProperties = MapProperties(),
             mockControlState = MockControlState(),
-            savedRoutes = emptyList(),
             compassState = CompassState(isVisible = true, bearing = 0f)
         )
     }
