@@ -148,7 +148,7 @@ fun SettingsScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SettingsContent(
+internal fun SettingsContent(
     state: SettingsState,
     onBack: () -> Unit = { },
     setBuildRouteOnRoad: (Boolean) -> Unit = { },
