@@ -93,7 +93,7 @@ fun ExpandedControlsConfigurationScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ExpandedControlsConfigurationContent(
+internal fun ExpandedControlsConfigurationContent(
     state: ExpandedControlsConfigurationState,
     onSave: () -> Unit = { },
     onBack: () -> Unit = { },
