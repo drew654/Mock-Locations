@@ -140,7 +140,7 @@ class ExpandedControlsConfigurationScreenTest {
     }
 
     @Test
-    fun integration_backButton_callsViewModelAndNavController() {
+    fun integration_backButton_callsNavController() {
         setupMockFlows()
         composeTestRule.setContent {
             ExpandedControlsConfigurationScreen(viewModel = viewModel, navController = navController)
@@ -152,7 +152,7 @@ class ExpandedControlsConfigurationScreenTest {
     }
 
     @Test
-    fun integration_selectSpeedUnit_updatesUi() {
+    fun integration_selectSpeedUnit_updatesViewModelAndUi() {
         setupMockFlows()
         composeTestRule.setContent {
             ExpandedControlsConfigurationScreen(viewModel = viewModel, navController = navController)

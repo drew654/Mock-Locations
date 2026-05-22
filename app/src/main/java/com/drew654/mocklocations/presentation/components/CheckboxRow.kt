@@ -12,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.presentation.conditional
 import com.drew654.mocklocations.presentation.ui.theme.DayNightPreviews
@@ -22,7 +23,8 @@ fun CheckboxRow(
     label: String,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit = { },
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    checkboxTestTag: String? = null
 ) {
     Row(
         modifier = Modifier
@@ -48,7 +50,10 @@ fun CheckboxRow(
         Checkbox(
             checked = checked,
             onCheckedChange = onCheckedChange,
-            enabled = enabled
+            enabled = enabled,
+            modifier = Modifier.conditional(checkboxTestTag != null) {
+                testTag(checkboxTestTag!!)
+            }
         )
     }
 }

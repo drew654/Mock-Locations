@@ -141,7 +141,8 @@ internal fun ExportSettingsContent(
                     checked = state.isExportSettings,
                     onCheckedChange = {
                         setIsExportSettings(it)
-                    }
+                    },
+                    checkboxTestTag = "export_settings_checkbox"
                 )
                 CheckboxRow(
                     label = "Export ${state.routesToExport} routes",
@@ -149,7 +150,8 @@ internal fun ExportSettingsContent(
                     onCheckedChange = {
                         setIsExportRoutes(it)
                     },
-                    enabled = state.routesToExport > 0
+                    enabled = state.routesToExport > 0,
+                    checkboxTestTag = "export_routes_checkbox"
                 )
                 Spacer(Modifier.padding(bottom = 16.dp))
             }

@@ -11,7 +11,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import com.drew654.mocklocations.presentation.conditional
 import com.drew654.mocklocations.presentation.ui.theme.DayNightPreviews
 import com.drew654.mocklocations.presentation.ui.theme.ThemePreview
 
@@ -19,7 +21,8 @@ import com.drew654.mocklocations.presentation.ui.theme.ThemePreview
 fun RadioButtonRow(
     label: String,
     selected: Boolean,
-    onClick: () -> Unit = { }
+    onClick: () -> Unit = { },
+    radioButtonTestTag: String? = null
 ) {
     Row(
         modifier = Modifier
@@ -31,7 +34,10 @@ fun RadioButtonRow(
     ) {
         RadioButton(
             selected = selected,
-            onClick = { onClick() }
+            onClick = { onClick() },
+            modifier = Modifier.conditional(radioButtonTestTag != null) {
+                testTag(radioButtonTestTag!!)
+            }
         )
         Text(text = label)
         Spacer(Modifier.weight(1f))
