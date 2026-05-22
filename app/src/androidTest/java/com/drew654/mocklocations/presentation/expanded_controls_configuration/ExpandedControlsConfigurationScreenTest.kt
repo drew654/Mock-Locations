@@ -37,7 +37,7 @@ class ExpandedControlsConfigurationScreenTest {
     }
 
     @Test
-    fun backButton_triggersCallback() {
+    fun clickBackButton_triggersCallback() {
         var clicked = false
         composeTestRule.setContent {
             ExpandedControlsConfigurationContent(

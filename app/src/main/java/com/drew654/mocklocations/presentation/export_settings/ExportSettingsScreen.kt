@@ -89,7 +89,7 @@ fun ExportSettingsScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ExportSettingsContent(
+internal fun ExportSettingsContent(
     state: ExportSettingsState,
     onExport: () -> Unit = { },
     onBack: () -> Unit = { },
