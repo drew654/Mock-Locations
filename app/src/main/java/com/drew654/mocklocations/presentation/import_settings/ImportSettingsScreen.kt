@@ -84,7 +84,7 @@ fun ImportSettingsScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ImportSettingsContent(
+internal fun ImportSettingsContent(
     state: ImportSettingsState,
     onImport: () -> Unit = { },
     onBack: () -> Unit = { },
@@ -138,7 +138,8 @@ private fun ImportSettingsContent(
                     onCheckedChange = {
                         setIsImportSettings(it)
                     },
-                    enabled = state.isImportSettingsEnabled
+                    enabled = state.isImportSettingsEnabled,
+                    checkboxTestTag = "import_settings_checkbox"
                 )
                 CheckboxRow(
                     label = "Import ${state.routesToImport} routes",
@@ -146,7 +147,8 @@ private fun ImportSettingsContent(
                     onCheckedChange = {
                         setIsImportRoutes(it)
                     },
-                    enabled = state.isImportRoutesEnabled
+                    enabled = state.isImportRoutesEnabled,
+                    checkboxTestTag = "import_routes_checkbox"
                 )
                 if (state.isImportRoutes) {
                     ImportRouteOption.entries.forEach { option ->
@@ -192,7 +194,9 @@ private fun ImportSettingsContentPreview1() {
         Surface {
             ImportSettingsContent(
                 state = ImportSettingsState(
+                    isImportSettingsEnabled = true,
                     isImportSettings = true,
+                    isImportRoutesEnabled = true,
                     isImportRoutes = true,
                     routesToImport = 5,
                     importRouteOption = ImportRouteOption.REPLACE
@@ -208,7 +212,9 @@ private fun ImportSettingsContentPreview2() {
     DeviceThemePreview {
         ImportSettingsContent(
             state = ImportSettingsState(
+                isImportSettingsEnabled = false,
                 isImportSettings = false,
+                isImportRoutesEnabled = true,
                 isImportRoutes = true,
                 importRouteOption = ImportRouteOption.REPLACE,
                 routesToImport = 5
@@ -223,7 +229,9 @@ private fun ImportSettingsContentPreview3() {
     DeviceThemePreview {
         ImportSettingsContent(
             state = ImportSettingsState(
+                isImportSettingsEnabled = true,
                 isImportSettings = true,
+                isImportRoutesEnabled = false,
                 isImportRoutes = false,
                 importRouteOption = null,
                 routesToImport = 0

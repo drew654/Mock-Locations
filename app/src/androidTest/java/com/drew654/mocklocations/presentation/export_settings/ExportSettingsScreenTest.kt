@@ -87,7 +87,7 @@ class ExportSettingsScreenTest {
     }
 
     @Test
-    fun clickExportRoutes_disabledWhenZeroRoutes() {
+    fun clickExportRoutes_disabled_whenZeroRoutes() {
         var clicked = false
         composeTestRule.setContent {
             ExportSettingsContent(
@@ -122,7 +122,7 @@ class ExportSettingsScreenTest {
     }
 
     @Test
-    fun exportButton_disabledWhenFormInvalid() {
+    fun clickExportButton_disabled_whenFormInvalid() {
         var clicked = false
         composeTestRule.setContent {
             ExportSettingsContent(
@@ -132,6 +132,8 @@ class ExportSettingsScreenTest {
         }
 
         composeTestRule.onNodeWithText("Export").assertIsNotEnabled()
+        composeTestRule.onNodeWithText("Export").performClick()
+
         assertFalse(clicked)
     }
 
