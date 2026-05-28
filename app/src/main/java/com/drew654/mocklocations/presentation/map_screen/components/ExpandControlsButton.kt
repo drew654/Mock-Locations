@@ -39,7 +39,7 @@ fun ExpandControlsButton(
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.outline_chevron_right_24),
-                contentDescription = "Toggle Controls",
+                contentDescription = if (controlsAreExpanded) "Collapse controls" else "Expand controls",
                 modifier = Modifier.rotate(90f + if (controlsAreExpanded) 0f else 180f),
                 tint = MaterialTheme.colorScheme.onSurface
             )
