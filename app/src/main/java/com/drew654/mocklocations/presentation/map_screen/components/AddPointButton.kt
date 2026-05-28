@@ -38,3 +38,13 @@ fun AddPointButtonPreview() {
         }
     }
 }
+
+@DayNightPreviews
+@Composable
+fun AddPointButtonDisabledPreview() {
+    ThemePreview {
+        Box(modifier = Modifier.padding(8.dp)) {
+            AddPointButton(enabled = false)
+        }
+    }
+}
