@@ -53,7 +53,7 @@ fun SecondaryMockLocationControls(
         )
         Spacer(Modifier.height(4.dp))
         ClearLocationTargetButton(
-            onClearLocationTarget = onClearLocationTarget,
+            onClick = onClearLocationTarget,
             enabled = mockControlState.isClearLocationTargetEnabled()
         )
         Spacer(Modifier.height(4.dp))

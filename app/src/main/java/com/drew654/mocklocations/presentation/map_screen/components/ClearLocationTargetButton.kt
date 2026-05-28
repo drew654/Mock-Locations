@@ -14,13 +14,11 @@ import com.drew654.mocklocations.presentation.ui.theme.ThemePreview
 
 @Composable
 fun ClearLocationTargetButton(
-    onClearLocationTarget: () -> Unit = { },
+    onClick: () -> Unit = { },
     enabled: Boolean = true
 ) {
     DisableableSmallFloatingActionButton(
-        onClick = {
-            onClearLocationTarget()
-        },
+        onClick = { onClick() },
         enabled = enabled
     ) {
         Icon(
@@ -40,6 +38,16 @@ fun ClearLocationTargetButtonPreview() {
     ThemePreview {
         Box(modifier = Modifier.padding(4.dp)) {
             ClearLocationTargetButton()
+        }
+    }
+}
+
+@DayNightPreviews
+@Composable
+fun ClearLocationTargetButtonDisabledPreview() {
+    ThemePreview {
+        Box(modifier = Modifier.padding(4.dp)) {
+            ClearLocationTargetButton(enabled = false)
         }
     }
 }
