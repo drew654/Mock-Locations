@@ -169,7 +169,7 @@ class ExportSettingsScreenTest {
         composeTestRule.onNodeWithText("Export settings").performClick()
 
         composeTestRule.onNodeWithTag("export_settings_checkbox").assertIsOn()
-        assert(exportSettingsState.value.isExportSettings)
+        assertTrue(exportSettingsState.value.isExportSettings)
         composeTestRule.onNodeWithText("Export").assertIsEnabled()
     }
 

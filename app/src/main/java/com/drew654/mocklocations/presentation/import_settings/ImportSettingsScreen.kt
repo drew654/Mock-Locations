@@ -151,15 +151,22 @@ internal fun ImportSettingsContent(
                     checkboxTestTag = "import_routes_checkbox"
                 )
                 if (state.isImportRoutes) {
-                    ImportRouteOption.entries.forEach { option ->
-                        RadioButtonRow(
-                            label = option.label,
-                            selected = state.importRouteOption == option,
-                            onClick = {
-                                setImportRouteOption(option)
-                            }
-                        )
-                    }
+                    RadioButtonRow(
+                        label = ImportRouteOption.REPLACE.label,
+                        selected = state.importRouteOption == ImportRouteOption.REPLACE,
+                        onClick = {
+                            setImportRouteOption(ImportRouteOption.REPLACE)
+                        },
+                        radioButtonTestTag = "replace_routes_radio_button"
+                    )
+                    RadioButtonRow(
+                        label = ImportRouteOption.MERGE.label,
+                        selected = state.importRouteOption == ImportRouteOption.MERGE,
+                        onClick = {
+                            setImportRouteOption(ImportRouteOption.MERGE)
+                        },
+                        radioButtonTestTag = "merge_routes_radio_button"
+                    )
                 }
                 Spacer(Modifier.padding(bottom = 16.dp))
             }
