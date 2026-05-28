@@ -83,6 +83,10 @@ fun ExpandedControls(
 @Composable
 private fun ExpandedControlsPreview() {
     ThemePreview {
-        ExpandedControls()
+        ExpandedControls(
+            state = ExpandedControlsState(
+                isExpanded = true
+            )
+        )
     }
 }
