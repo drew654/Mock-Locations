@@ -14,11 +14,11 @@ import com.drew654.mocklocations.presentation.ui.theme.ThemePreview
 
 @Composable
 fun PopRouteSegmentButton(
-    onPopRouteSegment: () -> Unit = { },
+    onClick: () -> Unit = { },
     enabled: Boolean = true
 ) {
     DisableableSmallFloatingActionButton(
-        onClick = { onPopRouteSegment() },
+        onClick = { onClick() },
         enabled = enabled
     ) {
         Icon(

@@ -58,7 +58,7 @@ fun SecondaryMockLocationControls(
         )
         Spacer(Modifier.height(4.dp))
         PopRouteSegmentButton(
-            onPopRouteSegment = onPopRouteSegment,
+            onClick = onPopRouteSegment,
             enabled = mockControlState.isPopPointEnabled()
         )
     }
