@@ -12,6 +12,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.toggleableState
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.RouteSegment
@@ -48,7 +53,13 @@ fun RouteListItem(
                 onLongClick = {
                     onLongClick(route)
                 }
-            ),
+            )
+            .semantics {
+                if (shouldShowCheckbox) {
+                    role = Role.Checkbox
+                    toggleableState = if (selected) ToggleableState.On else ToggleableState.Off
+                }
+            },
         leadingContent = {
             if (shouldShowCheckbox) {
                 Checkbox(
@@ -75,7 +86,11 @@ private fun RouteListItemUnselectedPreview() {
                 routeSegments = listOf(
                     RouteSegment(
                         points = listOf(
-                            LatLng(0.0, 0.0),
+                            LatLng(0.0, 0.0)
+                        )
+                    ),
+                    RouteSegment(
+                        points = listOf(
                             LatLng(0.0, 0.1)
                         )
                     )
@@ -97,7 +112,11 @@ private fun RouteListItemSelectedPreview() {
                 routeSegments = listOf(
                     RouteSegment(
                         points = listOf(
-                            LatLng(0.0, 0.0),
+                            LatLng(0.0, 0.0)
+                        )
+                    ),
+                    RouteSegment(
+                        points = listOf(
                             LatLng(0.0, 0.1)
                         )
                     )
