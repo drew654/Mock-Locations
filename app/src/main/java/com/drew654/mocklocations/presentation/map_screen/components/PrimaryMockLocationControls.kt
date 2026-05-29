@@ -58,7 +58,7 @@ fun PrimaryMockLocationControls(
 
             if (mockControlState.isResumeVisible()) {
                 ResumeMockingButton(
-                    onTogglePause = onTogglePause,
+                    onClick = onTogglePause,
                     enabled = mockControlState.isResumeEnabled(),
                     modifier = Modifier.padding(end = 12.dp, bottom = 12.dp)
                 )

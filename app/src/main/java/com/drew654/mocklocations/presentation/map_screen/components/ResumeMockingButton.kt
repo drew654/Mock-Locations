@@ -15,11 +15,11 @@ import com.drew654.mocklocations.presentation.ui.theme.ThemePreview
 @Composable
 fun ResumeMockingButton(
     modifier: Modifier = Modifier,
-    onTogglePause: () -> Unit = { },
+    onClick: () -> Unit = { },
     enabled: Boolean = true
 ) {
     DisableableSmallFloatingActionButton(
-        onClick = { onTogglePause() },
+        onClick = { onClick() },
         enabled = enabled,
         modifier = modifier
     ) {
