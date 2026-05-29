@@ -21,11 +21,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.presentation.NoRippleInteractionSource
 import com.drew654.mocklocations.presentation.ui.theme.DayNightPreviews
 import com.drew654.mocklocations.presentation.ui.theme.ThemePreview
@@ -33,7 +33,7 @@ import com.drew654.mocklocations.presentation.ui.theme.ThemePreview
 @Composable
 fun NamingRouteDialogBody(
     routeName: TextFieldValue,
-    savedRoutes: List<LocationTarget.SavedRoute>,
+    isSaveEnabled: Boolean,
     onRouteNameChange: (TextFieldValue) -> Unit = { },
     onConfirm: () -> Unit = { },
     onBack: () -> Unit = { }
@@ -64,7 +64,7 @@ fun NamingRouteDialogBody(
         OutlinedTextField(
             value = routeName,
             onValueChange = { onRouteNameChange(it) },
-            label = { Text("Route Name") },
+            label = { Text("Route name") },
             modifier = Modifier
                 .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
                 .fillMaxWidth()
@@ -97,10 +97,12 @@ fun NamingRouteDialogBody(
                 onClick = {
                     onConfirm()
                 },
-                modifier = Modifier.padding(8.dp),
-                enabled = routeName.text.isNotBlank() && savedRoutes.none { it.name == routeName.text }
+                modifier = Modifier
+                    .padding(8.dp)
+                    .testTag("save_route_name_button"),
+                enabled = isSaveEnabled
             ) {
-                Text(text = "Save Route")
+                Text(text = "Save route")
             }
         }
     }
@@ -113,7 +115,7 @@ private fun NamingRouteDialogBodyPreview() {
         Card {
             NamingRouteDialogBody(
                 routeName = TextFieldValue("Route 1"),
-                savedRoutes = emptyList()
+                isSaveEnabled = true
             )
         }
     }

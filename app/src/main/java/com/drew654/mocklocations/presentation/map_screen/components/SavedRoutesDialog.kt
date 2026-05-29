@@ -59,7 +59,7 @@ fun SavedRoutesDialog(
                             onSetIsNamingRoute(false)
                             routeName = TextFieldValue("")
                         },
-                        savedRoutes = savedRoutes
+                        isSaveEnabled = routeName.text.isNotBlank() && savedRoutes.none { it.name == routeName.text }
                     )
                 } else {
                     RoutesListDialogBody(
