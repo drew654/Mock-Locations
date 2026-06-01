@@ -14,11 +14,11 @@ import com.drew654.mocklocations.presentation.ui.theme.ThemePreview
 @Composable
 fun StartMockingButton(
     modifier: Modifier = Modifier,
-    onStart: () -> Unit = { },
+    onClick: () -> Unit = { },
     enabled: Boolean = true
 ) {
     DisableableFloatingActionButton(
-        onClick = { onStart() },
+        onClick = { onClick() },
         enabled = enabled,
         modifier = modifier
     ) {

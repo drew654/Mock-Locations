@@ -74,7 +74,7 @@ fun PrimaryMockLocationControls(
 
             if (mockControlState.isStartVisible()) {
                 StartMockingButton(
-                    onStart = onStart,
+                    onClick = onStart,
                     enabled = mockControlState.isStartEnabled(),
                     modifier = Modifier.padding(bottom = 12.dp, end = 12.dp)
                 )
