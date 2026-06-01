@@ -82,7 +82,7 @@ fun PrimaryMockLocationControls(
 
             if (mockControlState.isStopVisible()) {
                 StopMockingButton(
-                    onStop = onStop,
+                    onClick = onStop,
                     enabled = mockControlState.isStopEnabled(),
                     modifier = Modifier.padding(bottom = 12.dp, end = 12.dp)
                 )
