@@ -106,7 +106,7 @@ fun RoutesListDialogBody(
                     modifier = Modifier.padding(8.dp),
                     enabled = isSaveRouteEnabled
                 ) {
-                    Text(text = "Save Route")
+                    Text(text = "Save route")
                 }
             }
         } else {
@@ -127,7 +127,7 @@ fun RoutesListDialogBody(
                     modifier = Modifier.padding(8.dp),
                     enabled = selectedRoutes.isNotEmpty()
                 ) {
-                    Text(text = "Delete Selected")
+                    Text(text = "Delete selected")
                 }
             }
         }

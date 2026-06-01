@@ -73,7 +73,8 @@ class PermissionsDialogTest {
         composeTestRule.onNodeWithText("To use this app, you must select \"Mock Locations\" as the Mock Location App in Developer Options. It should be near the bottom of the list.").assertIsDisplayed()
         composeTestRule.onNodeWithText("Open Developer Options").performClick()
 
-        intended(hasAction(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS)) }
+        intended(hasAction(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS))
+    }
 
     @Test
     fun developerOptionsPermission_displaysCorrectText_andLaunchesSettings() {
