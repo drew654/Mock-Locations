@@ -25,7 +25,7 @@ fun UserLocationButton(
     ) {
         Icon(
             painter = painterResource(id = R.drawable.baseline_my_location_24),
-            contentDescription = "My Location",
+            contentDescription = "My location",
             tint = MaterialTheme.colorScheme.onSurface
         )
     }
