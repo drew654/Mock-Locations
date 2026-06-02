@@ -24,7 +24,7 @@ fun AddPointButton(
     ) {
         Icon(
             painter = painterResource(id = R.drawable.baseline_add_location_alt_24),
-            contentDescription = "Add Point"
+            contentDescription = "Add point"
         )
     }
 }

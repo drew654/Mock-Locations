@@ -21,7 +21,7 @@ class AddPointButtonTest {
             )
         }
 
-        composeTestRule.onNodeWithContentDescription("Add Point").performClick()
+        composeTestRule.onNodeWithContentDescription("Add point").performClick()
 
         assertTrue(clicked)
     }
@@ -36,7 +36,7 @@ class AddPointButtonTest {
             )
         }
 
-        composeTestRule.onNodeWithContentDescription("Add Point").performClick()
+        composeTestRule.onNodeWithContentDescription("Add point").performClick()
         assertFalse(clicked)
     }
 }
