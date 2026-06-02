@@ -20,7 +20,7 @@ class SavedRoutesButtonTest {
             )
         }
 
-        composeTestRule.onNodeWithContentDescription("Saved Routes").performClick()
+        composeTestRule.onNodeWithContentDescription("Saved routes").performClick()
 
         assertTrue(clicked)
     }

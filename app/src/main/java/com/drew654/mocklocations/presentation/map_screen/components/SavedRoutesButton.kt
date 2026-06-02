@@ -22,7 +22,7 @@ fun SavedRoutesButton(
     ) {
         Icon(
             painter = painterResource(id = R.drawable.baseline_save_24),
-            contentDescription = "Saved Routes",
+            contentDescription = "Saved routes",
             tint = MaterialTheme.colorScheme.onPrimaryContainer
         )
     }
