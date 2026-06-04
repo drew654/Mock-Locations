@@ -20,7 +20,7 @@ class MapZoomButtonsTest {
             )
         }
 
-        composeTestRule.onNodeWithContentDescription("Zoom In").performClick()
+        composeTestRule.onNodeWithContentDescription("Zoom in").performClick()
 
         assertTrue(clicked)
     }
@@ -34,7 +34,7 @@ class MapZoomButtonsTest {
             )
         }
 
-        composeTestRule.onNodeWithContentDescription("Zoom Out").performClick()
+        composeTestRule.onNodeWithContentDescription("Zoom out").performClick()
 
         assertTrue(clicked)
     }

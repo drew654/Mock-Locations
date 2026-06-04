@@ -21,7 +21,7 @@ class CompassButtonTest {
             )
         }
 
-        composeTestRule.onNodeWithContentDescription("Align North").performClick()
+        composeTestRule.onNodeWithContentDescription("Align north").performClick()
 
         assertTrue(clicked)
     }
