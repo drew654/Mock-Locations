@@ -35,7 +35,7 @@ fun CompassButton(
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.baseline_north_24),
-                contentDescription = "Align North",
+                contentDescription = "Align north",
                 modifier = Modifier
                     .graphicsLayer {
                         rotationZ = 360f - bearing()

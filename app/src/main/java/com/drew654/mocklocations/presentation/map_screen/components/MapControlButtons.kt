@@ -31,7 +31,6 @@ import com.drew654.mocklocations.presentation.ui.theme.DeviceThemePreview
 fun MapControlButtons(
     mockControlState: MockControlState,
     controlsAreExpanded: Boolean,
-    isPaused: Boolean,
     isShowingSearch: Boolean,
     compassState: CompassState,
     crosshairsColor: Color,
@@ -130,7 +129,7 @@ fun MapControlButtons(
                     onClearLocationTarget()
                 },
                 onStart = {
-                    if (isPaused) {
+                    if (mockControlState.isPaused) {
                         onTogglePause()
                     } else {
                         onStart()
@@ -178,7 +177,6 @@ fun MapControlButtonsPreview() {
         MapControlButtons(
             mockControlState = MockControlState(),
             controlsAreExpanded = false,
-            isPaused = false,
             isShowingSearch = false,
             crosshairsColor = MaterialTheme.colorScheme.onSurface,
             compassState = CompassState(isVisible = { true }, bearing = { 0f })

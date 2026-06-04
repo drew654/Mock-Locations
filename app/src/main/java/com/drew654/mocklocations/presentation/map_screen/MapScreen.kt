@@ -432,7 +432,6 @@ private fun MapContent(
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
     val activeLocationTarget = state.mockControlState.activeLocationTarget
-    val isPaused = state.mockControlState.isPaused
     val isMocking = state.mockControlState.isMocking
 
     Box(
@@ -519,7 +518,6 @@ private fun MapContent(
                     onSaveLocationTarget = {
                         onSaveLocationTarget()
                     },
-                    isPaused = isPaused,
                     onAddCrosshairsPoint = {
                         onAddCrosshairsPoint()
                     },

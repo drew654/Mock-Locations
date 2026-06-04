@@ -47,7 +47,7 @@ fun MapZoomButtons(
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.baseline_add_24),
-                    contentDescription = "Zoom In",
+                    contentDescription = "Zoom in",
                     tint = MaterialTheme.colorScheme.onSurface
                 )
             }
@@ -66,7 +66,7 @@ fun MapZoomButtons(
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.baseline_remove_24),
-                    contentDescription = "Zoom Out",
+                    contentDescription = "Zoom out",
                     tint = MaterialTheme.colorScheme.onSurface
                 )
             }
