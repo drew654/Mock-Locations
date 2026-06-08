@@ -1,15 +1,18 @@
 package com.drew654.mocklocations.presentation.map_screen.components
 
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import com.drew654.mocklocations.domain.model.CompassState
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.MockControlState
 import com.drew654.mocklocations.domain.model.RouteSegment
 import com.google.android.gms.maps.model.LatLng
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
@@ -105,6 +108,32 @@ class MapControlButtonsTest {
     }
 
     @Test
+    fun clickResume_triggersCallback() {
+        var clicked = false
+        composeTestRule.setContent {
+            MapControlButtons(
+                mockControlState = MockControlState(
+                    isMocking = true,
+                    activeLocationTarget = route,
+                    isPaused = true
+                ),
+                controlsAreExpanded = false,
+                isShowingSearch = false,
+                compassState = CompassState(
+                    bearing = { 0f },
+                    isVisible = { false }
+                ),
+                crosshairsColor = MaterialTheme.colorScheme.onBackground,
+                onTogglePause = { clicked = true }
+            )
+        }
+
+        composeTestRule.onNodeWithContentDescription("Resume").performClick()
+
+        assertTrue(clicked)
+    }
+
+    @Test
     fun clickAddPoint_triggersCallback() {
         var clicked = false
         composeTestRule.setContent {
@@ -124,6 +153,64 @@ class MapControlButtonsTest {
         composeTestRule.onNodeWithContentDescription("Add point").performClick()
 
         assertTrue(clicked)
+    }
+
+    @Test
+    fun crosshairs_visible_whenNotMocking() {
+        composeTestRule.setContent {
+            MapControlButtons(
+                mockControlState = MockControlState(),
+                controlsAreExpanded = false,
+                isShowingSearch = false,
+                compassState = CompassState(
+                    bearing = { 0f },
+                    isVisible = { false }
+                ),
+                crosshairsColor = MaterialTheme.colorScheme.onBackground
+            )
+        }
+
+        composeTestRule.onNodeWithTag("crosshairs").assertIsDisplayed()
+    }
+
+    @Test
+    fun crosshairs_notVisible_whenMocking() {
+        composeTestRule.setContent {
+            MapControlButtons(
+                mockControlState = MockControlState(
+                    isMocking = true
+                ),
+                controlsAreExpanded = false,
+                isShowingSearch = false,
+                compassState = CompassState(
+                    bearing = { 0f },
+                    isVisible = { false }
+                ),
+                crosshairsColor = MaterialTheme.colorScheme.onBackground
+            )
+        }
+
+        composeTestRule.onNodeWithTag("crosshairs").assertDoesNotExist()
+    }
+
+    @Test
+    fun crosshairs_notVisible_whenDisabled() {
+        composeTestRule.setContent {
+            MapControlButtons(
+                mockControlState = MockControlState(
+                    isUsingCrosshairs = false
+                ),
+                controlsAreExpanded = false,
+                isShowingSearch = false,
+                compassState = CompassState(
+                    bearing = { 0f },
+                    isVisible = { false }
+                ),
+                crosshairsColor = MaterialTheme.colorScheme.onBackground
+            )
+        }
+
+        composeTestRule.onNodeWithTag("crosshairs").assertDoesNotExist()
     }
 
     @Test
@@ -221,6 +308,28 @@ class MapControlButtonsTest {
     }
 
     @Test
+    fun clickCloseSearch_triggersCallback() {
+        var capturedValue: Boolean? = null
+        composeTestRule.setContent {
+            MapControlButtons(
+                mockControlState = MockControlState(),
+                controlsAreExpanded = false,
+                isShowingSearch = true,
+                compassState = CompassState(
+                    bearing = { 0f },
+                    isVisible = { false }
+                ),
+                crosshairsColor = MaterialTheme.colorScheme.onBackground,
+                setShowSearch = { capturedValue = it }
+            )
+        }
+
+        composeTestRule.onNodeWithContentDescription("Close search").performClick()
+
+        assertEquals(false, capturedValue)
+    }
+
+    @Test
     fun clickExpandControls_triggersCallback() {
         var capturedValue: Boolean? = null
         composeTestRule.setContent {
@@ -240,6 +349,28 @@ class MapControlButtonsTest {
         composeTestRule.onNodeWithContentDescription("Expand controls").performClick()
 
         assertEquals(true, capturedValue)
+    }
+
+    @Test
+    fun clickCollapseControls_triggersCallback() {
+        var capturedValue: Boolean? = null
+        composeTestRule.setContent {
+            MapControlButtons(
+                mockControlState = MockControlState(),
+                controlsAreExpanded = true,
+                isShowingSearch = false,
+                compassState = CompassState(
+                    bearing = { 0f },
+                    isVisible = { false }
+                ),
+                crosshairsColor = MaterialTheme.colorScheme.onBackground,
+                setControlsAreExpanded = { capturedValue = it }
+            )
+        }
+
+        composeTestRule.onNodeWithContentDescription("Collapse controls").performClick()
+
+        assertEquals(false, capturedValue)
     }
 
     @Test
@@ -284,6 +415,24 @@ class MapControlButtonsTest {
         composeTestRule.onNodeWithContentDescription("Align north").performClick()
 
         assertTrue(clicked)
+    }
+
+    @Test
+    fun compass_notVisible_whenIsVisibleIsFalse() {
+        composeTestRule.setContent {
+            MapControlButtons(
+                mockControlState = MockControlState(),
+                controlsAreExpanded = false,
+                isShowingSearch = false,
+                compassState = CompassState(
+                    bearing = { 0f },
+                    isVisible = { false }
+                ),
+                crosshairsColor = MaterialTheme.colorScheme.onBackground
+            )
+        }
+
+        composeTestRule.onNodeWithContentDescription("Align north").assertDoesNotExist()
     }
 
     @Test

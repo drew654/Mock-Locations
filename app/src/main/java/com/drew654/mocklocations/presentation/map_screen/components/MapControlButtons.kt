@@ -129,11 +129,7 @@ fun MapControlButtons(
                     onClearLocationTarget()
                 },
                 onStart = {
-                    if (mockControlState.isPaused) {
-                        onTogglePause()
-                    } else {
-                        onStart()
-                    }
+                    onStart()
                 },
                 onStop = {
                     onStop()
