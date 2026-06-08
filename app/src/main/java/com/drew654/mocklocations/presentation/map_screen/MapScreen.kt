@@ -400,7 +400,7 @@ fun MapScreen(
 }
 
 @Composable
-private fun MapContent(
+internal fun MapContent(
     state: MapState,
     cameraPositionState: CameraPositionState,
     compassState: CompassState,
