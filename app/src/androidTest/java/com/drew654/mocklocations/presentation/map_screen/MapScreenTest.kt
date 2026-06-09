@@ -4,6 +4,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performImeAction
@@ -310,6 +311,54 @@ class MapScreenTest {
         composeTestRule.onNodeWithContentDescription("Add point").performClick()
 
         assertTrue(clicked)
+    }
+
+    @Test
+    fun crosshairs_visible_whenNotMocking() {
+        composeTestRule.setContent {
+            MapContent(
+                state = MapState(),
+                cameraPositionState = CameraPositionState(),
+                compassState = CompassState()
+            )
+        }
+
+        composeTestRule.onNodeWithTag(testTag = "crosshairs", useUnmergedTree = true).assertIsDisplayed()
+    }
+
+    @Test
+    fun crosshairs_notVisible_whenMocking() {
+        composeTestRule.setContent {
+            MapContent(
+                state = MapState(
+                    mockControlState = MockControlState(
+                        isMocking = true,
+                        activeLocationTarget = route1
+                    )
+                ),
+                cameraPositionState = CameraPositionState(),
+                compassState = CompassState()
+            )
+        }
+
+        composeTestRule.onNodeWithTag("crosshairs").assertDoesNotExist()
+    }
+
+    @Test
+    fun crosshairs_notVisible_whenDisabled() {
+        composeTestRule.setContent {
+            MapContent(
+                state = MapState(
+                    mockControlState = MockControlState(
+                        isUsingCrosshairs = false
+                    )
+                ),
+                cameraPositionState = CameraPositionState(),
+                compassState = CompassState()
+            )
+        }
+
+        composeTestRule.onNodeWithTag("crosshairs").assertDoesNotExist()
     }
 
     @Test
