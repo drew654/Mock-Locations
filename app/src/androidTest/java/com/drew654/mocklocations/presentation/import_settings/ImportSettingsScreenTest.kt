@@ -17,6 +17,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.flow.MutableStateFlow
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -127,15 +128,19 @@ class ImportSettingsScreenTest {
         var clicked = false
         composeTestRule.setContent {
             ImportSettingsContent(
-                state = ImportSettingsState(),
+                state = ImportSettingsState(
+                    isImportRoutesEnabled = true,
+                    isImportRoutes = true,
+                    routesToImport = 5
+                ),
                 onImport = { clicked = true }
             )
         }
 
-        composeTestRule.onNodeWithText("Import").assertIsNotEnabled()
+        composeTestRule.onNodeWithText("Import").assertIsEnabled()
         composeTestRule.onNodeWithText("Import").performClick()
 
-        assertFalse(clicked)
+        assertTrue(clicked)
     }
 
     @Test
@@ -256,7 +261,7 @@ class ImportSettingsScreenTest {
         composeTestRule.onNodeWithText("Replace current routes").performClick()
 
         composeTestRule.onNodeWithTag("replace_routes_radio_button").assertIsSelected()
-        assert(importSettingsState.value.importRouteOption == ImportRouteOption.REPLACE)
+        assertEquals(importSettingsState.value.importRouteOption, ImportRouteOption.REPLACE)
         composeTestRule.onNodeWithText("Import").assertIsEnabled()
     }
 
@@ -276,7 +281,7 @@ class ImportSettingsScreenTest {
         composeTestRule.onNodeWithText("Merge with current routes").performClick()
 
         composeTestRule.onNodeWithTag("merge_routes_radio_button").assertIsSelected()
-        assert(importSettingsState.value.importRouteOption == ImportRouteOption.MERGE)
+        assertEquals(importSettingsState.value.importRouteOption, ImportRouteOption.MERGE)
         composeTestRule.onNodeWithText("Import").assertIsEnabled()
     }
 }

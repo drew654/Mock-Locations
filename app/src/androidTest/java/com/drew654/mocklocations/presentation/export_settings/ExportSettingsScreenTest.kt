@@ -204,7 +204,7 @@ class ExportSettingsScreenTest {
         composeTestRule.onNodeWithText("Export 5 routes").performClick()
 
         composeTestRule.onNodeWithTag("export_routes_checkbox").assertIsOn()
-        assert(exportSettingsState.value.isExportRoutes)
+        assertTrue(exportSettingsState.value.isExportRoutes)
         composeTestRule.onNodeWithText("Export").assertIsEnabled()
     }
 }

@@ -14,6 +14,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.flow.MutableStateFlow
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -81,7 +82,7 @@ class ExpandedControlsConfigurationScreenTest {
 
         composeTestRule.onNodeWithText("m/s").performClick()
 
-        assertTrue(input == SpeedUnitValue(30.0, SpeedUnit.MetersPerSecond))
+        assertEquals(input, SpeedUnitValue(30.0, SpeedUnit.MetersPerSecond))
     }
 
     @Test
@@ -96,7 +97,7 @@ class ExpandedControlsConfigurationScreenTest {
 
         composeTestRule.onNodeWithText("0").performTextReplacement("50")
 
-        assert(input == "50")
+        assertEquals(input, "50")
     }
 
     @Test
@@ -111,7 +112,7 @@ class ExpandedControlsConfigurationScreenTest {
 
         composeTestRule.onNodeWithText("100").performTextReplacement("200")
 
-        assert(input == "200")
+        assertEquals(input, "200")
     }
 
     @Test
@@ -162,7 +163,7 @@ class ExpandedControlsConfigurationScreenTest {
 
         composeTestRule.onNodeWithText("m/s").performClick()
 
-        assert(expandedControlsConfigurationState.value.speedUnitValue == SpeedUnitValue(30.0, SpeedUnit.MetersPerSecond))
+        assertEquals(expandedControlsConfigurationState.value.speedUnitValue, SpeedUnitValue(30.0, SpeedUnit.MetersPerSecond))
         composeTestRule.onNodeWithText("m/s").assertExists()
     }
 
@@ -175,7 +176,7 @@ class ExpandedControlsConfigurationScreenTest {
 
         composeTestRule.onNodeWithText("0").performTextReplacement("50")
 
-        assert(expandedControlsConfigurationState.value.speedSliderLowerEnd == "50")
+        assertEquals(expandedControlsConfigurationState.value.speedSliderLowerEnd, "50")
         composeTestRule.onNodeWithText("50").assertExists()
     }
 
@@ -188,7 +189,7 @@ class ExpandedControlsConfigurationScreenTest {
 
         composeTestRule.onNodeWithText("100").performTextReplacement("200")
 
-        assert(expandedControlsConfigurationState.value.speedSliderUpperEnd == "200")
+        assertEquals(expandedControlsConfigurationState.value.speedSliderUpperEnd, "200")
         composeTestRule.onNodeWithText("200").assertExists()
     }
 

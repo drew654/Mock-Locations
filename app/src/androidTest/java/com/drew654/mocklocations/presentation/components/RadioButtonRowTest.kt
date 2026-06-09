@@ -26,16 +26,11 @@ class RadioButtonRowTest {
             )
         }
 
-        composeTestRule
-            .onNodeWithText("Radio button")
-            .assertExists()
-            .performClick()
+        composeTestRule.onNodeWithText("Radio button").assertExists().performClick()
 
         assertTrue(selected)
 
-        composeTestRule
-            .onNodeWithText("Radio button")
-            .performClick()
+        composeTestRule.onNodeWithText("Radio button").performClick()
 
         assertFalse(selected)
     }

@@ -262,7 +262,7 @@ class MapControlButtonsTest {
     }
 
     @Test
-    fun clickSaveLocationTarget_triggersCallback() {
+    fun clickSavedRoutes_triggersCallback() {
         var clicked = false
         composeTestRule.setContent {
             MapControlButtons(

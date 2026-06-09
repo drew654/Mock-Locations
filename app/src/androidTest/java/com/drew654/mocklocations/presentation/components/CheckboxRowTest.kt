@@ -26,16 +26,11 @@ class CheckboxRowTest {
             )
         }
 
-        composeTestRule
-            .onNodeWithText("Checkbox")
-            .assertExists()
-            .performClick()
+        composeTestRule.onNodeWithText("Checkbox").assertExists().performClick()
 
         assertTrue(checked)
 
-        composeTestRule
-            .onNodeWithText("Checkbox")
-            .performClick()
+        composeTestRule.onNodeWithText("Checkbox").performClick()
 
         assertFalse(checked)
     }
