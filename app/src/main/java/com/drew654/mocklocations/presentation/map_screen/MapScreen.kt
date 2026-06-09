@@ -369,8 +369,8 @@ fun MapScreen(
             }
         },
         compassState = CompassState(
-            isVisible = { cameraPositionState.position.bearing != 0f || cameraPositionState.position.tilt != 0f },
-            bearing = { cameraPositionState.position.bearing }
+            bearing = { cameraPositionState.position.bearing },
+            tilt = { cameraPositionState.position.tilt }
         ),
         onSettingsClick = {
             focusManager.clearFocus()
@@ -595,7 +595,7 @@ private fun MapScreenPreview() {
         MapContent(
             state = MapState(),
             cameraPositionState = CameraPositionState(),
-            compassState = CompassState(isVisible = { true }, bearing = { 0f })
+            compassState = CompassState()
         )
     }
 }

@@ -566,8 +566,7 @@ class MapScreenTest {
                 state = MapState(),
                 cameraPositionState = CameraPositionState(),
                 compassState = CompassState(
-                    bearing = { 90f },
-                    isVisible = { true }
+                    bearing = { 90f }
                 ),
                 onClickCompass = { clicked = true }
             )

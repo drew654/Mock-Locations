@@ -175,7 +175,7 @@ fun MapControlButtonsPreview() {
             controlsAreExpanded = false,
             isShowingSearch = false,
             crosshairsColor = MaterialTheme.colorScheme.onSurface,
-            compassState = CompassState(isVisible = { true }, bearing = { 0f })
+            compassState = CompassState()
         )
     }
 }

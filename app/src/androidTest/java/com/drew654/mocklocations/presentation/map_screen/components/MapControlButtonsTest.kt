@@ -43,10 +43,7 @@ class MapControlButtonsTest {
                 mockControlState = MockControlState(),
                 controlsAreExpanded = false,
                 isShowingSearch = false,
-                compassState = CompassState(
-                    bearing = { 0f },
-                    isVisible = { false }
-                ),
+                compassState = CompassState(),
                 crosshairsColor = MaterialTheme.colorScheme.onBackground,
                 onStart = { clicked = true }
             )
@@ -68,10 +65,7 @@ class MapControlButtonsTest {
                 ),
                 controlsAreExpanded = false,
                 isShowingSearch = false,
-                compassState = CompassState(
-                    bearing = { 0f },
-                    isVisible = { false }
-                ),
+                compassState = CompassState(),
                 crosshairsColor = MaterialTheme.colorScheme.onBackground,
                 onStop = { clicked = true }
             )
@@ -93,10 +87,7 @@ class MapControlButtonsTest {
                 ),
                 controlsAreExpanded = false,
                 isShowingSearch = false,
-                compassState = CompassState(
-                    bearing = { 0f },
-                    isVisible = { false }
-                ),
+                compassState = CompassState(),
                 crosshairsColor = MaterialTheme.colorScheme.onBackground,
                 onTogglePause = { clicked = true }
             )
@@ -119,10 +110,7 @@ class MapControlButtonsTest {
                 ),
                 controlsAreExpanded = false,
                 isShowingSearch = false,
-                compassState = CompassState(
-                    bearing = { 0f },
-                    isVisible = { false }
-                ),
+                compassState = CompassState(),
                 crosshairsColor = MaterialTheme.colorScheme.onBackground,
                 onTogglePause = { clicked = true }
             )
@@ -141,10 +129,7 @@ class MapControlButtonsTest {
                 mockControlState = MockControlState(),
                 controlsAreExpanded = false,
                 isShowingSearch = false,
-                compassState = CompassState(
-                    bearing = { 0f },
-                    isVisible = { false }
-                ),
+                compassState = CompassState(),
                 crosshairsColor = MaterialTheme.colorScheme.onBackground,
                 onAddCrosshairsPoint = { clicked = true }
             )
@@ -162,10 +147,7 @@ class MapControlButtonsTest {
                 mockControlState = MockControlState(),
                 controlsAreExpanded = false,
                 isShowingSearch = false,
-                compassState = CompassState(
-                    bearing = { 0f },
-                    isVisible = { false }
-                ),
+                compassState = CompassState(),
                 crosshairsColor = MaterialTheme.colorScheme.onBackground
             )
         }
@@ -182,10 +164,7 @@ class MapControlButtonsTest {
                 ),
                 controlsAreExpanded = false,
                 isShowingSearch = false,
-                compassState = CompassState(
-                    bearing = { 0f },
-                    isVisible = { false }
-                ),
+                compassState = CompassState(),
                 crosshairsColor = MaterialTheme.colorScheme.onBackground
             )
         }
@@ -202,10 +181,7 @@ class MapControlButtonsTest {
                 ),
                 controlsAreExpanded = false,
                 isShowingSearch = false,
-                compassState = CompassState(
-                    bearing = { 0f },
-                    isVisible = { false }
-                ),
+                compassState = CompassState(),
                 crosshairsColor = MaterialTheme.colorScheme.onBackground
             )
         }
@@ -223,10 +199,7 @@ class MapControlButtonsTest {
                 ),
                 controlsAreExpanded = false,
                 isShowingSearch = false,
-                compassState = CompassState(
-                    bearing = { 0f },
-                    isVisible = { false }
-                ),
+                compassState = CompassState(),
                 crosshairsColor = MaterialTheme.colorScheme.onBackground,
                 onPopRouteSegment = { clicked = true }
             )
@@ -247,10 +220,7 @@ class MapControlButtonsTest {
                 ),
                 controlsAreExpanded = false,
                 isShowingSearch = false,
-                compassState = CompassState(
-                    bearing = { 0f },
-                    isVisible = { false }
-                ),
+                compassState = CompassState(),
                 crosshairsColor = MaterialTheme.colorScheme.onBackground,
                 onClearLocationTarget = { clicked = true }
             )
@@ -271,10 +241,7 @@ class MapControlButtonsTest {
                 ),
                 controlsAreExpanded = false,
                 isShowingSearch = false,
-                compassState = CompassState(
-                    bearing = { 0f },
-                    isVisible = { false }
-                ),
+                compassState = CompassState(),
                 crosshairsColor = MaterialTheme.colorScheme.onBackground,
                 onSaveLocationTarget = { clicked = true }
             )
@@ -293,10 +260,7 @@ class MapControlButtonsTest {
                 mockControlState = MockControlState(),
                 controlsAreExpanded = false,
                 isShowingSearch = false,
-                compassState = CompassState(
-                    bearing = { 0f },
-                    isVisible = { false }
-                ),
+                compassState = CompassState(),
                 crosshairsColor = MaterialTheme.colorScheme.onBackground,
                 setShowSearch = { capturedValue = it }
             )
@@ -315,10 +279,7 @@ class MapControlButtonsTest {
                 mockControlState = MockControlState(),
                 controlsAreExpanded = false,
                 isShowingSearch = true,
-                compassState = CompassState(
-                    bearing = { 0f },
-                    isVisible = { false }
-                ),
+                compassState = CompassState(),
                 crosshairsColor = MaterialTheme.colorScheme.onBackground,
                 setShowSearch = { capturedValue = it }
             )
@@ -337,10 +298,7 @@ class MapControlButtonsTest {
                 mockControlState = MockControlState(),
                 controlsAreExpanded = false,
                 isShowingSearch = false,
-                compassState = CompassState(
-                    bearing = { 0f },
-                    isVisible = { false }
-                ),
+                compassState = CompassState(),
                 crosshairsColor = MaterialTheme.colorScheme.onBackground,
                 setControlsAreExpanded = { capturedValue = it }
             )
@@ -359,10 +317,7 @@ class MapControlButtonsTest {
                 mockControlState = MockControlState(),
                 controlsAreExpanded = true,
                 isShowingSearch = false,
-                compassState = CompassState(
-                    bearing = { 0f },
-                    isVisible = { false }
-                ),
+                compassState = CompassState(),
                 crosshairsColor = MaterialTheme.colorScheme.onBackground,
                 setControlsAreExpanded = { capturedValue = it }
             )
@@ -381,10 +336,7 @@ class MapControlButtonsTest {
                 mockControlState = MockControlState(),
                 controlsAreExpanded = false,
                 isShowingSearch = false,
-                compassState = CompassState(
-                    bearing = { 0f },
-                    isVisible = { false }
-                ),
+                compassState = CompassState(),
                 crosshairsColor = MaterialTheme.colorScheme.onBackground,
                 onUserLocationFocus = { clicked = true }
             )
@@ -404,8 +356,7 @@ class MapControlButtonsTest {
                 controlsAreExpanded = false,
                 isShowingSearch = false,
                 compassState = CompassState(
-                    bearing = { 90f },
-                    isVisible = { true }
+                    bearing = { 90f }
                 ),
                 crosshairsColor = MaterialTheme.colorScheme.onBackground,
                 onClickCompass = { clicked = true }
@@ -424,10 +375,7 @@ class MapControlButtonsTest {
                 mockControlState = MockControlState(),
                 controlsAreExpanded = false,
                 isShowingSearch = false,
-                compassState = CompassState(
-                    bearing = { 0f },
-                    isVisible = { false }
-                ),
+                compassState = CompassState(),
                 crosshairsColor = MaterialTheme.colorScheme.onBackground
             )
         }
@@ -443,10 +391,7 @@ class MapControlButtonsTest {
                 mockControlState = MockControlState(),
                 controlsAreExpanded = false,
                 isShowingSearch = false,
-                compassState = CompassState(
-                    bearing = { 0f },
-                    isVisible = { false }
-                ),
+                compassState = CompassState(),
                 crosshairsColor = MaterialTheme.colorScheme.onBackground,
                 onSettingsClick = { clicked = true }
             )
@@ -465,10 +410,7 @@ class MapControlButtonsTest {
                 mockControlState = MockControlState(),
                 controlsAreExpanded = false,
                 isShowingSearch = false,
-                compassState = CompassState(
-                    bearing = { 0f },
-                    isVisible = { false }
-                ),
+                compassState = CompassState(),
                 crosshairsColor = MaterialTheme.colorScheme.onBackground,
                 onZoomIn = { clicked = true }
             )
@@ -487,10 +429,7 @@ class MapControlButtonsTest {
                 mockControlState = MockControlState(),
                 controlsAreExpanded = false,
                 isShowingSearch = false,
-                compassState = CompassState(
-                    bearing = { 0f },
-                    isVisible = { false }
-                ),
+                compassState = CompassState(),
                 crosshairsColor = MaterialTheme.colorScheme.onBackground,
                 onZoomOut = { clicked = true }
             )
