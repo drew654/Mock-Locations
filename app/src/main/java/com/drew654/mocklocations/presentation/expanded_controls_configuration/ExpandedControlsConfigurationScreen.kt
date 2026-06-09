@@ -194,7 +194,7 @@ internal fun ExpandedControlsConfigurationContent(
 
             TextButton(
                 onClick = {
-                    if (state.formIsValid()) {
+                    if (state.isFormValid()) {
                         onSave()
                     } else {
                         Toast.makeText(context, "Invalid values", Toast.LENGTH_SHORT).show()

@@ -6,7 +6,7 @@ data class ExpandedControlsConfigurationState(
     val speedSliderLowerEnd: String = "0",
     val speedSliderUpperEnd: String = "100"
 ) {
-    fun formIsValid(): Boolean {
+    fun isFormValid(): Boolean {
         return !(
                 speedSliderLowerEnd.toIntOrNull() == null
                         || speedSliderUpperEnd.toIntOrNull() == null
