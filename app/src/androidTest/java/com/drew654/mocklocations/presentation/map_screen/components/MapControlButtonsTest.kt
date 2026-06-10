@@ -369,7 +369,7 @@ class MapControlButtonsTest {
     }
 
     @Test
-    fun compass_notVisible_whenIsVisibleIsFalse() {
+    fun compass_notVisible_whenMapIsFacingNorth() {
         composeTestRule.setContent {
             MapControlButtons(
                 mockControlState = MockControlState(),

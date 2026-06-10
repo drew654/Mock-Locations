@@ -56,6 +56,23 @@ class SecondaryMockLocationControlsTest {
     }
 
     @Test
+    fun clickCloseSearch_triggersCallback() {
+        var calledWith: Boolean? = null
+        composeTestRule.setContent {
+            SecondaryMockLocationControls(
+                mockControlState = MockControlState(),
+                isShowingSearch = true,
+                scrollState = ScrollState(0),
+                setShowSearch = { calledWith = it }
+            )
+        }
+
+        composeTestRule.onNodeWithContentDescription("Close search").performClick()
+
+        assertEquals(false, calledWith)
+    }
+
+    @Test
     fun clickSavedRoutes_triggersCallback() {
         var clicked = false
         composeTestRule.setContent {

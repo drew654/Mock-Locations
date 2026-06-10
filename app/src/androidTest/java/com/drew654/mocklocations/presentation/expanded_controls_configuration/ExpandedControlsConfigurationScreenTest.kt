@@ -82,7 +82,7 @@ class ExpandedControlsConfigurationScreenTest {
 
         composeTestRule.onNodeWithText("m/s").performClick()
 
-        assertEquals(input, SpeedUnitValue(30.0, SpeedUnit.MetersPerSecond))
+        assertEquals(SpeedUnitValue(30.0, SpeedUnit.MetersPerSecond), input)
     }
 
     @Test
@@ -97,7 +97,7 @@ class ExpandedControlsConfigurationScreenTest {
 
         composeTestRule.onNodeWithText("0").performTextReplacement("50")
 
-        assertEquals(input, "50")
+        assertEquals("50", input)
     }
 
     @Test
@@ -112,7 +112,7 @@ class ExpandedControlsConfigurationScreenTest {
 
         composeTestRule.onNodeWithText("100").performTextReplacement("200")
 
-        assertEquals(input, "200")
+        assertEquals("200", input)
     }
 
     @Test
@@ -163,7 +163,7 @@ class ExpandedControlsConfigurationScreenTest {
 
         composeTestRule.onNodeWithText("m/s").performClick()
 
-        assertEquals(expandedControlsConfigurationState.value.speedUnitValue, SpeedUnitValue(30.0, SpeedUnit.MetersPerSecond))
+        assertEquals(SpeedUnitValue(30.0, SpeedUnit.MetersPerSecond), expandedControlsConfigurationState.value.speedUnitValue)
         composeTestRule.onNodeWithText("m/s").assertExists()
     }
 
@@ -176,7 +176,7 @@ class ExpandedControlsConfigurationScreenTest {
 
         composeTestRule.onNodeWithText("0").performTextReplacement("50")
 
-        assertEquals(expandedControlsConfigurationState.value.speedSliderLowerEnd, "50")
+        assertEquals("50", expandedControlsConfigurationState.value.speedSliderLowerEnd)
         composeTestRule.onNodeWithText("50").assertExists()
     }
 
@@ -189,7 +189,7 @@ class ExpandedControlsConfigurationScreenTest {
 
         composeTestRule.onNodeWithText("100").performTextReplacement("200")
 
-        assertEquals(expandedControlsConfigurationState.value.speedSliderUpperEnd, "200")
+        assertEquals("200", expandedControlsConfigurationState.value.speedSliderUpperEnd)
         composeTestRule.onNodeWithText("200").assertExists()
     }
 

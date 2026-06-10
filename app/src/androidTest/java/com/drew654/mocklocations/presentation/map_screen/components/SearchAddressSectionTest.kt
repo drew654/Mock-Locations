@@ -18,7 +18,6 @@ class SearchAddressSectionTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
-
     @Test
     fun typingText_showsClearButton() {
         composeTestRule.setContent {

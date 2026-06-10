@@ -1,6 +1,5 @@
 package com.drew654.mocklocations.presentation.map_screen.components
 
-import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performClick
@@ -11,28 +10,6 @@ import org.junit.Test
 class SearchAddressButtonTest {
     @get:Rule
     val composeTestRule = createComposeRule()
-
-    @Test
-    fun isShowingSearch_false_showsSearchIcon() {
-        composeTestRule.setContent {
-            SearchAddressButton(
-                isShowingSearch = false
-            )
-        }
-
-        composeTestRule.onNodeWithContentDescription("Search").assertIsDisplayed()
-    }
-
-    @Test
-    fun isShowingSearch_true_showsCloseSearchIcon() {
-        composeTestRule.setContent {
-            SearchAddressButton(
-                isShowingSearch = true
-            )
-        }
-
-        composeTestRule.onNodeWithContentDescription("Close search").assertIsDisplayed()
-    }
 
     @Test
     fun clickButton_whenNotShowingSearch_callsSetSearchWithTrue() {

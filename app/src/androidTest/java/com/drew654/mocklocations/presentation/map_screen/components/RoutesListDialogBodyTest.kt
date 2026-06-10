@@ -116,7 +116,7 @@ class RoutesListDialogBodyTest {
     }
 
     @Test
-    fun clickSelectedRoute_triggersOnRouteDeselected() {
+    fun clickSelectedRoute_triggersOnRouteDeselected_whenSelected() {
         var deselectedRoute: LocationTarget.SavedRoute? = null
         composeTestRule.setContent {
             RoutesListDialogBody(
@@ -188,7 +188,7 @@ class RoutesListDialogBodyTest {
     }
 
     @Test
-    fun clickCancel_triggersCallback() {
+    fun clickCancel_triggersOnDismissCallback() {
         var clicked = false
         composeTestRule.setContent {
             RoutesListDialogBody(

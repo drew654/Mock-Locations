@@ -180,9 +180,7 @@ class RouteListItemTest {
             )
         }
 
-        composeTestRule.onNodeWithText("Route 1").performTouchInput {
-            longClick()
-        }
+        composeTestRule.onNodeWithText("Route 1").performTouchInput { longClick() }
 
         assertTrue(clicked)
     }

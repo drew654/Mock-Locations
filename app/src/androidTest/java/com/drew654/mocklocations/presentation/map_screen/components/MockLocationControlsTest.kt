@@ -47,7 +47,7 @@ class MockLocationControlsTest {
     }
 
     @Test
-    fun clickExpandControlsButton_triggersCallback() {
+    fun clickExpandControls_triggersCallback() {
         var capturedValue: Boolean? = null
         composeTestRule.setContent {
             MockLocationControls(
@@ -64,16 +64,20 @@ class MockLocationControlsTest {
     }
 
     @Test
-    fun expandedControlsButton_showsCollapseDescription_whenExpanded() {
+    fun clickCollapseControls_triggersCallback() {
+        var capturedValue: Boolean? = null
         composeTestRule.setContent {
             MockLocationControls(
                 mockControlState = MockControlState(),
                 controlsAreExpanded = true,
-                isShowingSearch = false
+                isShowingSearch = false,
+                setControlsAreExpanded = { capturedValue = it }
             )
         }
 
-        composeTestRule.onNodeWithContentDescription("Collapse controls").assertIsDisplayed()
+        composeTestRule.onNodeWithContentDescription("Collapse controls").performClick()
+
+        assertEquals(false, capturedValue)
     }
 
     @Test
@@ -129,6 +133,27 @@ class MockLocationControlsTest {
         }
 
         composeTestRule.onNodeWithContentDescription("Pause").performClick()
+
+        assertTrue(clicked)
+    }
+
+    @Test
+    fun clickResume_triggersCallback() {
+        var clicked = false
+        composeTestRule.setContent {
+            MockLocationControls(
+                mockControlState = MockControlState(
+                    isMocking = true,
+                    activeLocationTarget = route,
+                    isPaused = true
+                ),
+                controlsAreExpanded = false,
+                isShowingSearch = false,
+                onTogglePause = { clicked = true }
+            )
+        }
+
+        composeTestRule.onNodeWithContentDescription("Resume").performClick()
 
         assertTrue(clicked)
     }
