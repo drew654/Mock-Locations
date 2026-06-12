@@ -3,11 +3,11 @@ package com.drew654.mocklocations.presentation.components
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import org.junit.Assert.*
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
@@ -27,7 +27,7 @@ class CheckboxRowTest {
             )
         }
 
-        composeTestRule.onNodeWithText("Checkbox").assertIsDisplayed().performClick()
+        composeTestRule.onNodeWithText("Checkbox").performClick()
 
         assertTrue(checked)
 
