@@ -1,6 +1,7 @@
 package com.drew654.mocklocations.repository
 
 import android.content.Context
+import android.net.Uri
 import com.drew654.mocklocations.BuildConfig
 import com.drew654.mocklocations.domain.SettingsManager
 import com.drew654.mocklocations.domain.model.ExportData
@@ -87,6 +88,13 @@ class ExportRepository @Inject constructor(
         if (importRouteOption != null) {
             importRoutes(exportData.routes, importRouteOption)
         }
+    }
+
+    fun readJsonFromUri(context: Context, uri: Uri): String {
+        return context.contentResolver.openInputStream(uri)
+            ?.bufferedReader()
+            ?.use { it.readText() }
+            ?: throw IllegalStateException("Unable to read file")
     }
 
     fun getVersionCodeFromJson(json: String): Int {

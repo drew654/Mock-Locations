@@ -64,7 +64,6 @@ class MainActivity : ComponentActivity() {
                         }
                         composable(Screen.ImportSettings.route) {
                             ImportSettingsScreen(
-                                viewModel = viewModel,
                                 navController = navController
                             )
                         }

@@ -1,6 +1,5 @@
 package com.drew654.mocklocations.domain.model
 
-import android.net.Uri
 import androidx.compose.runtime.Immutable
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapType
@@ -15,7 +14,6 @@ data class MapState(
     val hasRestoredCamera: Boolean = false,
     val isCameraFollowingMockedLocation: Boolean = true,
     val isCameraCurrentlyFollowingMockedLocation: Boolean = true,
-    val importUri: Uri? = null,
     val shouldFocusSearchBar: Boolean = false,
     val expandedControlsState: ExpandedControlsState = ExpandedControlsState(),
     val isShowingSearch: Boolean = false,

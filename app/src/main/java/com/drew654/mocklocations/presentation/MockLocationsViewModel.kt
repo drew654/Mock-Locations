@@ -5,20 +5,14 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.net.Uri
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.drew654.mocklocations.R
-import com.drew654.mocklocations.repository.ExportRepository
-import com.drew654.mocklocations.repository.RouteRepository
 import com.drew654.mocklocations.domain.SettingsManager
 import com.drew654.mocklocations.domain.model.ExpandedControlsConfigurationState
 import com.drew654.mocklocations.domain.model.ExpandedControlsState
-import com.drew654.mocklocations.domain.model.ExportSettingsState
-import com.drew654.mocklocations.domain.model.ImportRouteOption
-import com.drew654.mocklocations.domain.model.ImportSettingsState
 import com.drew654.mocklocations.domain.model.LocationAccuracyLevel
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.MapState
@@ -30,6 +24,7 @@ import com.drew654.mocklocations.domain.model.SavedCameraPosition
 import com.drew654.mocklocations.domain.model.SettingsState
 import com.drew654.mocklocations.domain.model.SpeedUnitValue
 import com.drew654.mocklocations.domain.model.isGranted
+import com.drew654.mocklocations.repository.RouteRepository
 import com.drew654.mocklocations.service.MockLocationService
 import com.drew654.mocklocations.service.MockLocationService.Companion.ACTION_RESTORE_STRAIGHT_LINE_MOCKING
 import com.drew654.mocklocations.service.MockLocationService.Companion.ACTION_START_MOCKING
@@ -39,7 +34,6 @@ import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapType
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -55,7 +49,6 @@ import javax.inject.Inject
 class MockLocationsViewModel @Inject constructor(
     application: Application,
     private val settingsManager: SettingsManager,
-    val exportRepository: ExportRepository,
     private val routeRepository: RouteRepository
 ) : AndroidViewModel(application) {
     private val _uiMapState = MutableStateFlow(MapState())
@@ -75,10 +68,6 @@ class MockLocationsViewModel @Inject constructor(
     )
     private val _expandedControlsConfigurationState = MutableStateFlow(ExpandedControlsConfigurationState())
     val expandedControlsConfigurationState: StateFlow<ExpandedControlsConfigurationState> = _expandedControlsConfigurationState.asStateFlow()
-    private val _exportSettingsState = MutableStateFlow(ExportSettingsState())
-    val exportSettingsState: StateFlow<ExportSettingsState> = _exportSettingsState.asStateFlow()
-    private val _importSettingsState = MutableStateFlow(ImportSettingsState())
-    val importSettingsState: StateFlow<ImportSettingsState> = _importSettingsState.asStateFlow()
     private val _settingsState = MutableStateFlow(SettingsState())
     val settingsState: StateFlow<SettingsState> = _settingsState.asStateFlow()
 
@@ -139,88 +128,6 @@ class MockLocationsViewModel @Inject constructor(
                 }
             }
         }, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
-    }
-
-    fun importDataFromUri(importSettingsState: ImportSettingsState) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val context = getApplication<Application>().applicationContext
-            try {
-                val json = context.contentResolver
-                    .openInputStream(_uiMapState.value.importUri!!)
-                    ?.bufferedReader()
-                    ?.use { it.readText() }
-                    ?: throw IllegalStateException("Unable to read file")
-
-                exportRepository.importFromJson(json, importSettingsState.isImportSettings, importSettingsState.importRouteOption)
-                val savedSpeedUnitValue = settingsManager.speedUnitValueFlow.first()
-                updateExpandedControlsState { it.copy(speedUnitValue = savedSpeedUnitValue) }
-
-                launch(Dispatchers.Main) {
-                    Toast.makeText(context, "Import successful", Toast.LENGTH_SHORT).show()
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                launch(Dispatchers.Main) {
-                    Toast.makeText(context, "Import failed", Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-    }
-
-    fun getVersionCodeFromUri(): Int {
-        var versionCode = 0
-        viewModelScope.launch {
-            val context = getApplication<Application>().applicationContext
-            try {
-                val json = context.contentResolver
-                    .openInputStream(_uiMapState.value.importUri!!)
-                    ?.bufferedReader()
-                    ?.use { it.readText() }
-                    ?: throw IllegalStateException("Unable to read file")
-                versionCode = exportRepository.getVersionCodeFromJson(json)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-        return versionCode
-    }
-
-    fun getRouteCountFromImportUri(): Int {
-        var count = 0
-        viewModelScope.launch {
-            val context = getApplication<Application>().applicationContext
-            try {
-                val json = context.contentResolver
-                    .openInputStream(_uiMapState.value.importUri!!)
-                    ?.bufferedReader()
-                    ?.use { it.readText() }
-                    ?: throw IllegalStateException("Unable to read file")
-
-                count = exportRepository.getRouteCountFromJson(json)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-        return count
-    }
-
-    fun getIsWithSettingsToImportFromImportUri(): Boolean {
-        var isWithSettingsToImport = false
-        viewModelScope.launch {
-            val context = getApplication<Application>().applicationContext
-            try {
-                val json = context.contentResolver
-                    .openInputStream(_uiMapState.value.importUri!!)
-                    ?.bufferedReader()
-                    ?.use { it.readText() }
-                    ?: throw IllegalStateException("Unable to read file")
-
-                isWithSettingsToImport = exportRepository.isWithSettingsToImport(json)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-        return isWithSettingsToImport
     }
 
     fun resetSettingsToDefault() {
@@ -367,10 +274,6 @@ class MockLocationsViewModel @Inject constructor(
         }
     }
 
-    fun setImportUri(uri: Uri?) {
-        updateMapState { it.copy(importUri = uri) }
-    }
-
     fun setShouldFocusSearchBar(value: Boolean) {
         updateMapState { it.copy(shouldFocusSearchBar = value) }
     }
@@ -457,39 +360,6 @@ class MockLocationsViewModel @Inject constructor(
                 }
             }
         }
-    }
-
-    fun refreshExportSettingsState() {
-        viewModelScope.launch {
-            val currentRoutesCount = settingsManager.savedRoutesFlow.first().size
-            _exportSettingsState.value = ExportSettingsState(
-                routesToExport = currentRoutesCount,
-                isExportSettings = true,
-                isExportRoutes = currentRoutesCount > 0
-            )
-        }
-    }
-
-    fun updateExportSettingsState(transform: (ExportSettingsState) -> ExportSettingsState) {
-        _exportSettingsState.value = transform(_exportSettingsState.value)
-    }
-
-    fun refreshImportSettingsState() {
-        val isImportSettingsEnabled = getIsWithSettingsToImportFromImportUri()
-        val routesToImport = getRouteCountFromImportUri()
-        val isImportRoutesEnabled = routesToImport > 0
-        _importSettingsState.value = ImportSettingsState(
-            isImportRoutesEnabled = isImportRoutesEnabled,
-            isImportRoutes = isImportRoutesEnabled,
-            isImportSettingsEnabled = isImportSettingsEnabled,
-            isImportSettings = isImportSettingsEnabled,
-            importRouteOption = if (isImportRoutesEnabled) ImportRouteOption.REPLACE else null,
-            routesToImport = routesToImport
-        )
-    }
-
-    fun updateImportSettingsState(transform: (ImportSettingsState) -> ImportSettingsState) {
-        _importSettingsState.value = transform(_importSettingsState.value)
     }
 
     fun refreshSettingsState() {
