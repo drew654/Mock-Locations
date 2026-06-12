@@ -25,8 +25,10 @@ import com.drew654.mocklocations.domain.model.getMapStyleByName
 import com.drew654.mocklocations.util.JsonUtils
 import com.drew654.mocklocations.util.MigrationUtils
 import com.google.gson.reflect.TypeToken
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
     name = "settings",
@@ -79,7 +81,7 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
     }
 )
 
-class SettingsManager(private val context: Context) {
+class SettingsManager @Inject constructor(@param:ApplicationContext private val context: Context) {
     companion object {
         val VERSION_CODE = intPreferencesKey("version_code")
 

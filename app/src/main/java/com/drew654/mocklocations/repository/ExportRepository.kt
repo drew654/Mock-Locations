@@ -1,23 +1,25 @@
-package com.drew654.mocklocations.data.repository
+package com.drew654.mocklocations.repository
 
 import android.content.Context
 import com.drew654.mocklocations.BuildConfig
 import com.drew654.mocklocations.domain.SettingsManager
-import com.drew654.mocklocations.domain.model.LocationAccuracyLevel
 import com.drew654.mocklocations.domain.model.ExportData
 import com.drew654.mocklocations.domain.model.ExportMeta
 import com.drew654.mocklocations.domain.model.ExportSettings
 import com.drew654.mocklocations.domain.model.ImportRouteOption
+import com.drew654.mocklocations.domain.model.LocationAccuracyLevel
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.getLocationAccuracyLevelByName
 import com.drew654.mocklocations.domain.model.getMapStyleByName
 import com.drew654.mocklocations.util.JsonUtils
 import com.drew654.mocklocations.util.MigrationUtils
+import com.google.gson.JsonObject
 import kotlinx.coroutines.flow.first
 import java.time.Instant
 import java.time.format.DateTimeFormatter
+import javax.inject.Inject
 
-class ExportRepository(
+class ExportRepository @Inject constructor(
     private val settingsManager: SettingsManager
 ) {
     val gson = JsonUtils.gson
@@ -66,7 +68,7 @@ class ExportRepository(
         var exportData = gson.fromJson(json, ExportData::class.java)
 
         if (exportData.meta.appVersionCode < 15) {
-            val jsonObject = gson.fromJson(json, com.google.gson.JsonObject::class.java)
+            val jsonObject = gson.fromJson(json, JsonObject::class.java)
             if (jsonObject.has("routes")) {
                 val legacyRoutesJson = jsonObject.get("routes").toString()
                 val migratedRoutesJson = MigrationUtils.migrateSavedRoutesJsonTo15(legacyRoutesJson)
@@ -112,7 +114,8 @@ class ExportRepository(
         settingsManager.setSpeedSliderLowerEnd(settings.expandedControlsSpeedSliderLowerEnd)
         settingsManager.setSpeedSliderUpperEnd(settings.expandedControlsSpeedSliderUpperEnd)
         settingsManager.setIsGoingToWaitAtRouteFinish(settings.waitAtRouteFinish)
-        settingsManager.setLocationAccuracyLevel(getLocationAccuracyLevelByName(settings.locationAccuracyLevel) ?: LocationAccuracyLevel.Perfect)
+        settingsManager.setLocationAccuracyLevel(
+            getLocationAccuracyLevelByName(settings.locationAccuracyLevel) ?: LocationAccuracyLevel.Perfect)
         settingsManager.setLocationUpdateDelay(settings.locationUpdateDelay)
     }
 

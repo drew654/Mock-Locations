@@ -21,8 +21,8 @@ import com.drew654.mocklocations.presentation.toLatLng
 import com.drew654.mocklocations.presentation.toRoutePoint
 import com.drew654.mocklocations.util.LocationMathUtils
 import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.LatLng
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -39,15 +39,28 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
+import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 
+@AndroidEntryPoint
 class MockLocationService : Service() {
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
-    private val settingsManager by lazy { SettingsManager(applicationContext) }
+
+    @Inject
+    lateinit var settingsManager: SettingsManager
+
+    @Inject
+    lateinit var notificationHelper: MockNotificationHelper
+
+    @Inject
+    lateinit var locationManager: LocationManager
+
+    @Inject
+    lateinit var fusedLocationClient: FusedLocationProviderClient
+
     private var mockJob: Job? = null
-    private val locationManager by lazy { getSystemService(LOCATION_SERVICE) as LocationManager }
-    private val providers = listOf(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER, LocationManager.FUSED_PROVIDER)
-    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private val providers =
+        listOf(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER, LocationManager.FUSED_PROVIDER)
 
     private lateinit var mockControlState: StateFlow<MockControlState>
     private lateinit var isClearRouteOnStopState: StateFlow<Boolean>
@@ -56,7 +69,6 @@ class MockLocationService : Service() {
     private var lastBroadcastLocation: Location? = null
     private var noiseLat = 0.0
     private var noiseLng = 0.0
-    private val notificationHelper by lazy { MockNotificationHelper(this) }
 
     companion object {
         const val ACTION_START_MOCKING = "ACTION_START_MOCKING"
@@ -69,7 +81,6 @@ class MockLocationService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         notificationHelper.createNotificationChannel()
 
         mockControlState = settingsManager.mockControlStateFlow.stateIn(

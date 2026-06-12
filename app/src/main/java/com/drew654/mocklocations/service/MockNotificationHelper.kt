@@ -12,8 +12,10 @@ import com.drew654.mocklocations.R
 import com.drew654.mocklocations.domain.model.MockControlState
 import com.drew654.mocklocations.domain.model.isPauseVisible
 import com.drew654.mocklocations.domain.model.isResumeVisible
+import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
 
-class MockNotificationHelper(private val context: Context) {
+class MockNotificationHelper @Inject constructor(@ApplicationContext private val context: Context) {
     companion object {
         const val CHANNEL_ID = "mock_location_channel"
         const val NOTIFICATION_ID = 1

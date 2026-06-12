@@ -11,8 +11,8 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.drew654.mocklocations.R
-import com.drew654.mocklocations.data.repository.ExportRepository
-import com.drew654.mocklocations.data.repository.RouteRepository
+import com.drew654.mocklocations.repository.ExportRepository
+import com.drew654.mocklocations.repository.RouteRepository
 import com.drew654.mocklocations.domain.SettingsManager
 import com.drew654.mocklocations.domain.model.ExpandedControlsConfigurationState
 import com.drew654.mocklocations.domain.model.ExpandedControlsState
@@ -38,6 +38,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapType
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -47,11 +48,15 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class MockLocationsViewModel(application: Application) : AndroidViewModel(application) {
-    private val settingsManager = SettingsManager(application)
-    val exportRepository = ExportRepository(settingsManager)
-    val routeRepository = RouteRepository()
+@HiltViewModel
+class MockLocationsViewModel @Inject constructor(
+    application: Application,
+    private val settingsManager: SettingsManager,
+    val exportRepository: ExportRepository,
+    private val routeRepository: RouteRepository
+) : AndroidViewModel(application) {
     private val _uiMapState = MutableStateFlow(MapState())
     val mapState: StateFlow<MapState> = combine(
         _uiMapState,
