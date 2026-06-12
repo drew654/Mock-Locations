@@ -141,27 +141,6 @@ class MockLocationsViewModel @Inject constructor(
         }, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
     }
 
-    fun exportDataToUri(uri: Uri, exportSettings: Boolean, exportRoutes: Boolean) {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val context = getApplication<Application>().applicationContext
-                val jsonString = exportRepository.generateExportToJson(context, exportSettings, exportRoutes)
-                getApplication<Application>().contentResolver.openOutputStream(uri)?.use { outputStream ->
-                    outputStream.write(jsonString.toByteArray())
-                    outputStream.flush()
-                }
-                launch(Dispatchers.Main) {
-                    Toast.makeText(context, "Export successful", Toast.LENGTH_SHORT).show()
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                launch(Dispatchers.Main) {
-                    Toast.makeText(getApplication(), "Export failed", Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-    }
-
     fun importDataFromUri(importSettingsState: ImportSettingsState) {
         viewModelScope.launch(Dispatchers.IO) {
             val context = getApplication<Application>().applicationContext

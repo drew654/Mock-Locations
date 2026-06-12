@@ -59,7 +59,6 @@ class MainActivity : ComponentActivity() {
                         }
                         composable(Screen.ExportSettings.route) {
                             ExportSettingsScreen(
-                                viewModel = viewModel,
                                 navController = navController
                             )
                         }
