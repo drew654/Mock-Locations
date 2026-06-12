@@ -5,124 +5,91 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.location.Geocoder
 import android.net.Uri
-import android.os.Build
-import android.util.Log
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.drew654.mocklocations.R
 import com.drew654.mocklocations.data.repository.ExportRepository
 import com.drew654.mocklocations.data.repository.RouteRepository
 import com.drew654.mocklocations.domain.SettingsManager
+import com.drew654.mocklocations.domain.model.ExpandedControlsConfigurationState
+import com.drew654.mocklocations.domain.model.ExpandedControlsState
+import com.drew654.mocklocations.domain.model.ExportSettingsState
 import com.drew654.mocklocations.domain.model.ImportRouteOption
+import com.drew654.mocklocations.domain.model.ImportSettingsState
 import com.drew654.mocklocations.domain.model.LocationAccuracyLevel
 import com.drew654.mocklocations.domain.model.LocationTarget
+import com.drew654.mocklocations.domain.model.MapState
 import com.drew654.mocklocations.domain.model.MapStyle
 import com.drew654.mocklocations.domain.model.MockControlState
-import com.drew654.mocklocations.domain.model.RoutePoint
+import com.drew654.mocklocations.domain.model.Permission
 import com.drew654.mocklocations.domain.model.RouteSegment
 import com.drew654.mocklocations.domain.model.SavedCameraPosition
-import com.drew654.mocklocations.domain.model.SpeedUnit
+import com.drew654.mocklocations.domain.model.SettingsState
 import com.drew654.mocklocations.domain.model.SpeedUnitValue
+import com.drew654.mocklocations.domain.model.isGranted
 import com.drew654.mocklocations.service.MockLocationService
 import com.drew654.mocklocations.service.MockLocationService.Companion.ACTION_RESTORE_STRAIGHT_LINE_MOCKING
 import com.drew654.mocklocations.service.MockLocationService.Companion.ACTION_START_MOCKING
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MapStyleOptions
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.suspendCancellableCoroutine
-import java.io.IOException
-import kotlin.coroutines.resume
 
 class MockLocationsViewModel(application: Application) : AndroidViewModel(application) {
-    private val _cameraPosition = MutableStateFlow<SavedCameraPosition?>(null)
-    val cameraPosition = _cameraPosition.asStateFlow()
-    private val _isMapCenteredAfterLaunch = MutableStateFlow(false)
-    val isMapCenteredAfterLaunch = _isMapCenteredAfterLaunch.asStateFlow()
-    private val _controlsAreExpanded = MutableStateFlow(false)
-    val controlsAreExpanded: StateFlow<Boolean> = _controlsAreExpanded.asStateFlow()
     private val settingsManager = SettingsManager(application)
     val exportRepository = ExportRepository(settingsManager)
     val routeRepository = RouteRepository()
-    private val _importUri = MutableStateFlow<Uri?>(null)
-    private val _shouldFocusSearchBar = MutableStateFlow(false)
-    val shouldFocusSearchBar: StateFlow<Boolean> = _shouldFocusSearchBar.asStateFlow()
-    private val _speedUnitValue =
-        MutableStateFlow(SpeedUnitValue(value = 30.0, speedUnit = SpeedUnit.MilesPerHour))
-    val speedUnitValue: StateFlow<SpeedUnitValue> = _speedUnitValue.asStateFlow()
-    val mockControlState = settingsManager.mockControlStateFlow.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = runBlocking { settingsManager.mockControlStateFlow.first() }
-    )
-    val isBuildRoutesOnRoad: StateFlow<Boolean> = settingsManager.buildRouteOnRoadsFlow.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = runBlocking { settingsManager.buildRouteOnRoadsFlow.first() }
-    )
-    val mapStyle: StateFlow<MapStyle?> = settingsManager.mapStyleFlow.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = runBlocking { settingsManager.mapStyleFlow.first() }
-    )
-    val locationAccuracyLevel: StateFlow<LocationAccuracyLevel> = settingsManager.locationAccuracyLevelFlow.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = runBlocking { settingsManager.locationAccuracyLevelFlow.first() }
-    )
-    val speedSliderLowerEnd: StateFlow<Int> = settingsManager.speedSliderLowerEndFlow.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = runBlocking { settingsManager.speedSliderLowerEndFlow.first() }
-    )
-    val speedSliderUpperEnd: StateFlow<Int> = settingsManager.speedSliderUpperEndFlow.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = runBlocking { settingsManager.speedSliderUpperEndFlow.first() }
-    )
-    val isCameraFollowingMockedLocation: StateFlow<Boolean> =
-        settingsManager.isCameraFollowingMockedLocation.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = runBlocking { settingsManager.isCameraFollowingMockedLocation.first() }
+    private val _uiMapState = MutableStateFlow(MapState())
+    val mapState: StateFlow<MapState> = combine(
+        _uiMapState,
+        settingsManager.mockControlStateFlow,
+        settingsManager.currentMockedLocationFlow
+    ) { uiMapState, mockControlState, currentMockedLocation ->
+        uiMapState.copy(
+            mockControlState = mockControlState,
+            currentMockedLocation = currentMockedLocation
         )
-    val isGoingToWaitAtRouteFinish: StateFlow<Boolean> = settingsManager.isGoingToWaitAtRouteFinishFlow.stateIn(
+    }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = runBlocking { settingsManager.isGoingToWaitAtRouteFinishFlow.first() }
+        initialValue = MapState()
     )
-    val isCameraCurrentlyFollowingMockedLocation: StateFlow<Boolean> =
-        settingsManager.isCameraCurrentlyFollowingMockedLocationFlow.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = runBlocking { settingsManager.isCameraCurrentlyFollowingMockedLocationFlow.first() }
-        )
-    val currentMockedLocation: StateFlow<RoutePoint?> =
-        settingsManager.currentMockedLocationFlow.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = runBlocking { settingsManager.currentMockedLocationFlow.first() }
-        )
-    val locationUpdateDelay: StateFlow<Float> = settingsManager.locationUpdateDelayFlow.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = runBlocking { settingsManager.locationUpdateDelayFlow.first() }
-    )
+    private val _expandedControlsConfigurationState = MutableStateFlow(ExpandedControlsConfigurationState())
+    val expandedControlsConfigurationState: StateFlow<ExpandedControlsConfigurationState> = _expandedControlsConfigurationState.asStateFlow()
+    private val _exportSettingsState = MutableStateFlow(ExportSettingsState())
+    val exportSettingsState: StateFlow<ExportSettingsState> = _exportSettingsState.asStateFlow()
+    private val _importSettingsState = MutableStateFlow(ImportSettingsState())
+    val importSettingsState: StateFlow<ImportSettingsState> = _importSettingsState.asStateFlow()
+    private val _settingsState = MutableStateFlow(SettingsState())
+    val settingsState: StateFlow<SettingsState> = _settingsState.asStateFlow()
 
     init {
         viewModelScope.launch {
-            _speedUnitValue.value = settingsManager.speedUnitValueFlow.first()
-            settingsManager.setMockControlState(mockControlState.value.copy(isWaitingForRouteFetch = false))
+            val savedSpeedUnitValue = settingsManager.speedUnitValueFlow.first()
+            val savedSpeedSliderLowerEnd = settingsManager.speedSliderLowerEndFlow.first()
+            val savedSpeedSliderUpperEnd = settingsManager.speedSliderUpperEndFlow.first()
+            updateExpandedControlsState {
+                it.copy(
+                    speedUnitValue = savedSpeedUnitValue,
+                    speedSliderLowerEnd = savedSpeedSliderLowerEnd,
+                    speedSliderUpperEnd = savedSpeedSliderUpperEnd
+                )
+            }
+            _expandedControlsConfigurationState.value = getExpandedControlsConfigurationState()
+            settingsManager.setMockControlState(mapState.value.mockControlState.copy(isWaitingForRouteFetch = false))
         }
 
         viewModelScope.launch {
@@ -146,12 +113,13 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         ContextCompat.registerReceiver(application, object : BroadcastReceiver() {
             override fun onReceive(p0: Context?, p1: Intent?) {
                 viewModelScope.launch {
+                    val clearRouteOnStop = settingsManager.clearRouteOnStopFlow.first()
                     updateMockControlState {
                         it.copy(
                             isMocking = false,
                             isPaused = false,
                             isWaitingAtEndOfRoute = false,
-                            activeLocationTarget = if (clearRouteOnStop.value) LocationTarget.Empty else (it.activeLocationTarget)
+                            activeLocationTarget = if (clearRouteOnStop) LocationTarget.Empty else (it.activeLocationTarget)
                         )
                     }
                 }
@@ -180,19 +148,19 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
-    fun importDataFromUri(importSettings: Boolean, importRouteOption: ImportRouteOption?) {
+    fun importDataFromUri(importSettingsState: ImportSettingsState) {
         viewModelScope.launch(Dispatchers.IO) {
             val context = getApplication<Application>().applicationContext
-
             try {
                 val json = context.contentResolver
-                    .openInputStream(_importUri.value!!)
+                    .openInputStream(_uiMapState.value.importUri!!)
                     ?.bufferedReader()
                     ?.use { it.readText() }
                     ?: throw IllegalStateException("Unable to read file")
 
-                exportRepository.importFromJson(json, importSettings, importRouteOption)
-                _speedUnitValue.value = settingsManager.speedUnitValueFlow.first()
+                exportRepository.importFromJson(json, importSettingsState.isImportSettings, importSettingsState.importRouteOption)
+                val savedSpeedUnitValue = settingsManager.speedUnitValueFlow.first()
+                updateExpandedControlsState { it.copy(speedUnitValue = savedSpeedUnitValue) }
 
                 launch(Dispatchers.Main) {
                     Toast.makeText(context, "Import successful", Toast.LENGTH_SHORT).show()
@@ -212,7 +180,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
             val context = getApplication<Application>().applicationContext
             try {
                 val json = context.contentResolver
-                    .openInputStream(_importUri.value!!)
+                    .openInputStream(_uiMapState.value.importUri!!)
                     ?.bufferedReader()
                     ?.use { it.readText() }
                     ?: throw IllegalStateException("Unable to read file")
@@ -230,7 +198,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
             val context = getApplication<Application>().applicationContext
             try {
                 val json = context.contentResolver
-                    .openInputStream(_importUri.value!!)
+                    .openInputStream(_uiMapState.value.importUri!!)
                     ?.bufferedReader()
                     ?.use { it.readText() }
                     ?: throw IllegalStateException("Unable to read file")
@@ -249,7 +217,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
             val context = getApplication<Application>().applicationContext
             try {
                 val json = context.contentResolver
-                    .openInputStream(_importUri.value!!)
+                    .openInputStream(_uiMapState.value.importUri!!)
                     ?.bufferedReader()
                     ?.use { it.readText() }
                     ?: throw IllegalStateException("Unable to read file")
@@ -265,24 +233,87 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     fun resetSettingsToDefault() {
         viewModelScope.launch {
             settingsManager.resetToDefault()
-            _speedUnitValue.value = settingsManager.speedUnitValueFlow.first()
+            val savedSpeedUnitValue = settingsManager.speedUnitValueFlow.first()
+            val savedSpeedSliderLowerEnd = settingsManager.speedSliderLowerEndFlow.first()
+            val savedSpeedSliderUpperEnd = settingsManager.speedSliderUpperEndFlow.first()
+            updateExpandedControlsState {
+                it.copy(
+                    speedUnitValue = savedSpeedUnitValue,
+                    speedSliderLowerEnd = savedSpeedSliderLowerEnd,
+                    speedSliderUpperEnd = savedSpeedSliderUpperEnd
+                )
+            }
+            refreshSettingsState()
         }
     }
 
     fun updateCameraPosition(position: CameraPosition) {
-        _cameraPosition.value = SavedCameraPosition(
-            latitude = position.target.latitude,
-            longitude = position.target.longitude,
-            zoom = position.zoom
-        )
+        updateMapState {
+            it.copy(
+                savedCameraPosition = SavedCameraPosition(
+                    latitude = position.target.latitude,
+                    longitude = position.target.longitude,
+                    zoom = position.zoom
+                )
+            )
+        }
     }
 
     fun setMapIsCenteredAfterLaunch() {
-        _isMapCenteredAfterLaunch.value = true
+        updateMapState { it.copy(isMapCenteredAfterLaunch = true) }
+    }
+
+    fun updateMapState(transform: (MapState) -> MapState) {
+        val currentState = _uiMapState.value
+        val newState = transform(currentState)
+        _uiMapState.value = newState
+    }
+
+    fun refreshMapState(
+        context: Context,
+        isSystemInDarkTheme: Boolean
+    ) {
+        viewModelScope.launch {
+            val mapStyle = settingsManager.mapStyleFlow.first()
+            val hasLocationPermission = Permission.FineLocation.isGranted(context)
+            val isCameraFollowingMockedLocation = settingsManager.isCameraFollowingMockedLocation.first()
+            val isCameraCurrentlyFollowingMockedLocation = settingsManager.isCameraCurrentlyFollowingMockedLocationFlow.first()
+            val mapProperties = MapProperties(
+                isMyLocationEnabled = hasLocationPermission,
+                isBuildingEnabled = true,
+                mapStyleOptions = MapStyleOptions.loadRawResourceStyle(
+                    context,
+                    mapStyle?.resourceId
+                        ?: if (isSystemInDarkTheme) {
+                            R.raw.map_style_night
+                        } else {
+                            R.raw.map_style_standard
+                        }
+                ),
+                mapType = mapStyle?.mapType ?: MapType.NORMAL
+            )
+            val savedRoutes = settingsManager.savedRoutesFlow.first()
+            updateMapState {
+                it.copy(
+                    mapStyle = mapStyle,
+                    isCameraFollowingMockedLocation = isCameraFollowingMockedLocation,
+                    isCameraCurrentlyFollowingMockedLocation = isCameraCurrentlyFollowingMockedLocation,
+                    hasLocationPermission = hasLocationPermission,
+                    mapProperties = mapProperties,
+                    savedRoutes = savedRoutes
+                )
+            }
+        }
+    }
+
+    fun updateExpandedControlsState(transform: (ExpandedControlsState) -> ExpandedControlsState) {
+        val currentState = _uiMapState.value.expandedControlsState
+        val newState = transform(currentState)
+        updateMapState { it.copy(expandedControlsState = newState) }
     }
 
     fun setControlsAreExpanded(expanded: Boolean) {
-        _controlsAreExpanded.value = expanded
+        updateExpandedControlsState { it.copy(isExpanded = expanded) }
     }
 
     private suspend fun updateMockControlState(transform: (MockControlState) -> MockControlState) {
@@ -298,8 +329,9 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     }
 
     suspend fun pushRouteSegment(point: LatLng) {
-        if (isBuildRoutesOnRoad.value) {
-            if (mockControlState.value.activeLocationTarget is LocationTarget.Empty) {
+        val isBuildRoutesOnRoad = settingsManager.buildRouteOnRoadsFlow.first()
+        if (isBuildRoutesOnRoad) {
+            if (mapState.value.mockControlState.activeLocationTarget is LocationTarget.Empty) {
                 updateMockControlState {
                     it.copy(
                         activeLocationTarget = LocationTarget.create(
@@ -311,7 +343,7 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
                 }
             } else {
                 fetchAndAppendRoute(
-                    start = mockControlState.value.activeLocationTarget.getLastPoint()!!,
+                    start = mapState.value.mockControlState.activeLocationTarget.getLastPoint()!!,
                     end = point
                 )
             }
@@ -333,15 +365,15 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     }
 
     fun setImportUri(uri: Uri?) {
-        _importUri.value = uri
+        updateMapState { it.copy(importUri = uri) }
     }
 
     fun setShouldFocusSearchBar(value: Boolean) {
-        _shouldFocusSearchBar.value = value
+        updateMapState { it.copy(shouldFocusSearchBar = value) }
     }
 
-    fun setSpeedUnitValue(speedUnitValue: SpeedUnitValue) {
-        _speedUnitValue.value = speedUnitValue
+    fun setSpeedUnitValue(newSpeedUnitValue: SpeedUnitValue) {
+        updateExpandedControlsState { it.copy(speedUnitValue = newSpeedUnitValue) }
     }
 
     fun startMockLocation(context: Context, pushPoint: LatLng? = null) {
@@ -364,12 +396,13 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
 
     fun stopMockLocation() {
         viewModelScope.launch {
+            val isClearRouteOnStop = settingsManager.clearRouteOnStopFlow.first()
             updateMockControlState {
                 it.copy(
                     isMocking = false,
                     isPaused = false,
                     isWaitingAtEndOfRoute = false,
-                    activeLocationTarget = if (clearRouteOnStop.value) LocationTarget.Empty else (it.activeLocationTarget)
+                    activeLocationTarget = if (isClearRouteOnStop) LocationTarget.Empty else (it.activeLocationTarget)
                 )
             }
         }
@@ -377,37 +410,6 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
             action = MockLocationService.ACTION_STOP_MOCKING
         }
         getApplication<Application>().startService(intent)
-    }
-
-    suspend fun geocodeAddress(
-        context: Context,
-        address: String
-    ): LatLng? = suspendCancellableCoroutine { continuation ->
-        val geocoder = Geocoder(context)
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            geocoder.getFromLocationName(address, 1) { results ->
-                val latLng = results.firstOrNull()?.let {
-                    LatLng(it.latitude, it.longitude)
-                }
-
-                continuation.resume(latLng)
-            }
-        } else {
-            try {
-                @Suppress("DEPRECATION")
-                val results = geocoder.getFromLocationName(address, 1)
-
-                val latLng = results?.firstOrNull()?.let {
-                    LatLng(it.latitude, it.longitude)
-                }
-
-                continuation.resume(latLng)
-            } catch (e: IOException) {
-                Log.e("MockLocationsViewModel", "Failed to geocode address", e)
-                continuation.resume(null)
-            }
-        }
     }
 
     fun fetchAndAppendRoute(start: LatLng, end: LatLng) {
@@ -430,32 +432,142 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
-    val clearRouteOnStop = settingsManager.clearRouteOnStopFlow.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = runBlocking { settingsManager.clearRouteOnStopFlow.first() }
-    )
-
     fun setClearRouteOnStop(enabled: Boolean) {
         viewModelScope.launch {
             settingsManager.setClearRouteOnStop(enabled)
         }
     }
 
-    val savedRoutes = settingsManager.savedRoutesFlow.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = runBlocking { settingsManager.savedRoutesFlow.first() }
-    )
-
     fun saveCurrentRoute(name: String) {
-        val current = mockControlState.value.activeLocationTarget
+        val current = mapState.value.mockControlState.activeLocationTarget
         if (current.routeSegments.isNotEmpty()) {
             val routeToSave = LocationTarget.SavedRoute(name = name, routeSegments = current.routeSegments)
             viewModelScope.launch {
                 settingsManager.saveRoute(route = routeToSave)
+                val newRoutes = settingsManager.savedRoutesFlow.first()
+                updateMapState {
+                    it.copy(
+                        savedRoutes = newRoutes
+                    )
+                }
             }
         }
+    }
+
+    suspend fun getExpandedControlsConfigurationState(): ExpandedControlsConfigurationState {
+        val speedUnitValue = settingsManager.speedUnitValueFlow.first()
+        val speedSliderLowerEnd = settingsManager.speedSliderLowerEndFlow.first()
+        val speedSliderUpperEnd = settingsManager.speedSliderUpperEndFlow.first()
+        return ExpandedControlsConfigurationState(
+            isShowingDialog = false,
+            speedUnitValue = speedUnitValue,
+            speedSliderLowerEnd = speedSliderLowerEnd.toString(),
+            speedSliderUpperEnd = speedSliderUpperEnd.toString()
+        )
+    }
+
+    fun updateExpandedControlsConfigurationState(transform: (ExpandedControlsConfigurationState) -> ExpandedControlsConfigurationState) {
+        _expandedControlsConfigurationState.value = transform(_expandedControlsConfigurationState.value)
+    }
+
+    fun refreshExpandedControlsConfigurationState() {
+        val currentExpandedControlsState = _uiMapState.value.expandedControlsState
+        _expandedControlsConfigurationState.value = ExpandedControlsConfigurationState(
+            isShowingDialog = false,
+            speedUnitValue = currentExpandedControlsState.speedUnitValue,
+            speedSliderLowerEnd = currentExpandedControlsState.speedSliderLowerEnd.toString(),
+            speedSliderUpperEnd = currentExpandedControlsState.speedSliderUpperEnd.toString()
+        )
+    }
+
+    fun saveExpandedControlsConfigurationState() {
+        val configState = expandedControlsConfigurationState.value
+        val speedSliderLowerEnd = configState.speedSliderLowerEnd.toIntOrNull() ?: 0
+        val speedSliderUpperEnd = configState.speedSliderUpperEnd.toIntOrNull() ?: 100
+        var speedUnitValue = configState.speedUnitValue
+
+        if (speedUnitValue.value < speedSliderLowerEnd) {
+            speedUnitValue = speedUnitValue.copy(value = speedSliderLowerEnd.toDouble())
+        } else if (speedUnitValue.value > speedSliderUpperEnd) {
+            speedUnitValue = speedUnitValue.copy(value = speedSliderUpperEnd.toDouble())
+        }
+
+        setSpeedUnitValue(speedUnitValue)
+        saveSpeedUnitValue(speedUnitValue)
+
+        setSpeedSliderLowerEnd(speedSliderLowerEnd)
+        saveSpeedSliderLowerEnd(speedSliderLowerEnd)
+        setSpeedSliderUpperEnd(speedSliderUpperEnd)
+        saveSpeedSliderUpperEnd(speedSliderUpperEnd)
+
+        updateExpandedControlsConfigurationState {
+            it.copy(speedUnitValue = speedUnitValue)
+        }
+    }
+
+    fun refreshExportSettingsState() {
+        viewModelScope.launch {
+            val currentRoutesCount = settingsManager.savedRoutesFlow.first().size
+            _exportSettingsState.value = ExportSettingsState(
+                routesToExport = currentRoutesCount,
+                isExportSettings = true,
+                isExportRoutes = currentRoutesCount > 0
+            )
+        }
+    }
+
+    fun updateExportSettingsState(transform: (ExportSettingsState) -> ExportSettingsState) {
+        _exportSettingsState.value = transform(_exportSettingsState.value)
+    }
+
+    fun refreshImportSettingsState() {
+        val isImportSettingsEnabled = getIsWithSettingsToImportFromImportUri()
+        val routesToImport = getRouteCountFromImportUri()
+        val isImportRoutesEnabled = routesToImport > 0
+        _importSettingsState.value = ImportSettingsState(
+            isImportRoutesEnabled = isImportRoutesEnabled,
+            isImportRoutes = isImportRoutesEnabled,
+            isImportSettingsEnabled = isImportSettingsEnabled,
+            isImportSettings = isImportSettingsEnabled,
+            importRouteOption = if (isImportRoutesEnabled) ImportRouteOption.REPLACE else null,
+            routesToImport = routesToImport
+        )
+    }
+
+    fun updateImportSettingsState(transform: (ImportSettingsState) -> ImportSettingsState) {
+        _importSettingsState.value = transform(_importSettingsState.value)
+    }
+
+    fun refreshSettingsState() {
+        viewModelScope.launch {
+            val isBuildRouteOnRoads = settingsManager.buildRouteOnRoadsFlow.first()
+            val isUsingCrosshairs = settingsManager.mockControlStateFlow.first().isUsingCrosshairs
+            val clearPointsOnStop = settingsManager.clearRouteOnStopFlow.first()
+            val isCameraFollowingMockedLocation = settingsManager.isCameraFollowingMockedLocation.first()
+            val isGoingToWaitAtRouteFinish = settingsManager.isGoingToWaitAtRouteFinishFlow.first()
+            val mapStyle = settingsManager.mapStyleFlow.first()
+            val locationAccuracyLevel = settingsManager.locationAccuracyLevelFlow.first()
+            val locationUpdateDelay = settingsManager.locationUpdateDelayFlow.first()
+
+            _settingsState.value = SettingsState(
+                isBuildRouteOnRoads = isBuildRouteOnRoads,
+                isUsingCrosshairs = isUsingCrosshairs,
+                clearPointsOnStop = clearPointsOnStop,
+                isCameraFollowingMockedLocation = isCameraFollowingMockedLocation,
+                isGoingToWaitAtRouteFinish = isGoingToWaitAtRouteFinish,
+                mapStyle = mapStyle,
+                locationAccuracyLevel = locationAccuracyLevel,
+                locationUpdateDelay = locationUpdateDelay,
+                isShowingMapStyleDialog = false,
+                isShowingLocationAccuracyLevelDialog = false,
+                isShowingLocationUpdateDelayDialog = false,
+                isShowingResetSettingsDialog = false
+            )
+        }
+    }
+
+    fun updateSettingsState(transform: (SettingsState) -> SettingsState) {
+        _settingsState.value = transform(_settingsState.value)
     }
 
     fun loadSavedRoute(route: LocationTarget.SavedRoute) {
@@ -467,6 +579,12 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     fun deleteSavedRoute(route: LocationTarget.SavedRoute) {
         viewModelScope.launch {
             settingsManager.deleteRoute(route)
+            val newRoutes = settingsManager.savedRoutesFlow.first()
+            updateMapState {
+                it.copy(
+                    savedRoutes = newRoutes
+                )
+            }
         }
     }
 
@@ -501,12 +619,20 @@ class MockLocationsViewModel(application: Application) : AndroidViewModel(applic
     }
 
     fun setSpeedSliderLowerEnd(value: Int) {
+        updateExpandedControlsState { it.copy(speedSliderLowerEnd = value) }
+    }
+
+    fun saveSpeedSliderLowerEnd(value: Int) {
         viewModelScope.launch {
             settingsManager.setSpeedSliderLowerEnd(value)
         }
     }
 
     fun setSpeedSliderUpperEnd(value: Int) {
+        updateExpandedControlsState { it.copy(speedSliderUpperEnd = value) }
+    }
+
+    fun saveSpeedSliderUpperEnd(value: Int) {
         viewModelScope.launch {
             settingsManager.setSpeedSliderUpperEnd(value)
         }

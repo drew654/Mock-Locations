@@ -1,0 +1,209 @@
+package com.drew654.mocklocations.presentation.expanded_controls_configuration
+
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextReplacement
+import androidx.navigation.NavController
+import com.drew654.mocklocations.domain.model.ExpandedControlsConfigurationState
+import com.drew654.mocklocations.domain.model.SpeedUnit
+import com.drew654.mocklocations.domain.model.SpeedUnitValue
+import com.drew654.mocklocations.presentation.MockLocationsViewModel
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
+import kotlinx.coroutines.flow.MutableStateFlow
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Rule
+import org.junit.Test
+
+class ExpandedControlsConfigurationScreenTest {
+    @get:Rule
+    val composeTestRule = createComposeRule()
+
+    private val viewModel = mockk<MockLocationsViewModel>(relaxed = true)
+    private val navController = mockk<NavController>(relaxed = true)
+    private val expandedControlsConfigurationState = MutableStateFlow(ExpandedControlsConfigurationState())
+
+    private fun setupMockFlows() {
+        expandedControlsConfigurationState.value = ExpandedControlsConfigurationState()
+        every { viewModel.expandedControlsConfigurationState } returns expandedControlsConfigurationState
+
+        every { viewModel.updateExpandedControlsConfigurationState(any()) } answers {
+            val transform = firstArg<(ExpandedControlsConfigurationState) -> ExpandedControlsConfigurationState>()
+            expandedControlsConfigurationState.value = transform(expandedControlsConfigurationState.value)
+        }
+    }
+
+    @Test
+    fun clickBackButton_triggersCallback() {
+        var clicked = false
+        composeTestRule.setContent {
+            ExpandedControlsConfigurationContent(
+                state = ExpandedControlsConfigurationState(),
+                onBack = { clicked = true }
+            )
+        }
+
+        composeTestRule.onNodeWithContentDescription("Back").performClick()
+
+        assertTrue(clicked)
+    }
+
+    @Test
+    fun clickSpeedUnit_triggersCallback() {
+        var clicked = false
+        composeTestRule.setContent {
+            ExpandedControlsConfigurationContent(
+                state = ExpandedControlsConfigurationState(),
+                setIsShowingDialog = { clicked = true }
+            )
+        }
+
+        composeTestRule.onNodeWithText("Speed unit").performClick()
+
+        assertTrue(clicked)
+    }
+
+    @Test
+    fun setSpeedUnitValue_triggersCallback() {
+        var input: SpeedUnitValue? = null
+        composeTestRule.setContent {
+            ExpandedControlsConfigurationContent(
+                state = ExpandedControlsConfigurationState(
+                    speedUnitValue = SpeedUnitValue(30.0, SpeedUnit.MilesPerHour),
+                    isShowingDialog = true
+                ),
+                setSpeedUnitValue = { input = it }
+            )
+        }
+
+        composeTestRule.onNodeWithText("m/s").performClick()
+
+        assertEquals(SpeedUnitValue(30.0, SpeedUnit.MetersPerSecond), input)
+    }
+
+    @Test
+    fun setSpeedSliderLowerEnd_triggersCallback() {
+        var input: String? = null
+        composeTestRule.setContent {
+            ExpandedControlsConfigurationContent(
+                state = ExpandedControlsConfigurationState(),
+                setSpeedSliderLowerEnd = { input = it }
+            )
+        }
+
+        composeTestRule.onNodeWithText("0").performTextReplacement("50")
+
+        assertEquals("50", input)
+    }
+
+    @Test
+    fun setSpeedSliderUpperEnd_triggersCallback() {
+        var input: String? = null
+        composeTestRule.setContent {
+            ExpandedControlsConfigurationContent(
+                state = ExpandedControlsConfigurationState(),
+                setSpeedSliderUpperEnd = { input = it }
+            )
+        }
+
+        composeTestRule.onNodeWithText("100").performTextReplacement("200")
+
+        assertEquals("200", input)
+    }
+
+    @Test
+    fun saveButton_triggersCallback() {
+        var clicked = false
+        composeTestRule.setContent {
+            ExpandedControlsConfigurationContent(
+                state = ExpandedControlsConfigurationState(),
+                onSave = { clicked = true }
+            )
+        }
+
+        composeTestRule.onNodeWithText("Save").performClick()
+
+        assertTrue(clicked)
+    }
+
+    @Test
+    fun integration_onOpen_refreshExpandedControlsConfigurationState() {
+        setupMockFlows()
+        composeTestRule.setContent {
+            ExpandedControlsConfigurationScreen(viewModel = viewModel, navController = navController)
+        }
+
+        verify { viewModel.refreshExpandedControlsConfigurationState() }
+    }
+
+    @Test
+    fun integration_backButton_callsNavController() {
+        setupMockFlows()
+        composeTestRule.setContent {
+            ExpandedControlsConfigurationScreen(viewModel = viewModel, navController = navController)
+        }
+
+        composeTestRule.onNodeWithContentDescription("Back").performClick()
+
+        verify { navController.popBackStack() }
+    }
+
+    @Test
+    fun integration_selectSpeedUnit_updatesViewModelAndUi() {
+        setupMockFlows()
+        composeTestRule.setContent {
+            ExpandedControlsConfigurationScreen(viewModel = viewModel, navController = navController)
+        }
+
+        composeTestRule.onNodeWithText("Speed unit").performClick()
+
+        composeTestRule.onNodeWithText("m/s").performClick()
+
+        assertEquals(SpeedUnitValue(30.0, SpeedUnit.MetersPerSecond), expandedControlsConfigurationState.value.speedUnitValue)
+        composeTestRule.onNodeWithText("m/s").assertIsDisplayed()
+    }
+
+    @Test
+    fun integration_setSpeedSliderLowerEnd_updatesViewModelAndUi() {
+        setupMockFlows()
+        composeTestRule.setContent {
+            ExpandedControlsConfigurationScreen(viewModel = viewModel, navController = navController)
+        }
+
+        composeTestRule.onNodeWithText("0").performTextReplacement("50")
+
+        assertEquals("50", expandedControlsConfigurationState.value.speedSliderLowerEnd)
+        composeTestRule.onNodeWithText("50").assertIsDisplayed()
+    }
+
+    @Test
+    fun integration_setSpeedSliderUpperEnd_updatesViewModelAndUi() {
+        setupMockFlows()
+        composeTestRule.setContent {
+            ExpandedControlsConfigurationScreen(viewModel = viewModel, navController = navController)
+        }
+
+        composeTestRule.onNodeWithText("100").performTextReplacement("200")
+
+        assertEquals("200", expandedControlsConfigurationState.value.speedSliderUpperEnd)
+        composeTestRule.onNodeWithText("200").assertIsDisplayed()
+    }
+
+    @Test
+    fun integration_clickSave_callsViewModelAndNavController() {
+        setupMockFlows()
+        composeTestRule.setContent {
+            ExpandedControlsConfigurationScreen(viewModel = viewModel, navController = navController)
+        }
+
+        composeTestRule.onNodeWithText("Save").performClick()
+
+        verify { viewModel.saveExpandedControlsConfigurationState() }
+        verify { navController.popBackStack() }
+    }
+}

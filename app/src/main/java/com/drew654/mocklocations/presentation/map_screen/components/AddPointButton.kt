@@ -1,55 +1,50 @@
 package com.drew654.mocklocations.presentation.map_screen.components
 
-import android.content.res.Configuration
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.R
-import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
+import com.drew654.mocklocations.presentation.ui.theme.DayNightPreviews
+import com.drew654.mocklocations.presentation.ui.theme.ThemePreview
 
 @Composable
 fun AddPointButton(
-    onAddCrosshairsPoint: () -> Unit,
-    enabled: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = { },
+    enabled: Boolean = true
 ) {
     DisableableFloatingActionButton(
-        onClick = { onAddCrosshairsPoint() },
+        onClick = { onClick() },
         enabled = enabled,
         modifier = modifier
     ) {
         Icon(
             painter = painterResource(id = R.drawable.baseline_add_location_alt_24),
-            contentDescription = "Add Point"
+            contentDescription = "Add point"
         )
     }
 }
 
-@Preview(
-    name = "Light Mode",
-    showBackground = true
-)
-@Preview(
-    name = "Dark Mode",
-    uiMode = Configuration.UI_MODE_NIGHT_YES,
-    showBackground = true
-)
+@DayNightPreviews
 @Composable
 fun AddPointButtonPreview() {
-    MockLocationsTheme {
-        Surface {
-            Box(modifier = Modifier.padding(8.dp)) {
-                AddPointButton(
-                    onAddCrosshairsPoint = { },
-                    enabled = true
-                )
-            }
+    ThemePreview {
+        Box(modifier = Modifier.padding(8.dp)) {
+            AddPointButton()
+        }
+    }
+}
+
+@DayNightPreviews
+@Composable
+fun AddPointButtonDisabledPreview() {
+    ThemePreview {
+        Box(modifier = Modifier.padding(8.dp)) {
+            AddPointButton(enabled = false)
         }
     }
 }

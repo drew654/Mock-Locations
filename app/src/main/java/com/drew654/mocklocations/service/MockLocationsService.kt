@@ -1,8 +1,5 @@
 package com.drew654.mocklocations.service
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
 import android.content.pm.ServiceInfo
@@ -13,19 +10,16 @@ import android.os.IBinder
 import android.os.SystemClock
 import android.util.Log
 import android.widget.Toast
-import androidx.core.app.NotificationCompat
-import com.drew654.mocklocations.R
 import com.drew654.mocklocations.domain.SettingsManager
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.MockControlState
 import com.drew654.mocklocations.domain.model.Permission
 import com.drew654.mocklocations.domain.model.RoutePoint
 import com.drew654.mocklocations.domain.model.isGranted
-import com.drew654.mocklocations.domain.model.isPauseVisible
-import com.drew654.mocklocations.domain.model.isResumeVisible
 import com.drew654.mocklocations.domain.model.toMetersPerSecond
 import com.drew654.mocklocations.presentation.toLatLng
 import com.drew654.mocklocations.presentation.toRoutePoint
+import com.drew654.mocklocations.util.LocationMathUtils
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.LatLng
@@ -45,13 +39,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
-import kotlin.math.atan
-import kotlin.math.cos
-import kotlin.math.exp
-import kotlin.math.ln
-import kotlin.math.sin
-import kotlin.math.tan
-import kotlin.random.Random
+import kotlin.coroutines.cancellation.CancellationException
 
 class MockLocationService : Service() {
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -68,10 +56,9 @@ class MockLocationService : Service() {
     private var lastBroadcastLocation: Location? = null
     private var noiseLat = 0.0
     private var noiseLng = 0.0
+    private val notificationHelper by lazy { MockNotificationHelper(this) }
 
     companion object {
-        const val CHANNEL_ID = "mock_location_channel"
-        const val NOTIFICATION_ID = 1
         const val ACTION_START_MOCKING = "ACTION_START_MOCKING"
         const val ACTION_STOP_MOCKING = "ACTION_STOP_MOCKING"
         const val ACTION_STOP_MOCKING_NOTIFICATION = "ACTION_STOP_MOCKING_NOTIFICATION"
@@ -83,7 +70,7 @@ class MockLocationService : Service() {
     override fun onCreate() {
         super.onCreate()
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-        createNotificationChannel()
+        notificationHelper.createNotificationChannel()
 
         mockControlState = settingsManager.mockControlStateFlow.stateIn(
             scope = serviceScope,
@@ -206,77 +193,22 @@ class MockLocationService : Service() {
         val hasLocationPermission = Permission.FineLocation.isGranted(application)
         if (!hasLocationPermission) return
 
-        val stopMockingIntent = PendingIntent.getService(
-            this,
-            0,
-            Intent(this, MockLocationService::class.java).apply {
-                action = ACTION_STOP_MOCKING_NOTIFICATION
-            },
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        val pauseMockingIntent = PendingIntent.getService(
-            this,
-            0,
-            Intent(this, MockLocationService::class.java).apply {
-                action = ACTION_PAUSE_MOCKING_NOTIFICATION
-            },
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Location Mocking Active")
-            .setContentText("Your location is currently being mocked.")
-            .setSmallIcon(R.drawable.baseline_my_location_24)
-            .setOngoing(true)
-            .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
-            .addAction(
-                R.drawable.baseline_stop_24,
-                "Stop",
-                stopMockingIntent
-            )
-            .apply {
-                if (mockControlState.isPauseVisible()) {
-                    addAction(
-                        R.drawable.baseline_pause_24,
-                        "Pause",
-                        pauseMockingIntent
-                    )
-                } else if (mockControlState.isResumeVisible()) {
-                    addAction(
-                        R.drawable.baseline_play_arrow_24,
-                        "Resume",
-                        pauseMockingIntent
-                    )
-                }
-            }
-            .build()
-
+        val notification = notificationHelper.buildNotification(mockControlState)
         startForeground(
-            NOTIFICATION_ID,
+            MockNotificationHelper.NOTIFICATION_ID,
             notification,
             ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
         )
     }
 
-    private fun updateNoiseSmooth() {
-        val currentAccuracyMeters = accuracyMetersState.value
-        val earthRadius = 6371000.0
-
-        val noiseMeters = currentAccuracyMeters * (0.3 + Random.nextDouble() * 0.4)
-        val randomDistance = Math.random() * noiseMeters
-        val randomAngle = Math.random() * 2 * Math.PI
-
-        val dLat = (randomDistance * cos(randomAngle)) / earthRadius
-        val dLng = (randomDistance * sin(randomAngle)) / earthRadius
-
-        val randomLat = Math.toDegrees(dLat)
-        val randomLng = Math.toDegrees(dLng)
-
-        val alpha = (currentAccuracyMeters / 50f).coerceIn(0.05f, 0.4f)
-
-        noiseLat = noiseLat * (1 - alpha) + randomLat * alpha
-        noiseLng = noiseLng * (1 - alpha) + randomLng * alpha
+    private fun updateNoise() {
+        val (newNoiseLat, newNoiseLng) = LocationMathUtils.getUpdatedNoiseLatLng(
+            accuracyMetersState.value,
+            noiseLat,
+            noiseLng
+        )
+        noiseLat = newNoiseLat
+        noiseLng = newNoiseLng
     }
 
     private fun mockLocationSinglePoint(point: LatLng) {
@@ -299,7 +231,7 @@ class MockLocationService : Service() {
                         speed = 0f
                     )
                     delay(locationUpdateDelayState.value)
-                    updateNoiseSmooth()
+                    updateNoise()
                 }
             } catch (e: Exception) {
                 handleError(e)
@@ -325,7 +257,10 @@ class MockLocationService : Service() {
         val points = locationTarget.getAllPoints()
         if (points.size < 2) return
 
-        val (segmentIndex, distanceInSegment) = findProgressOnRoute(points, restorePoint.latLng)
+        val (segmentIndex, distanceInSegment) = LocationMathUtils.findProgressOnRoute(
+            points,
+            restorePoint.latLng
+        )
 
         startRouteMocking(
             anchorPoints = points,
@@ -334,78 +269,6 @@ class MockLocationService : Service() {
             isStartedWaitingAtEndOfRoute = mockControlState.value.isWaitingAtEndOfRoute,
             startedMessage = "Route Mocking Restored"
         )
-    }
-
-    private fun interpolate(from: LatLng, to: LatLng, fraction: Double): LatLng {
-        if (from == to) return from
-
-        fun latToMercator(lat: Double): Double {
-            return ln(tan(Math.PI / 4 + Math.toRadians(lat) / 2))
-        }
-
-        fun mercatorToLat(y: Double): Double {
-            return Math.toDegrees(2 * atan(exp(y)) - Math.PI / 2)
-        }
-
-        val fromY = latToMercator(from.latitude)
-        val toY = latToMercator(to.latitude)
-
-        val interpolatedY = fromY + (toY - fromY) * fraction
-        val interpolatedLat = mercatorToLat(interpolatedY)
-
-        var dLng = to.longitude - from.longitude
-
-        if (dLng > 180) dLng -= 360
-        if (dLng < -180) dLng += 360
-        val interpolatedLng = from.longitude + dLng * fraction
-
-        return LatLng(interpolatedLat, interpolatedLng)
-    }
-
-    private fun findProgressOnRoute(
-        anchorPoints: List<LatLng>,
-        restorePoint: LatLng
-    ): Pair<Int, Double> {
-        var closestSegmentIndex = 0
-        var closestDistanceInSegment = 0.0
-        var minTotalDistanceToLine = Double.MAX_VALUE
-
-        for (i in 0 until anchorPoints.size - 1) {
-            val p1 = anchorPoints[i]
-            val p2 = anchorPoints[i + 1]
-
-            val results = FloatArray(3)
-            Location.distanceBetween(p1.latitude, p1.longitude, p2.latitude, p2.longitude, results)
-            val segmentLength = results[0].toDouble()
-
-            Location.distanceBetween(
-                p1.latitude,
-                p1.longitude,
-                restorePoint.latitude,
-                restorePoint.longitude,
-                results
-            )
-            val distanceToStart = results[0].toDouble()
-
-            Location.distanceBetween(
-                p2.latitude,
-                p2.longitude,
-                restorePoint.latitude,
-                restorePoint.longitude,
-                results
-            )
-            val distanceToEnd = results[0].toDouble()
-
-            val deviation = (distanceToStart + distanceToEnd) - segmentLength
-
-            if (deviation < minTotalDistanceToLine) {
-                minTotalDistanceToLine = deviation
-                closestSegmentIndex = i
-                closestDistanceInSegment = distanceToStart
-            }
-        }
-
-        return Pair(closestSegmentIndex, closestDistanceInSegment)
     }
 
     private fun startRouteMocking(
@@ -468,14 +331,14 @@ class MockLocationService : Service() {
                                 }
 
                                 delay(updateIntervalMs)
-                                updateNoiseSmooth()
+                                updateNoise()
                                 continue
                             } else {
                                 pausedBaseLocation = null
                             }
 
                             val fraction = (distanceInSegment / segmentLength).coerceIn(0.0, 1.0)
-                            val currentPosition = interpolate(start, end, fraction)
+                            val currentPosition = LocationMathUtils.interpolate(start, end, fraction)
 
                             broadcastLocation(
                                 currentPosition,
@@ -484,7 +347,7 @@ class MockLocationService : Service() {
                             )
 
                             delay(updateIntervalMs)
-                            updateNoiseSmooth()
+                            updateNoise()
 
                             distanceInSegment += currentSpeedMetersPerSec * (updateIntervalMs / 1000.0)
                         }
@@ -506,7 +369,7 @@ class MockLocationService : Service() {
                     while (mockControlState.value.isMocking) {
                         broadcastLocation(finalPoint, lastBroadcastLocation?.bearing ?: 0f, 0f)
                         delay(locationUpdateDelayState.value)
-                        updateNoiseSmooth()
+                        updateNoise()
                     }
                 }
 
@@ -608,7 +471,7 @@ class MockLocationService : Service() {
     }
 
     private fun handleError(e: Exception) {
-        if (e !is kotlinx.coroutines.CancellationException) {
+        if (e !is CancellationException) {
             serviceScope.launch(Dispatchers.Main) {
                 Toast.makeText(
                     this@MockLocationService,
@@ -642,19 +505,6 @@ class MockLocationService : Service() {
         mockJob?.cancelAndJoin()
         mockJob = null
         stopMockingInternal()
-    }
-
-    private fun createNotificationChannel() {
-        val channel = NotificationChannel(
-            CHANNEL_ID,
-            "Mock Location Service",
-            NotificationManager.IMPORTANCE_LOW
-        ).apply {
-            description = "Running location simulation in the background"
-        }
-
-        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.createNotificationChannel(channel)
     }
 
     override fun onBind(intent: Intent?): IBinder? {

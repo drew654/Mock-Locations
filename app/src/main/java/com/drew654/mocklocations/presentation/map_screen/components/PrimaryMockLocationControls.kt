@@ -1,6 +1,5 @@
 package com.drew654.mocklocations.presentation.map_screen.components
 
-import android.content.res.Configuration
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -9,11 +8,9 @@ import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.domain.model.MockControlState
 import com.drew654.mocklocations.domain.model.isAddPointEnabled
@@ -26,16 +23,17 @@ import com.drew654.mocklocations.domain.model.isStartEnabled
 import com.drew654.mocklocations.domain.model.isStartVisible
 import com.drew654.mocklocations.domain.model.isStopEnabled
 import com.drew654.mocklocations.domain.model.isStopVisible
-import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
+import com.drew654.mocklocations.presentation.ui.theme.DayNightPreviews
+import com.drew654.mocklocations.presentation.ui.theme.ThemePreview
 
 @Composable
 fun PrimaryMockLocationControls(
     mockControlState: MockControlState,
-    onStart: () -> Unit,
-    onStop: () -> Unit,
-    onTogglePause: () -> Unit,
-    onAddCrosshairsPoint: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onStart: () -> Unit = { },
+    onStop: () -> Unit = { },
+    onTogglePause: () -> Unit = { },
+    onAddCrosshairsPoint: () -> Unit = { }
 ) {
     Box(
         modifier = modifier
@@ -52,7 +50,7 @@ fun PrimaryMockLocationControls(
         ) {
             if (mockControlState.isAddPointVisible()) {
                 AddPointButton(
-                    onAddCrosshairsPoint = onAddCrosshairsPoint,
+                    onClick = onAddCrosshairsPoint,
                     enabled = mockControlState.isAddPointEnabled(),
                     modifier = Modifier.padding(end = 12.dp, bottom = 12.dp)
                 )
@@ -60,7 +58,7 @@ fun PrimaryMockLocationControls(
 
             if (mockControlState.isResumeVisible()) {
                 ResumeMockingButton(
-                    onTogglePause = onTogglePause,
+                    onClick = onTogglePause,
                     enabled = mockControlState.isResumeEnabled(),
                     modifier = Modifier.padding(end = 12.dp, bottom = 12.dp)
                 )
@@ -68,7 +66,7 @@ fun PrimaryMockLocationControls(
 
             if (mockControlState.isPauseVisible()) {
                 PauseMockingButton(
-                    onTogglePause = onTogglePause,
+                    onClick = onTogglePause,
                     enabled = mockControlState.isPauseEnabled(),
                     modifier = Modifier.padding(end = 12.dp, bottom = 12.dp)
                 )
@@ -76,7 +74,7 @@ fun PrimaryMockLocationControls(
 
             if (mockControlState.isStartVisible()) {
                 StartMockingButton(
-                    onStart = onStart,
+                    onClick = onStart,
                     enabled = mockControlState.isStartEnabled(),
                     modifier = Modifier.padding(bottom = 12.dp, end = 12.dp)
                 )
@@ -84,7 +82,7 @@ fun PrimaryMockLocationControls(
 
             if (mockControlState.isStopVisible()) {
                 StopMockingButton(
-                    onStop = onStop,
+                    onClick = onStop,
                     enabled = mockControlState.isStopEnabled(),
                     modifier = Modifier.padding(bottom = 12.dp, end = 12.dp)
                 )
@@ -93,26 +91,12 @@ fun PrimaryMockLocationControls(
     }
 }
 
-@Preview(
-    name = "Light Mode",
-    showBackground = true
-)
-@Preview(
-    name = "Dark Mode",
-    uiMode = Configuration.UI_MODE_NIGHT_YES,
-    showBackground = true
-)
+@DayNightPreviews
 @Composable
 private fun PrimaryMockLocationControlsPreview() {
-    MockLocationsTheme {
-        Surface {
-            PrimaryMockLocationControls(
-                mockControlState = MockControlState(),
-                onStart = { },
-                onStop = { },
-                onTogglePause = { },
-                onAddCrosshairsPoint = { }
-            )
-        }
+    ThemePreview {
+        PrimaryMockLocationControls(
+            mockControlState = MockControlState()
+        )
     }
 }

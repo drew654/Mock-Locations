@@ -1,6 +1,5 @@
 package com.drew654.mocklocations.presentation.map_screen.components
 
-import android.content.res.Configuration
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,7 +11,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -23,22 +21,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.presentation.NoRippleInteractionSource
-import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
+import com.drew654.mocklocations.presentation.ui.theme.DayNightPreviews
+import com.drew654.mocklocations.presentation.ui.theme.ThemePreview
 
 @Composable
 fun NamingRouteDialogBody(
     routeName: TextFieldValue,
-    onRouteNameChange: (TextFieldValue) -> Unit,
-    onBack: () -> Unit,
-    onConfirm: () -> Unit,
-    savedRoutes: List<LocationTarget.SavedRoute>
+    isSaveEnabled: Boolean,
+    onRouteNameChange: (TextFieldValue) -> Unit = { },
+    onConfirm: () -> Unit = { },
+    onBack: () -> Unit = { }
 ) {
     val focusManager = LocalFocusManager.current
     val focusRequester = remember { FocusRequester() }
@@ -66,7 +64,7 @@ fun NamingRouteDialogBody(
         OutlinedTextField(
             value = routeName,
             onValueChange = { onRouteNameChange(it) },
-            label = { Text("Route Name") },
+            label = { Text("Route name") },
             modifier = Modifier
                 .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
                 .fillMaxWidth()
@@ -99,37 +97,26 @@ fun NamingRouteDialogBody(
                 onClick = {
                     onConfirm()
                 },
-                modifier = Modifier.padding(8.dp),
-                enabled = routeName.text.isNotBlank() && savedRoutes.none { it.name == routeName.text }
+                modifier = Modifier
+                    .padding(8.dp)
+                    .testTag("save_route_name_button"),
+                enabled = isSaveEnabled
             ) {
-                Text(text = "Save Route")
+                Text(text = "Save route")
             }
         }
     }
 }
 
-@Preview(
-    name = "Light Mode",
-    showBackground = true
-)
-@Preview(
-    name = "Dark Mode",
-    uiMode = Configuration.UI_MODE_NIGHT_YES,
-    showBackground = true
-)
+@DayNightPreviews
 @Composable
 private fun NamingRouteDialogBodyPreview() {
-    MockLocationsTheme {
-        Surface {
-            Card {
-                NamingRouteDialogBody(
-                    routeName = TextFieldValue("Route 1"),
-                    onRouteNameChange = { },
-                    onBack = { },
-                    onConfirm = { },
-                    savedRoutes = emptyList()
-                )
-            }
+    ThemePreview {
+        Card {
+            NamingRouteDialogBody(
+                routeName = TextFieldValue("Route 1"),
+                isSaveEnabled = true
+            )
         }
     }
 }

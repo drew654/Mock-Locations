@@ -1,6 +1,5 @@
 package com.drew654.mocklocations.presentation.map_screen.components
 
-import android.content.res.Configuration
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,33 +12,32 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.RouteSegment
 import com.drew654.mocklocations.domain.model.SpeedUnit
-import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
+import com.drew654.mocklocations.presentation.ui.theme.DayNightPreviews
+import com.drew654.mocklocations.presentation.ui.theme.ThemePreview
 import com.google.android.gms.maps.model.LatLng
 
 @Composable
 fun RoutesListDialogBody(
     savedRoutes: List<LocationTarget.SavedRoute>,
-    onDismiss: () -> Unit,
-    locationTarget: LocationTarget,
-    onConfirm: () -> Unit,
-    onRouteLoaded: (LocationTarget.SavedRoute) -> Unit,
     selectedRoutes: List<LocationTarget.SavedRoute>,
-    onRouteSelected: (LocationTarget.SavedRoute) -> Unit,
-    onRouteDeselected: (LocationTarget.SavedRoute) -> Unit,
-    onClearSelectedRoutes: () -> Unit,
-    onDeleteSelectedRoutes: () -> Unit,
-    speedUnit: SpeedUnit
+    isSaveRouteEnabled: Boolean,
+    speedUnit: SpeedUnit,
+    onDismiss: () -> Unit = { },
+    onConfirm: () -> Unit = { },
+    onRouteLoaded: (LocationTarget.SavedRoute) -> Unit = { },
+    onRouteSelected: (LocationTarget.SavedRoute) -> Unit = { },
+    onRouteDeselected: (LocationTarget.SavedRoute) -> Unit = { },
+    onClearSelectedRoutes: () -> Unit = { },
+    onDeleteSelectedRoutes: () -> Unit = { }
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -106,9 +104,9 @@ fun RoutesListDialogBody(
                         onConfirm()
                     },
                     modifier = Modifier.padding(8.dp),
-                    enabled = locationTarget.isRoute()
+                    enabled = isSaveRouteEnabled
                 ) {
-                    Text(text = "Save Route")
+                    Text(text = "Save route")
                 }
             }
         } else {
@@ -129,22 +127,14 @@ fun RoutesListDialogBody(
                     modifier = Modifier.padding(8.dp),
                     enabled = selectedRoutes.isNotEmpty()
                 ) {
-                    Text(text = "Delete Selected")
+                    Text(text = "Delete selected")
                 }
             }
         }
     }
 }
 
-@Preview(
-    name = "Light Mode",
-    showBackground = true
-)
-@Preview(
-    name = "Dark Mode",
-    uiMode = Configuration.UI_MODE_NIGHT_YES,
-    showBackground = true
-)
+@DayNightPreviews
 @Composable
 private fun RoutesDialogBodyUnselectedPreview() {
     val savedRoutes = listOf(
@@ -172,45 +162,19 @@ private fun RoutesDialogBodyUnselectedPreview() {
             )
         )
     )
-    MockLocationsTheme {
-        Surface {
-            Card {
-                RoutesListDialogBody(
-                    savedRoutes = savedRoutes,
-                    onDismiss = { },
-                    locationTarget = LocationTarget.Route(
-                        routeSegments = listOf(
-                            RouteSegment(
-                                points = listOf(
-                                    LatLng(0.0, 0.0),
-                                    LatLng(0.0, 0.1)
-                                )
-                            )
-                        )
-                    ),
-                    onConfirm = { },
-                    onRouteLoaded = { },
-                    selectedRoutes = emptyList(),
-                    onRouteSelected = { },
-                    onRouteDeselected = { },
-                    onClearSelectedRoutes = { },
-                    onDeleteSelectedRoutes = { },
-                    speedUnit = SpeedUnit.MilesPerHour
-                )
-            }
+    ThemePreview {
+        Card {
+            RoutesListDialogBody(
+                savedRoutes = savedRoutes,
+                selectedRoutes = emptyList(),
+                speedUnit = SpeedUnit.MilesPerHour,
+                isSaveRouteEnabled = true
+            )
         }
     }
 }
 
-@Preview(
-    name = "Light Mode",
-    showBackground = true
-)
-@Preview(
-    name = "Dark Mode",
-    uiMode = Configuration.UI_MODE_NIGHT_YES,
-    showBackground = true
-)
+@DayNightPreviews
 @Composable
 private fun RoutesDialogBodySelectedPreview() {
     val savedRoutes = listOf(
@@ -238,32 +202,14 @@ private fun RoutesDialogBodySelectedPreview() {
             )
         )
     )
-    MockLocationsTheme {
-        Surface {
-            Card {
-                RoutesListDialogBody(
-                    savedRoutes = savedRoutes,
-                    onDismiss = { },
-                    locationTarget = LocationTarget.Route(
-                        routeSegments = listOf(
-                            RouteSegment(
-                                points = listOf(
-                                    LatLng(0.0, 0.0),
-                                    LatLng(0.0, 0.1)
-                                )
-                            )
-                        )
-                    ),
-                    onConfirm = { },
-                    onRouteLoaded = { },
-                    selectedRoutes = listOf(savedRoutes[0]),
-                    onRouteSelected = { },
-                    onRouteDeselected = { },
-                    onClearSelectedRoutes = { },
-                    onDeleteSelectedRoutes = { },
-                    speedUnit = SpeedUnit.MilesPerHour
-                )
-            }
+    ThemePreview {
+        Card {
+            RoutesListDialogBody(
+                savedRoutes = savedRoutes,
+                selectedRoutes = listOf(savedRoutes[0]),
+                speedUnit = SpeedUnit.MilesPerHour,
+                isSaveRouteEnabled = true
+            )
         }
     }
 }

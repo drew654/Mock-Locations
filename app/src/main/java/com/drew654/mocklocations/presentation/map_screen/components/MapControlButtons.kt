@@ -1,6 +1,5 @@
 package com.drew654.mocklocations.presentation.map_screen.components
 
-import android.content.res.Configuration
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -15,49 +14,41 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SmallFloatingActionButton
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import com.drew654.mocklocations.R
+import com.drew654.mocklocations.domain.model.CompassState
 import com.drew654.mocklocations.domain.model.MockControlState
 import com.drew654.mocklocations.domain.model.isAddPointVisible
-import com.drew654.mocklocations.presentation.Screen
-import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
-import com.google.maps.android.compose.CameraPositionState
+import com.drew654.mocklocations.presentation.ui.theme.DayNightDevicePreviews
+import com.drew654.mocklocations.presentation.ui.theme.DeviceThemePreview
 
 @Composable
 fun MapControlButtons(
-    navController: NavController,
     mockControlState: MockControlState,
-    cameraPositionState: CameraPositionState,
     controlsAreExpanded: Boolean,
-    setControlsAreExpanded: (Boolean) -> Unit,
-    onClearLocationTarget: () -> Unit,
-    onStart: () -> Unit,
-    onStop: () -> Unit,
-    onPopRouteSegment: () -> Unit,
-    onTogglePause: () -> Unit,
-    onSaveLocationTarget: () -> Unit,
-    isPaused: Boolean,
-    onAddCrosshairsPoint: () -> Unit,
-    onUserLocationFocus: () -> Unit,
-    setShowSearch: (Boolean) -> Unit,
     isShowingSearch: Boolean,
-    isCameraCurrentlyFollowingMockedLocation: Boolean,
-    crosshairsColor: Color
+    compassState: CompassState,
+    crosshairsColor: Color,
+    onStart: () -> Unit = { },
+    onStop: () -> Unit = { },
+    onTogglePause: () -> Unit = { },
+    onAddCrosshairsPoint: () -> Unit = { },
+    onPopRouteSegment: () -> Unit = { },
+    onClearLocationTarget: () -> Unit = { },
+    onSaveLocationTarget: () -> Unit = { },
+    setShowSearch: (Boolean) -> Unit = { },
+    setControlsAreExpanded: (Boolean) -> Unit = { },
+    onUserLocationFocus: () -> Unit = { },
+    onClickCompass: () -> Unit = { },
+    onSettingsClick: () -> Unit = { },
+    onZoomIn: () -> Unit = { },
+    onZoomOut: () -> Unit = { }
 ) {
-    val focusManager = LocalFocusManager.current
-    val scope = rememberCoroutineScope()
-
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -84,22 +75,25 @@ fun MapControlButtons(
                             onUserLocationFocus()
                         }
                     )
-                    if (cameraPositionState.position.bearing != 0f || cameraPositionState.position.tilt != 0f) {
+                    if (compassState.isVisible()) {
                         Spacer(Modifier.height(4.dp))
                         CompassButton(
-                            scope = scope,
-                            cameraPositionState = cameraPositionState
+                            bearing = { compassState.bearing() },
+                            onClick = { onClickCompass() }
                         )
                     }
                 }
                 Spacer(Modifier.weight(1f))
                 MapZoomButtons(
-                    cameraPositionState = cameraPositionState,
-                    scope = scope,
-                    isCameraCurrentlyFollowingMockedLocation = isCameraCurrentlyFollowingMockedLocation,
                     modifier = Modifier
                         .padding(12.dp)
-                        .padding(bottom = 32.dp)
+                        .padding(bottom = 32.dp),
+                    onZoomIn = {
+                        onZoomIn()
+                    },
+                    onZoomOut = {
+                        onZoomOut()
+                    }
                 )
             }
 
@@ -109,8 +103,7 @@ fun MapControlButtons(
             ) {
                 SmallFloatingActionButton(
                     onClick = {
-                        focusManager.clearFocus()
-                        navController.navigate(Screen.Settings.route)
+                        onSettingsClick()
                     },
                     modifier = Modifier
                         .align(Alignment.End)
@@ -136,11 +129,7 @@ fun MapControlButtons(
                     onClearLocationTarget()
                 },
                 onStart = {
-                    if (isPaused) {
-                        onTogglePause()
-                    } else {
-                        onStart()
-                    }
+                    onStart()
                 },
                 onStop = {
                     onStop()
@@ -177,39 +166,16 @@ fun MapControlButtons(
     }
 }
 
-@Preview(
-    name = "Light Mode",
-    showBackground = true
-)
-@Preview(
-    name = "Dark Mode",
-    uiMode = Configuration.UI_MODE_NIGHT_YES,
-    showBackground = true
-)
+@DayNightDevicePreviews
 @Composable
 fun MapControlButtonsPreview() {
-    MockLocationsTheme {
-        Surface {
-            MapControlButtons(
-                navController = NavController(LocalContext.current),
-                mockControlState = MockControlState(),
-                cameraPositionState = CameraPositionState(),
-                controlsAreExpanded = false,
-                setControlsAreExpanded = { },
-                onClearLocationTarget = { },
-                onStart = { },
-                onStop = { },
-                onPopRouteSegment = { },
-                onTogglePause = { },
-                onSaveLocationTarget = { },
-                isPaused = false,
-                onAddCrosshairsPoint = { },
-                onUserLocationFocus = { },
-                setShowSearch = { },
-                isShowingSearch = false,
-                isCameraCurrentlyFollowingMockedLocation = false,
-                crosshairsColor = MaterialTheme.colorScheme.onSurface
-            )
-        }
+    DeviceThemePreview {
+        MapControlButtons(
+            mockControlState = MockControlState(),
+            controlsAreExpanded = false,
+            isShowingSearch = false,
+            crosshairsColor = MaterialTheme.colorScheme.onSurface,
+            compassState = CompassState()
+        )
     }
 }

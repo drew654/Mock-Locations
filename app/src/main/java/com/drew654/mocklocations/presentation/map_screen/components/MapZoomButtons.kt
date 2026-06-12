@@ -1,6 +1,5 @@
 package com.drew654.mocklocations.presentation.map_screen.components
 
-import android.content.res.Configuration
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.size
@@ -13,27 +12,18 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.R
-import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.maps.android.compose.CameraPositionState
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import com.drew654.mocklocations.presentation.ui.theme.DayNightPreviews
+import com.drew654.mocklocations.presentation.ui.theme.ThemePreview
 
 @Composable
 fun MapZoomButtons(
-    cameraPositionState: CameraPositionState,
-    scope: CoroutineScope,
-    isCameraCurrentlyFollowingMockedLocation: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onZoomIn: () -> Unit = { },
+    onZoomOut: () -> Unit = { }
 ) {
-    val focusManager = LocalFocusManager.current
-
     Surface(
         modifier = modifier,
         shape = MaterialTheme.shapes.medium,
@@ -51,20 +41,13 @@ fun MapZoomButtons(
         ) {
             IconButton(
                 onClick = {
-                    focusManager.clearFocus()
-                    scope.launch {
-                        if (isCameraCurrentlyFollowingMockedLocation) {
-                            cameraPositionState.move(CameraUpdateFactory.zoomIn())
-                        } else {
-                            cameraPositionState.animate(CameraUpdateFactory.zoomIn())
-                        }
-                    }
+                    onZoomIn()
                 },
                 modifier = Modifier.size(40.dp)
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.baseline_add_24),
-                    contentDescription = "Zoom In",
+                    contentDescription = "Zoom in",
                     tint = MaterialTheme.colorScheme.onSurface
                 )
             }
@@ -77,20 +60,13 @@ fun MapZoomButtons(
 
             IconButton(
                 onClick = {
-                    focusManager.clearFocus()
-                    scope.launch {
-                        if (isCameraCurrentlyFollowingMockedLocation) {
-                            cameraPositionState.move(CameraUpdateFactory.zoomOut())
-                        } else {
-                            cameraPositionState.animate(CameraUpdateFactory.zoomOut())
-                        }
-                    }
+                    onZoomOut()
                 },
                 modifier = Modifier.size(40.dp)
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.baseline_remove_24),
-                    contentDescription = "Zoom Out",
+                    contentDescription = "Zoom out",
                     tint = MaterialTheme.colorScheme.onSurface
                 )
             }
@@ -98,24 +74,10 @@ fun MapZoomButtons(
     }
 }
 
-@Preview(
-    name = "Light Mode",
-    showBackground = true
-)
-@Preview(
-    name = "Dark Mode",
-    uiMode = Configuration.UI_MODE_NIGHT_YES,
-    showBackground = true
-)
+@DayNightPreviews
 @Composable
 fun MapZoomButtonsPreview() {
-    MockLocationsTheme {
-        Surface {
-            MapZoomButtons(
-                cameraPositionState = CameraPositionState(),
-                scope = CoroutineScope(Dispatchers.Main),
-                isCameraCurrentlyFollowingMockedLocation = false
-            )
-        }
+    ThemePreview {
+        MapZoomButtons()
     }
 }

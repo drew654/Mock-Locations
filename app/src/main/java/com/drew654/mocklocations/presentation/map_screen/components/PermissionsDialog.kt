@@ -1,28 +1,24 @@
 package com.drew654.mocklocations.presentation.map_screen.components
 
-import android.content.Context
 import android.content.Intent
-import android.content.res.Configuration
 import android.net.Uri
 import android.provider.Settings
 import android.util.Log
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import com.drew654.mocklocations.domain.model.Permission
-import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
+import com.drew654.mocklocations.presentation.ui.theme.DayNightDevicePreviews
+import com.drew654.mocklocations.presentation.ui.theme.DeviceThemePreview
 
 @Composable
 fun PermissionsDialog(
     permission: Permission,
-    setShowMockLocationDialog: (Boolean) -> Unit,
-    onDismiss: () -> Unit,
-    context: Context
+    onDismiss: () -> Unit = { }
 ) {
+    val context = LocalContext.current
     val (bodyText, buttonText, titleText) = when (permission) {
         is Permission.FineLocation -> Triple(
             "To use this app, you must grant \"Fine Location\" permission in App Settings.",
@@ -90,33 +86,19 @@ fun PermissionsDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = { setShowMockLocationDialog(false) }) {
+            TextButton(onClick = { onDismiss() }) {
                 Text("Cancel")
             }
         }
     )
 }
 
-@Preview(
-    name = "Light Mode",
-    showBackground = true
-)
-@Preview(
-    name = "Dark Mode",
-    uiMode = Configuration.UI_MODE_NIGHT_YES,
-    showBackground = true
-)
+@DayNightDevicePreviews
 @Composable
 private fun PermissionsDialogPreview() {
-    val context = LocalContext.current
-    MockLocationsTheme {
-        Surface {
-            PermissionsDialog(
-                permission = Permission.FineLocation,
-                setShowMockLocationDialog = { },
-                onDismiss = { },
-                context = context
-            )
-        }
+    DeviceThemePreview {
+        PermissionsDialog(
+            permission = Permission.FineLocation
+        )
     }
 }

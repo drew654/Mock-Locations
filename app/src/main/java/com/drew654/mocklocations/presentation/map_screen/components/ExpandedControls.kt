@@ -1,6 +1,5 @@
 package com.drew654.mocklocations.presentation.map_screen.components
 
-import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -11,28 +10,24 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.drew654.mocklocations.domain.model.SpeedUnit
+import com.drew654.mocklocations.domain.model.ExpandedControlsState
 import com.drew654.mocklocations.domain.model.SpeedUnitValue
-import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
+import com.drew654.mocklocations.presentation.ui.theme.DayNightPreviews
+import com.drew654.mocklocations.presentation.ui.theme.ThemePreview
 
 @Composable
 fun ExpandedControls(
-    isExpanded: Boolean,
-    speedUnitValue: SpeedUnitValue,
-    onSpeedChanged: (Double) -> Unit,
-    onSpeedChangeFinished: (SpeedUnitValue) -> Unit,
-    sliderLowerEnd: Int,
-    sliderUpperEnd: Int
+    state: ExpandedControlsState = ExpandedControlsState(),
+    onSpeedChanged: (Double) -> Unit = { },
+    onSpeedChangeFinished: (SpeedUnitValue) -> Unit = { }
 ) {
-    if (isExpanded) {
+    if (state.isExpanded) {
         Row(
             modifier = Modifier
                 .background(color = MaterialTheme.colorScheme.surfaceContainerHigh)
@@ -53,14 +48,14 @@ fun ExpandedControls(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "${speedUnitValue.value.toInt()}",
+                        text = "${state.speedUnitValue.value.toInt()}",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.weight(1f, fill = false),
                         overflow = TextOverflow.Ellipsis,
                         maxLines = 1
                     )
                     Text(
-                        text = " ${speedUnitValue.speedUnit.name}",
+                        text = " ${state.speedUnitValue.speedUnit.name}",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1
                     )
@@ -68,7 +63,7 @@ fun ExpandedControls(
             }
             Spacer(modifier = Modifier.weight(1f))
             Slider(
-                value = speedUnitValue.value.toFloat(),
+                value = state.speedUnitValue.value.toFloat(),
                 onValueChange = {
                     onSpeedChanged(it.toDouble())
                 },
@@ -76,38 +71,22 @@ fun ExpandedControls(
                     .widthIn(max = 300.dp)
                     .fillMaxWidth(),
                 onValueChangeFinished = {
-                    onSpeedChangeFinished(speedUnitValue)
+                    onSpeedChangeFinished(state.speedUnitValue)
                 },
-                valueRange = sliderLowerEnd.toFloat()..sliderUpperEnd.toFloat()
+                valueRange = state.speedSliderLowerEnd.toFloat()..state.speedSliderUpperEnd.toFloat()
             )
         }
     }
 }
 
-@Preview(
-    name = "Light Mode",
-    showBackground = true
-)
-@Preview(
-    name = "Dark Mode",
-    uiMode = Configuration.UI_MODE_NIGHT_YES,
-    showBackground = true
-)
+@DayNightPreviews
 @Composable
 private fun ExpandedControlsPreview() {
-    MockLocationsTheme {
-        Surface {
-            ExpandedControls(
-                isExpanded = true,
-                speedUnitValue = SpeedUnitValue(
-                    value = 30.0,
-                    speedUnit = SpeedUnit.MilesPerHour
-                ),
-                onSpeedChanged = { },
-                onSpeedChangeFinished = { },
-                0,
-                100
+    ThemePreview {
+        ExpandedControls(
+            state = ExpandedControlsState(
+                isExpanded = true
             )
-        }
+        )
     }
 }

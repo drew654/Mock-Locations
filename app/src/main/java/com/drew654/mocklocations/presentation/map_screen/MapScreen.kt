@@ -18,7 +18,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -30,30 +29,32 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
-import com.drew654.mocklocations.R
+import com.drew654.mocklocations.domain.model.CompassState
 import com.drew654.mocklocations.domain.model.LocationTarget
+import com.drew654.mocklocations.domain.model.MapState
 import com.drew654.mocklocations.domain.model.Permission
+import com.drew654.mocklocations.domain.model.SpeedUnitValue
 import com.drew654.mocklocations.domain.model.isGranted
 import com.drew654.mocklocations.domain.model.isLongPressAddPointEnabled
 import com.drew654.mocklocations.presentation.MockLocationsViewModel
 import com.drew654.mocklocations.presentation.NoRippleInteractionSource
+import com.drew654.mocklocations.presentation.Screen
 import com.drew654.mocklocations.presentation.map_screen.components.ExpandedControls
 import com.drew654.mocklocations.presentation.map_screen.components.MapControlButtons
 import com.drew654.mocklocations.presentation.map_screen.components.PermissionsDialog
 import com.drew654.mocklocations.presentation.map_screen.components.SavedRoutesDialog
 import com.drew654.mocklocations.presentation.map_screen.components.SearchAddressSection
+import com.drew654.mocklocations.presentation.ui.theme.DayNightDevicePreviews
+import com.drew654.mocklocations.presentation.ui.theme.DeviceThemePreview
+import com.drew654.mocklocations.util.MapUtils
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.LatLngBounds
-import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.maps.android.compose.CameraMoveStartedReason
 import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.GoogleMap
-import com.google.maps.android.compose.MapProperties
-import com.google.maps.android.compose.MapType
-import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.Polyline
@@ -69,63 +70,29 @@ fun MapScreen(
 ) {
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
-    val systemInDarkTheme = isSystemInDarkTheme()
-    val scope = rememberCoroutineScope()
-    val mockControlState by viewModel.mockControlState.collectAsState()
-    val locationTarget = mockControlState.activeLocationTarget
-    val isMocking = mockControlState.isMocking
-    val isPaused = mockControlState.isPaused
-    val isUsingCrosshairs = mockControlState.isUsingCrosshairs
-    val speedUnitValue by viewModel.speedUnitValue.collectAsState()
-    var hasLocationPermission by remember {
-        mutableStateOf(Permission.FineLocation.isGranted(context))
-    }
-    var permissionToBeRequested by remember { mutableStateOf<Permission?>(null) }
-    val mapStyle by viewModel.mapStyle.collectAsState()
-    val mapProperties = MapProperties(
-        isMyLocationEnabled = hasLocationPermission,
-        isBuildingEnabled = true,
-        mapStyleOptions = MapStyleOptions.loadRawResourceStyle(
-            context,
-            mapStyle?.resourceId
-                ?: if (systemInDarkTheme) {
-                    R.raw.map_style_night
-                } else {
-                    R.raw.map_style_standard
-                }
-        ),
-        mapType = mapStyle?.mapType ?: MapType.NORMAL
-    )
-    val mapUiSettings = MapUiSettings(
-        compassEnabled = false,
-        myLocationButtonEnabled = false,
-        zoomControlsEnabled = false
-    )
-    val savedCameraPosition by viewModel.cameraPosition.collectAsState()
-    var hasRestoredCamera by remember { mutableStateOf(false) }
-    val isMapCenteredAfterLaunch by viewModel.isMapCenteredAfterLaunch.collectAsState()
-    val cameraPositionState = rememberCameraPositionState()
     val lifecycleOwner = LocalLifecycleOwner.current
-    var isShowingSavedRoutesDialog by rememberSaveable { mutableStateOf(false) }
-    val savedRoutes by viewModel.savedRoutes.collectAsState()
-    val controlsAreExpanded by viewModel.controlsAreExpanded.collectAsState()
-    var isShowingSearch by rememberSaveable { mutableStateOf(false) }
+    val isSystemInDarkTheme = isSystemInDarkTheme()
+    val scope = rememberCoroutineScope()
+    val cameraPositionState = rememberCameraPositionState()
+    val state by viewModel.mapState.collectAsState()
     val permissionsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { result ->
         val locationGranted = result[Permission.FineLocation.permission] ?: false
-        hasLocationPermission = locationGranted || Permission.FineLocation.isGranted(context)
+        val hasLocationPermission = locationGranted || Permission.FineLocation.isGranted(context)
+        viewModel.updateMapState { it.copy(hasLocationPermission = hasLocationPermission) }
         if (!hasLocationPermission) {
-            permissionToBeRequested = Permission.FineLocation
+            viewModel.updateMapState { it.copy(permissionToBeRequested = Permission.FineLocation) }
         }
     }
-    var isNamingRoute by rememberSaveable { mutableStateOf(false) }
-    val speedSliderLowerEnd by viewModel.speedSliderLowerEnd.collectAsState()
-    val speedSliderUpperEnd by viewModel.speedSliderUpperEnd.collectAsState()
-    val isCameraFollowingMockedLocation by viewModel.isCameraFollowingMockedLocation.collectAsState()
-    val isCameraCurrentlyFollowingMockedLocation by viewModel.isCameraCurrentlyFollowingMockedLocation.collectAsState()
-    val currentMockedLocation by viewModel.currentMockedLocation.collectAsState()
-    val shouldFocusSearchBar by viewModel.shouldFocusSearchBar.collectAsState()
+
+    var isInitialized by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        if (!isInitialized) {
+            viewModel.refreshMapState(context = context, isSystemInDarkTheme = isSystemInDarkTheme)
+            isInitialized = true
+        }
+    }
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -135,24 +102,25 @@ fun MapScreen(
                 )
             }
             if (event == Lifecycle.Event.ON_RESUME || event == Lifecycle.Event.ON_START) {
+                viewModel.refreshMapState(context = context, isSystemInDarkTheme)
                 if (
-                    permissionToBeRequested == Permission.MockLocations
+                    state.permissionToBeRequested == Permission.MockLocations
                     && Permission.MockLocations.isGranted(context)
                 ) {
-                    permissionToBeRequested = null
+                    viewModel.updateMapState { it.copy(permissionToBeRequested = null) }
                 }
                 if (
-                    permissionToBeRequested == Permission.DeveloperOptions
+                    state.permissionToBeRequested == Permission.DeveloperOptions
                     && Permission.DeveloperOptions.isGranted(context)
                 ) {
-                    permissionToBeRequested = null
+                    viewModel.updateMapState { it.copy(permissionToBeRequested = null) }
                 }
                 if (
-                    permissionToBeRequested == Permission.FineLocation
+                    state.permissionToBeRequested == Permission.FineLocation
                     && Permission.FineLocation.isGranted(context)
                 ) {
-                    permissionToBeRequested = null
-                    hasLocationPermission = true
+                    viewModel.updateMapState { it.copy(permissionToBeRequested = null) }
+                    viewModel.updateMapState { it.copy(hasLocationPermission = true) }
                 }
             }
         }
@@ -162,18 +130,15 @@ fun MapScreen(
         }
     }
 
-    LaunchedEffect(savedCameraPosition) {
-        if (!hasRestoredCamera && savedCameraPosition != null) {
+    LaunchedEffect(state.savedCameraPosition) {
+        if (!state.hasRestoredCamera && state.savedCameraPosition != null) {
             cameraPositionState.move(
                 CameraUpdateFactory.newLatLngZoom(
-                    LatLng(
-                        savedCameraPosition!!.latitude,
-                        savedCameraPosition!!.longitude
-                    ),
-                    savedCameraPosition!!.zoom
+                    state.savedCameraPosition!!.toLatLng(),
+                    state.savedCameraPosition!!.zoom
                 )
             )
-            hasRestoredCamera = true
+            viewModel.updateMapState { it.copy(hasRestoredCamera = true) }
         }
     }
 
@@ -182,6 +147,7 @@ fun MapScreen(
             cameraPositionState.isMoving to cameraPositionState.cameraMoveStartedReason
         }.collect { (isMoving, reason) ->
             if (isMoving && reason == CameraMoveStartedReason.GESTURE) {
+                viewModel.updateMapState { it.copy(isCameraCurrentlyFollowingMockedLocation = false) }
                 viewModel.setIsCameraCurrentlyFollowingMockedLocation(false)
             }
 
@@ -191,28 +157,28 @@ fun MapScreen(
         }
     }
 
-    LaunchedEffect(currentMockedLocation, isCameraFollowingMockedLocation) {
-        if (isMocking && isCameraCurrentlyFollowingMockedLocation && currentMockedLocation != null) {
+    LaunchedEffect(state.currentMockedLocation, state.isCameraFollowingMockedLocation) {
+        if (state.mockControlState.isMocking && state.isCameraCurrentlyFollowingMockedLocation && state.currentMockedLocation != null) {
             cameraPositionState.move(
-                CameraUpdateFactory.newLatLng(currentMockedLocation!!.latLng)
+                CameraUpdateFactory.newLatLng(state.currentMockedLocation!!.latLng)
             )
         }
     }
 
-    LaunchedEffect(Unit) {
-        if (!isMapCenteredAfterLaunch) {
-            if (mockControlState.activeLocationTarget !is LocationTarget.Empty) {
+    LaunchedEffect(state.hasLocationPermission, state.mockControlState.activeLocationTarget) {
+        if (!state.isMapCenteredAfterLaunch) {
+            if (state.mockControlState.activeLocationTarget !is LocationTarget.Empty) {
                 snapshotFlow { cameraPositionState.projection }
                     .filterNotNull()
                     .first()
 
                 try {
-                    focusMapToLocationTarget(mockControlState.activeLocationTarget, cameraPositionState)
+                    MapUtils.focusMapToLocationTarget(state.mockControlState.activeLocationTarget, cameraPositionState)
                     viewModel.setMapIsCenteredAfterLaunch()
                 } catch (e: Exception) {
                     Log.e("MapScreen", "Error centering map to active location target", e)
                 }
-            } else if (hasLocationPermission) {
+            } else if (state.hasLocationPermission) {
                 val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
 
                 try {
@@ -234,6 +200,240 @@ fun MapScreen(
         }
     }
 
+    MapContent(
+        state = state,
+        onSearchAddress = { address ->
+            scope.launch {
+                val latLng = MapUtils.geocodeAddress(context, address)
+                if (latLng == null) {
+                    Toast.makeText(context, "Address not found", Toast.LENGTH_SHORT).show()
+                } else {
+                    cameraPositionState.animate(
+                        CameraUpdateFactory.newLatLngZoom(latLng, 15f)
+                    )
+                }
+            }
+        },
+        cameraPositionState = cameraPositionState,
+        onMapLongClick = { point ->
+            if (state.mockControlState.isLongPressAddPointEnabled()) {
+                scope.launch {
+                    viewModel.pushRouteSegment(point)
+                }
+            }
+        },
+        setControlsAreExpanded = {
+            viewModel.setControlsAreExpanded(it)
+        },
+        onClearLocationTarget = {
+            viewModel.clearLocationTarget()
+        },
+        onStart = {
+            val permissionsToRequest = buildList {
+                if (!Permission.FineLocation.isGranted(context)) {
+                    add(Permission.FineLocation.permission)
+                }
+
+                if (
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+                    && !Permission.PostNotifications.isGranted(context)
+                ) {
+                    add(Permission.PostNotifications.permission)
+                }
+            }
+
+            if (permissionsToRequest.contains(Manifest.permission.ACCESS_FINE_LOCATION)) {
+                permissionsLauncher.launch(permissionsToRequest.toTypedArray())
+                return@MapContent
+            }
+
+            if (!Permission.DeveloperOptions.isGranted(context)) {
+                viewModel.updateMapState { it.copy(permissionToBeRequested = Permission.DeveloperOptions) }
+                return@MapContent
+            }
+
+            if (!Permission.MockLocations.isGranted(context)) {
+                viewModel.updateMapState { it.copy(permissionToBeRequested = Permission.MockLocations) }
+                return@MapContent
+            }
+
+            if (state.isCameraFollowingMockedLocation && state.mockControlState.activeLocationTarget.isRoute()) {
+                viewModel.updateMapState { it.copy(isCameraCurrentlyFollowingMockedLocation = true) }
+                viewModel.setIsCameraCurrentlyFollowingMockedLocation(true)
+                cameraPositionState.move(CameraUpdateFactory.zoomTo(15f))
+            }
+            scope.launch {
+                viewModel.startMockLocation(
+                    context = context,
+                    pushPoint = if (state.mockControlState.isUsingCrosshairs && state.mockControlState.activeLocationTarget is LocationTarget.Empty) cameraPositionState.position.target else null
+                )
+            }
+        },
+        onStop = {
+            viewModel.stopMockLocation()
+        },
+        onPopRouteSegment = {
+            viewModel.popRouteSegment()
+        },
+        onTogglePause = {
+            viewModel.togglePause()
+        },
+        onSaveLocationTarget = {
+            viewModel.updateMapState { it.copy(isShowingSavedRoutesDialog = true) }
+            if (state.mockControlState.isMocking) {
+                viewModel.updateMapState { it.copy(isNamingRoute = true) }
+            }
+        },
+        onAddCrosshairsPoint = {
+            scope.launch {
+                viewModel.pushRouteSegment(cameraPositionState.position.target)
+            }
+        },
+        onUserLocationFocus = {
+            if (!Permission.FineLocation.isGranted(context)) {
+                permissionsLauncher.launch(arrayOf(Permission.FineLocation.permission))
+                return@MapContent
+            }
+
+            if (state.isCameraFollowingMockedLocation) {
+                viewModel.updateMapState { it.copy(isCameraCurrentlyFollowingMockedLocation = true) }
+                viewModel.setIsCameraCurrentlyFollowingMockedLocation(true)
+                cameraPositionState.move(CameraUpdateFactory.zoomTo(15f))
+            }
+            scope.launch {
+                val fusedLocationClient =
+                    LocationServices.getFusedLocationProviderClient(context)
+                try {
+                    fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                        if (location != null) {
+                            scope.launch {
+                                cameraPositionState.animate(
+                                    CameraUpdateFactory.newLatLngZoom(
+                                        LatLng(location.latitude, location.longitude),
+                                        15f
+                                    )
+                                )
+                            }
+                        }
+                    }
+                } catch (e: SecurityException) {
+                    Log.e("MapScreen", "Failed to get user location", e)
+                }
+            }
+        },
+        onShowSearch = { newValue ->
+            viewModel.setShouldFocusSearchBar(newValue)
+            viewModel.updateMapState { it.copy(isShowingSearch = newValue) }
+        },
+        onSpeedChanged = { newSpeed ->
+            val oldValue = state.expandedControlsState.speedUnitValue
+            viewModel.updateExpandedControlsState { it.copy(speedUnitValue = oldValue.copy(value = newSpeed)) }
+        },
+        onSpeedChangeFinished = {
+            viewModel.saveSpeedUnitValue(state.expandedControlsState.speedUnitValue)
+        },
+        onSetIsNamingRoute = { newValue ->
+            viewModel.updateMapState { it.copy(isNamingRoute = newValue) }
+        },
+        onDismissSavedRouteDialog = {
+            viewModel.updateMapState { it.copy(isShowingSavedRoutesDialog = false) }
+        },
+        onRouteSaved = { name ->
+            viewModel.saveCurrentRoute(name)
+        },
+        onRouteLoaded = { savedRoute ->
+            viewModel.loadSavedRoute(savedRoute)
+            scope.launch {
+                MapUtils.focusMapToLocationTarget(savedRoute, cameraPositionState)
+            }
+        },
+        onRouteDeleted = { savedRoute ->
+            viewModel.deleteSavedRoute(savedRoute)
+        },
+        onDismissPermissionsDialog = {
+            viewModel.updateMapState { it.copy(permissionToBeRequested = null) }
+        },
+        onClickCompass = {
+            scope.launch {
+                val currentPos = cameraPositionState.position
+                cameraPositionState.animate(
+                    CameraUpdateFactory.newCameraPosition(
+                        CameraPosition.Builder()
+                            .target(currentPos.target)
+                            .zoom(currentPos.zoom)
+                            .bearing(0f)
+                            .tilt(0f)
+                            .build()
+                    )
+                )
+            }
+        },
+        compassState = CompassState(
+            bearing = { cameraPositionState.position.bearing },
+            tilt = { cameraPositionState.position.tilt }
+        ),
+        onSettingsClick = {
+            focusManager.clearFocus()
+            navController.navigate(Screen.Settings.route)
+        },
+        onZoomIn = {
+            focusManager.clearFocus()
+            scope.launch {
+                if (state.isCameraCurrentlyFollowingMockedLocation) {
+                    cameraPositionState.move(CameraUpdateFactory.zoomIn())
+                } else {
+                    cameraPositionState.animate(CameraUpdateFactory.zoomIn())
+                }
+            }
+        },
+        onZoomOut = {
+            focusManager.clearFocus()
+            scope.launch {
+                if (state.isCameraCurrentlyFollowingMockedLocation) {
+                    cameraPositionState.move(CameraUpdateFactory.zoomOut())
+                } else {
+                    cameraPositionState.animate(CameraUpdateFactory.zoomOut())
+                }
+            }
+        }
+    )
+}
+
+@Composable
+internal fun MapContent(
+    state: MapState,
+    cameraPositionState: CameraPositionState,
+    compassState: CompassState,
+    onSearchAddress: (String) -> Unit = { },
+    onMapLongClick: (LatLng) -> Unit = { },
+    setControlsAreExpanded: (Boolean) -> Unit = { },
+    onClearLocationTarget: () -> Unit = { },
+    onStart: () -> Unit = { },
+    onStop: () -> Unit = { },
+    onPopRouteSegment: () -> Unit = { },
+    onTogglePause: () -> Unit = { },
+    onSaveLocationTarget: () -> Unit = { },
+    onAddCrosshairsPoint: () -> Unit = { },
+    onUserLocationFocus: () -> Unit = { },
+    onShowSearch: (Boolean) -> Unit = { },
+    onSpeedChanged: (Double) -> Unit = { },
+    onSpeedChangeFinished: (SpeedUnitValue) -> Unit = { },
+    onSetIsNamingRoute: (Boolean) -> Unit = { },
+    onDismissSavedRouteDialog: () -> Unit = { },
+    onRouteSaved: (String) -> Unit = { },
+    onRouteLoaded: (LocationTarget.SavedRoute) -> Unit = { },
+    onRouteDeleted: (LocationTarget.SavedRoute) -> Unit = { },
+    onDismissPermissionsDialog: () -> Unit = { },
+    onClickCompass: () -> Unit = { },
+    onSettingsClick: () -> Unit = { },
+    onZoomIn: () -> Unit = { },
+    onZoomOut: () -> Unit = { }
+) {
+    val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
+    val activeLocationTarget = state.mockControlState.activeLocationTarget
+    val isMocking = state.mockControlState.isMocking
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -245,21 +445,12 @@ fun MapScreen(
             }
     ) {
         Column {
-            if (isShowingSearch) {
+            if (state.isShowingSearch) {
                 SearchAddressSection(
                     onSearchAddress = { address ->
-                        scope.launch {
-                            val latLng = viewModel.geocodeAddress(context, address)
-                            if (latLng == null) {
-                                Toast.makeText(context, "Address not found", Toast.LENGTH_SHORT).show()
-                            } else {
-                                cameraPositionState.animate(
-                                    CameraUpdateFactory.newLatLngZoom(latLng, 15f)
-                                )
-                            }
-                        }
+                        onSearchAddress(address)
                     },
-                    shouldFocusSearchBar = shouldFocusSearchBar
+                    shouldFocusSearchBar = state.shouldFocusSearchBar
                 )
             }
             Box(
@@ -268,45 +459,31 @@ fun MapScreen(
                 GoogleMap(
                     modifier = Modifier.fillMaxSize(),
                     cameraPositionState = cameraPositionState,
-                    properties = mapProperties,
-                    uiSettings = mapUiSettings,
+                    properties = state.mapProperties,
+                    uiSettings = state.mapUiSettings,
                     onMapClick = {
                         focusManager.clearFocus()
                     },
-                    onMapLongClick = {
+                    onMapLongClick = { point ->
                         focusManager.clearFocus()
-                        if (mockControlState.isLongPressAddPointEnabled()) {
-                            scope.launch {
-                                viewModel.pushRouteSegment(it)
-                            }
-                        }
+                        onMapLongClick(point)
                     }
                 ) {
-                    if (locationTarget !is LocationTarget.Empty) {
+                    if (activeLocationTarget.isRoute()) {
                         Polyline(
-                            points = locationTarget.getAllPoints().map {
-                                LatLng(
-                                    it.latitude,
-                                    it.longitude
-                                )
-                            },
-                            color = mapStyle?.polyLineStroke ?: MaterialTheme.colorScheme.onBackground,
+                            points = activeLocationTarget.getAllPoints(),
+                            color = state.mapStyle?.polyLineStroke ?: MaterialTheme.colorScheme.onBackground,
                             width = 8f * context.resources.displayMetrics.density
                         )
                     }
 
-                    locationTarget.routeSegments.forEachIndexed { index, routeSegment ->
+                    activeLocationTarget.routeSegments.forEachIndexed { index, routeSegment ->
                         Marker(
-                            state = MarkerState(
-                                position = LatLng(
-                                    routeSegment.getMapMarkerPoint().latitude,
-                                    routeSegment.getMapMarkerPoint().longitude
-                                )
-                            ),
+                            state = MarkerState(position = routeSegment.getMapMarkerPoint()),
                             icon = BitmapDescriptorFactory.defaultMarker(
-                                getMarkerHue(
+                                MapUtils.getMarkerHue(
                                     index,
-                                    locationTarget.routeSegments.size
+                                    activeLocationTarget.routeSegments.size
                                 )
                             ),
                             snippet = "Lat: ${routeSegment.getMapMarkerPoint().latitude}, Lng: ${routeSegment.getMapMarkerPoint().longitude}",
@@ -318,193 +495,107 @@ fun MapScreen(
                     }
                 }
                 MapControlButtons(
-                    navController = navController,
-                    mockControlState = mockControlState,
-                    cameraPositionState = cameraPositionState,
-                    controlsAreExpanded = controlsAreExpanded,
+                    mockControlState = state.mockControlState,
+                    controlsAreExpanded = state.expandedControlsState.isExpanded,
                     setControlsAreExpanded = {
-                        viewModel.setControlsAreExpanded(it)
+                        setControlsAreExpanded(it)
                     },
                     onClearLocationTarget = {
-                        viewModel.clearLocationTarget()
+                        onClearLocationTarget()
                     },
                     onStart = {
-                        val permissionsToRequest = buildList {
-                            if (!Permission.FineLocation.isGranted(context)) {
-                                add(Permission.FineLocation.permission)
-                            }
-
-                            if (
-                                Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
-                                && !Permission.PostNotifications.isGranted(context)
-                            ) {
-                                add(Permission.PostNotifications.permission)
-                            }
-                        }
-
-                        if (permissionsToRequest.contains(Manifest.permission.ACCESS_FINE_LOCATION)) {
-                            permissionsLauncher.launch(permissionsToRequest.toTypedArray())
-                            return@MapControlButtons
-                        }
-
-                        if (!Permission.DeveloperOptions.isGranted(context)) {
-                            permissionToBeRequested = Permission.DeveloperOptions
-                            return@MapControlButtons
-                        }
-
-                        if (!Permission.MockLocations.isGranted(context)) {
-                            permissionToBeRequested = Permission.MockLocations
-                            return@MapControlButtons
-                        }
-
-                        if (isCameraFollowingMockedLocation && locationTarget.isRoute()) {
-                            viewModel.setIsCameraCurrentlyFollowingMockedLocation(true)
-                            cameraPositionState.move(CameraUpdateFactory.zoomTo(15f))
-                        }
-                        scope.launch {
-                            viewModel.startMockLocation(
-                                context = context,
-                                pushPoint = if (isUsingCrosshairs && locationTarget is LocationTarget.Empty) cameraPositionState.position.target else null
-                            )
-                        }
+                        onStart()
                     },
                     onStop = {
-                        viewModel.stopMockLocation()
+                        onStop()
                     },
                     onPopRouteSegment = {
-                        viewModel.popRouteSegment()
+                        onPopRouteSegment()
                     },
                     onTogglePause = {
-                        viewModel.togglePause()
+                        onTogglePause()
                     },
                     onSaveLocationTarget = {
-                        isShowingSavedRoutesDialog = true
-                        if (isMocking) {
-                            isNamingRoute = true
-                        }
+                        onSaveLocationTarget()
                     },
-                    isPaused = isPaused,
                     onAddCrosshairsPoint = {
-                        scope.launch {
-                            viewModel.pushRouteSegment(cameraPositionState.position.target)
-                        }
+                        onAddCrosshairsPoint()
                     },
                     onUserLocationFocus = {
-                        if (!Permission.FineLocation.isGranted(context)) {
-                            permissionsLauncher.launch(arrayOf(Permission.FineLocation.permission))
-                            return@MapControlButtons
-                        }
-
-                        if (isCameraFollowingMockedLocation) {
-                            viewModel.setIsCameraCurrentlyFollowingMockedLocation(true)
-                            cameraPositionState.move(CameraUpdateFactory.zoomTo(15f))
-                        }
-                        scope.launch {
-                            val fusedLocationClient =
-                                LocationServices.getFusedLocationProviderClient(context)
-                            try {
-                                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-                                    if (location != null) {
-                                        scope.launch {
-                                            cameraPositionState.animate(
-                                                CameraUpdateFactory.newLatLngZoom(
-                                                    LatLng(location.latitude, location.longitude),
-                                                    15f
-                                                )
-                                            )
-                                        }
-                                    }
-                                }
-                            } catch (e: SecurityException) {
-                                Log.e("MapScreen", "Failed to get user location", e)
-                            }
-                        }
+                        onUserLocationFocus()
                     },
                     setShowSearch = {
-                        viewModel.setShouldFocusSearchBar(it)
-                        isShowingSearch = it
+                        onShowSearch(it)
                     },
-                    isShowingSearch = isShowingSearch,
-                    isCameraCurrentlyFollowingMockedLocation = isCameraCurrentlyFollowingMockedLocation,
-                    crosshairsColor = mapStyle?.polyLineStroke ?: MaterialTheme.colorScheme.onBackground
+                    isShowingSearch = state.isShowingSearch,
+                    crosshairsColor = state.mapStyle?.polyLineStroke ?: MaterialTheme.colorScheme.onBackground,
+                    onClickCompass = {
+                        onClickCompass()
+                    },
+                    compassState = compassState,
+                    onSettingsClick = {
+                        onSettingsClick()
+                    },
+                    onZoomIn = {
+                        onZoomIn()
+                    },
+                    onZoomOut = {
+                        onZoomOut()
+                    }
                 )
             }
             ExpandedControls(
-                isExpanded = controlsAreExpanded,
-                speedUnitValue = speedUnitValue,
+                state = state.expandedControlsState,
                 onSpeedChanged = {
-                    viewModel.setSpeedUnitValue(speedUnitValue.copy(value = it))
+                    onSpeedChanged(it)
                 },
                 onSpeedChangeFinished = {
-                    viewModel.saveSpeedUnitValue(speedUnitValue)
-                },
-                sliderLowerEnd = speedSliderLowerEnd,
-                sliderUpperEnd = speedSliderUpperEnd
+                    onSpeedChangeFinished(it)
+                }
             )
         }
     }
     SavedRoutesDialog(
-        isVisible = isShowingSavedRoutesDialog,
-        isNamingRoute = isNamingRoute,
+        isVisible = state.isShowingSavedRoutesDialog,
+        isNamingRoute = state.isNamingRoute,
         onSetIsNamingRoute = {
-            isNamingRoute = it
+            onSetIsNamingRoute(it)
         },
         onDismiss = {
-            isShowingSavedRoutesDialog = false
+            onDismissSavedRouteDialog()
         },
-        savedRoutes = savedRoutes,
+        savedRoutes = state.savedRoutes,
         onRouteSaved = {
-            viewModel.saveCurrentRoute(it)
+            onRouteSaved(it)
         },
-        locationTarget = locationTarget,
+        locationTarget = activeLocationTarget,
         onRouteLoaded = {
-            viewModel.loadSavedRoute(it)
-            scope.launch {
-                focusMapToLocationTarget(it, cameraPositionState)
-            }
+            onRouteLoaded(it)
         },
         onRouteDeleted = {
-            viewModel.deleteSavedRoute(it)
+            onRouteDeleted(it)
         },
         isMocking = isMocking,
-        speedUnit = speedUnitValue.speedUnit
+        speedUnit = state.expandedControlsState.speedUnitValue.speedUnit
     )
-    permissionToBeRequested?.let { permission ->
+    state.permissionToBeRequested?.let { permission ->
         PermissionsDialog(
             permission = permission,
-            setShowMockLocationDialog = { permissionToBeRequested = null },
             onDismiss = {
-                permissionToBeRequested = null
-            },
-            context = context
+                onDismissPermissionsDialog()
+            }
         )
     }
 }
 
-private fun getMarkerHue(index: Int, numPoints: Int): Float {
-    return when (index) {
-        0 -> BitmapDescriptorFactory.HUE_GREEN
-        numPoints - 1 -> BitmapDescriptorFactory.HUE_RED
-        else -> BitmapDescriptorFactory.HUE_YELLOW
+@DayNightDevicePreviews
+@Composable
+private fun MapScreenPreview() {
+    DeviceThemePreview {
+        MapContent(
+            state = MapState(),
+            cameraPositionState = CameraPositionState(),
+            compassState = CompassState()
+        )
     }
-}
-
-private suspend fun focusMapToLocationTarget(
-    locationTarget: LocationTarget,
-    cameraPositionState: CameraPositionState
-) {
-    if (locationTarget.routeSegments.isEmpty()) return
-
-    val boundsBuilder = LatLngBounds.Builder()
-    locationTarget.getAllPoints().forEach { boundsBuilder.include(it) }
-
-    val bounds = boundsBuilder.build()
-
-    val update = if (locationTarget.routeSegments.size == 1) {
-        CameraUpdateFactory.newLatLngZoom(locationTarget.getLastPoint()!!, 15f)
-    } else {
-        CameraUpdateFactory.newLatLngBounds(bounds, 200)
-    }
-
-    cameraPositionState.animate(update)
 }

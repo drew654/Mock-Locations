@@ -11,9 +11,9 @@ import com.drew654.mocklocations.presentation.NoRippleInteractionSource
 
 @Composable
 fun DisableableSmallFloatingActionButton(
-    onClick: () -> Unit,
-    enabled: Boolean,
     modifier: Modifier = Modifier,
+    onClick: () -> Unit = { },
+    enabled: Boolean = true,
     content: @Composable () -> Unit
 ) {
     val focusManager = LocalFocusManager.current

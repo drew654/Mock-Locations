@@ -1,6 +1,5 @@
 package com.drew654.mocklocations.presentation.map_screen.components
 
-import android.content.res.Configuration
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
@@ -13,16 +12,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.drew654.mocklocations.R
-import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
+import com.drew654.mocklocations.presentation.ui.theme.DayNightPreviews
+import com.drew654.mocklocations.presentation.ui.theme.ThemePreview
 
 @Composable
 fun ExpandControlsButton(
-    onClick: () -> Unit,
     controlsAreExpanded: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = { }
 ) {
     Surface(
         modifier = modifier
@@ -40,7 +39,7 @@ fun ExpandControlsButton(
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.outline_chevron_right_24),
-                contentDescription = "Toggle Controls",
+                contentDescription = if (controlsAreExpanded) "Collapse controls" else "Expand controls",
                 modifier = Modifier.rotate(90f + if (controlsAreExpanded) 0f else 180f),
                 tint = MaterialTheme.colorScheme.onSurface
             )
@@ -48,25 +47,14 @@ fun ExpandControlsButton(
     }
 }
 
-@Preview(
-    name = "Light Mode",
-    showBackground = true
-)
-@Preview(
-    name = "Dark Mode",
-    uiMode = Configuration.UI_MODE_NIGHT_YES,
-    showBackground = true
-)
+@DayNightPreviews
 @Composable
-fun ExpandControlsButtonPreview() {
-    MockLocationsTheme {
-        Surface {
-            Box(modifier = Modifier.padding(4.dp)) {
-                ExpandControlsButton(
-                    onClick = { },
-                    controlsAreExpanded = false
-                )
-            }
+private fun ExpandControlsButtonPreview() {
+    ThemePreview {
+        Box(modifier = Modifier.padding(4.dp)) {
+            ExpandControlsButton(
+                controlsAreExpanded = false
+            )
         }
     }
 }

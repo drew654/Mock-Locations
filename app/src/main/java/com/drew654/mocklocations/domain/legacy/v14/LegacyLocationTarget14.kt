@@ -61,6 +61,7 @@ sealed interface LegacyLocationTarget14 {
         val name: String,
         override val points: List<LatLng>
     ) : LegacyLocationTarget14 {
+        fun getDistance(speedUnit: SpeedUnit): Double = Route(points).getDistance(speedUnit)
         fun getDistanceText(speedUnit: SpeedUnit): String = Route(points).getDistanceText(speedUnit)
     }
 
