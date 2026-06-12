@@ -45,6 +45,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -83,18 +84,26 @@ class MockLocationsViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            val savedSpeedUnitValue = settingsManager.speedUnitValueFlow.first()
-            val savedSpeedSliderLowerEnd = settingsManager.speedSliderLowerEndFlow.first()
-            val savedSpeedSliderUpperEnd = settingsManager.speedSliderUpperEndFlow.first()
-            updateExpandedControlsState {
-                it.copy(
-                    speedUnitValue = savedSpeedUnitValue,
-                    speedSliderLowerEnd = savedSpeedSliderLowerEnd,
-                    speedSliderUpperEnd = savedSpeedSliderUpperEnd
-                )
+            combine(
+                settingsManager.speedUnitValueFlow,
+                settingsManager.speedSliderLowerEndFlow,
+                settingsManager.speedSliderUpperEndFlow
+            ) { speedUnitValue, lowerEnd, upperEnd ->
+                Triple(speedUnitValue, lowerEnd, upperEnd)
+            }.distinctUntilChanged().collect { (speedUnitValue, lowerEnd, upperEnd) ->
+                updateExpandedControlsState {
+                    it.copy(
+                        speedUnitValue = speedUnitValue,
+                        speedSliderLowerEnd = lowerEnd,
+                        speedSliderUpperEnd = upperEnd
+                    )
+                }
             }
-            _expandedControlsConfigurationState.value = getExpandedControlsConfigurationState()
-            settingsManager.setMockControlState(mapState.value.mockControlState.copy(isWaitingForRouteFetch = false))
+        }
+
+        viewModelScope.launch {
+            val currentState = settingsManager.mockControlStateFlow.first()
+            settingsManager.setMockControlState(currentState.copy(isWaitingForRouteFetch = false))
         }
 
         viewModelScope.launch {
@@ -283,6 +292,9 @@ class MockLocationsViewModel @Inject constructor(
             val hasLocationPermission = Permission.FineLocation.isGranted(context)
             val isCameraFollowingMockedLocation = settingsManager.isCameraFollowingMockedLocation.first()
             val isCameraCurrentlyFollowingMockedLocation = settingsManager.isCameraCurrentlyFollowingMockedLocationFlow.first()
+            val speedUnitValue = settingsManager.speedUnitValueFlow.first()
+            val speedSliderLowerEnd = settingsManager.speedSliderLowerEndFlow.first()
+            val speedSliderUpperEnd = settingsManager.speedSliderUpperEndFlow.first()
             val mapProperties = MapProperties(
                 isMyLocationEnabled = hasLocationPermission,
                 isBuildingEnabled = true,
@@ -305,16 +317,23 @@ class MockLocationsViewModel @Inject constructor(
                     isCameraCurrentlyFollowingMockedLocation = isCameraCurrentlyFollowingMockedLocation,
                     hasLocationPermission = hasLocationPermission,
                     mapProperties = mapProperties,
-                    savedRoutes = savedRoutes
+                    savedRoutes = savedRoutes,
+                    expandedControlsState = it.expandedControlsState.copy(
+                        speedUnitValue = speedUnitValue,
+                        speedSliderLowerEnd = speedSliderLowerEnd,
+                        speedSliderUpperEnd = speedSliderUpperEnd
+                    )
                 )
             }
         }
     }
 
     fun updateExpandedControlsState(transform: (ExpandedControlsState) -> ExpandedControlsState) {
-        val currentState = _uiMapState.value.expandedControlsState
-        val newState = transform(currentState)
-        updateMapState { it.copy(expandedControlsState = newState) }
+        updateMapState { mapState ->
+            val currentState = mapState.expandedControlsState
+            val newState = transform(currentState)
+            mapState.copy(expandedControlsState = newState)
+        }
     }
 
     fun setControlsAreExpanded(expanded: Boolean) {
@@ -377,8 +396,10 @@ class MockLocationsViewModel @Inject constructor(
         updateMapState { it.copy(shouldFocusSearchBar = value) }
     }
 
-    fun setSpeedUnitValue(newSpeedUnitValue: SpeedUnitValue) {
-        updateExpandedControlsState { it.copy(speedUnitValue = newSpeedUnitValue) }
+    fun setSpeedValue(newSpeed: Double) {
+        updateExpandedControlsState {
+            it.copy(speedUnitValue = it.speedUnitValue.copy(value = newSpeed))
+        }
     }
 
     fun startMockLocation(context: Context, pushPoint: LatLng? = null) {
@@ -456,57 +477,6 @@ class MockLocationsViewModel @Inject constructor(
                     )
                 }
             }
-        }
-    }
-
-    suspend fun getExpandedControlsConfigurationState(): ExpandedControlsConfigurationState {
-        val speedUnitValue = settingsManager.speedUnitValueFlow.first()
-        val speedSliderLowerEnd = settingsManager.speedSliderLowerEndFlow.first()
-        val speedSliderUpperEnd = settingsManager.speedSliderUpperEndFlow.first()
-        return ExpandedControlsConfigurationState(
-            isShowingDialog = false,
-            speedUnitValue = speedUnitValue,
-            speedSliderLowerEnd = speedSliderLowerEnd.toString(),
-            speedSliderUpperEnd = speedSliderUpperEnd.toString()
-        )
-    }
-
-    fun updateExpandedControlsConfigurationState(transform: (ExpandedControlsConfigurationState) -> ExpandedControlsConfigurationState) {
-        _expandedControlsConfigurationState.value = transform(_expandedControlsConfigurationState.value)
-    }
-
-    fun refreshExpandedControlsConfigurationState() {
-        val currentExpandedControlsState = _uiMapState.value.expandedControlsState
-        _expandedControlsConfigurationState.value = ExpandedControlsConfigurationState(
-            isShowingDialog = false,
-            speedUnitValue = currentExpandedControlsState.speedUnitValue,
-            speedSliderLowerEnd = currentExpandedControlsState.speedSliderLowerEnd.toString(),
-            speedSliderUpperEnd = currentExpandedControlsState.speedSliderUpperEnd.toString()
-        )
-    }
-
-    fun saveExpandedControlsConfigurationState() {
-        val configState = expandedControlsConfigurationState.value
-        val speedSliderLowerEnd = configState.speedSliderLowerEnd.toIntOrNull() ?: 0
-        val speedSliderUpperEnd = configState.speedSliderUpperEnd.toIntOrNull() ?: 100
-        var speedUnitValue = configState.speedUnitValue
-
-        if (speedUnitValue.value < speedSliderLowerEnd) {
-            speedUnitValue = speedUnitValue.copy(value = speedSliderLowerEnd.toDouble())
-        } else if (speedUnitValue.value > speedSliderUpperEnd) {
-            speedUnitValue = speedUnitValue.copy(value = speedSliderUpperEnd.toDouble())
-        }
-
-        setSpeedUnitValue(speedUnitValue)
-        saveSpeedUnitValue(speedUnitValue)
-
-        setSpeedSliderLowerEnd(speedSliderLowerEnd)
-        saveSpeedSliderLowerEnd(speedSliderLowerEnd)
-        setSpeedSliderUpperEnd(speedSliderUpperEnd)
-        saveSpeedSliderUpperEnd(speedSliderUpperEnd)
-
-        updateExpandedControlsConfigurationState {
-            it.copy(speedUnitValue = speedUnitValue)
         }
     }
 
@@ -620,26 +590,6 @@ class MockLocationsViewModel @Inject constructor(
     fun setLocationAccuracyLevel(locationAccuracyLevel: LocationAccuracyLevel) {
         viewModelScope.launch {
             settingsManager.setLocationAccuracyLevel(locationAccuracyLevel)
-        }
-    }
-
-    fun setSpeedSliderLowerEnd(value: Int) {
-        updateExpandedControlsState { it.copy(speedSliderLowerEnd = value) }
-    }
-
-    fun saveSpeedSliderLowerEnd(value: Int) {
-        viewModelScope.launch {
-            settingsManager.setSpeedSliderLowerEnd(value)
-        }
-    }
-
-    fun setSpeedSliderUpperEnd(value: Int) {
-        updateExpandedControlsState { it.copy(speedSliderUpperEnd = value) }
-    }
-
-    fun saveSpeedSliderUpperEnd(value: Int) {
-        viewModelScope.launch {
-            settingsManager.setSpeedSliderUpperEnd(value)
         }
     }
 

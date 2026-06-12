@@ -339,6 +339,14 @@ class SettingsManager @Inject constructor(@param:ApplicationContext private val 
         }
     }
 
+    suspend fun setSpeedSettings(speedUnitValue: SpeedUnitValue, lowerEnd: Int, upperEnd: Int) {
+        context.dataStore.edit { preferences ->
+            preferences[SPEED_UNIT_VALUE_JSON] = gson.toJson(speedUnitValue)
+            preferences[SPEED_SLIDER_LOWER_END] = lowerEnd
+            preferences[SPEED_SLIDER_UPPER_END] = upperEnd
+        }
+    }
+
     val isCameraFollowingMockedLocation: Flow<Boolean> = context.dataStore.data.map { preferences ->
         preferences[IS_CAMERA_FOLLOWING_MOCKED_LOCATION] ?: true
     }

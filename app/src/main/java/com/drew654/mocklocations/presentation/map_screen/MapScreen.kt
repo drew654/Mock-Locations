@@ -326,11 +326,10 @@ fun MapScreen(
             viewModel.updateMapState { it.copy(isShowingSearch = newValue) }
         },
         onSpeedChanged = { newSpeed ->
-            val oldValue = state.expandedControlsState.speedUnitValue
-            viewModel.updateExpandedControlsState { it.copy(speedUnitValue = oldValue.copy(value = newSpeed)) }
+            viewModel.setSpeedValue(newSpeed)
         },
-        onSpeedChangeFinished = {
-            viewModel.saveSpeedUnitValue(state.expandedControlsState.speedUnitValue)
+        onSpeedChangeFinished = { speedUnitValue ->
+            viewModel.saveSpeedUnitValue(speedUnitValue)
         },
         onSetIsNamingRoute = { newValue ->
             viewModel.updateMapState { it.copy(isNamingRoute = newValue) }

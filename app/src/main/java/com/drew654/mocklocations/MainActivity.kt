@@ -54,7 +54,6 @@ class MainActivity : ComponentActivity() {
                         }
                         composable(Screen.ExpandedControlsConfiguration.route) {
                             ExpandedControlsConfigurationScreen(
-                                viewModel = viewModel,
                                 navController = navController
                             )
                         }
