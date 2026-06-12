@@ -1,5 +1,6 @@
 package com.drew654.mocklocations.presentation.import_settings
 
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsOn
@@ -186,8 +187,8 @@ class ImportSettingsScreenTest {
             )
         }
 
-        composeTestRule.onNodeWithText("Replace current routes").assertExists()
-        composeTestRule.onNodeWithText("Merge with current routes").assertExists()
+        composeTestRule.onNodeWithText("Replace current routes").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Merge with current routes").assertIsDisplayed()
     }
 
     @Test

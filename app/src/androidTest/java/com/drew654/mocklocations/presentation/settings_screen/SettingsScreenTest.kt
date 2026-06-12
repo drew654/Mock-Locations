@@ -1,5 +1,6 @@
 package com.drew654.mocklocations.presentation.settings_screen
 
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasSetTextAction
@@ -7,6 +8,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextReplacement
 import androidx.navigation.NavController
 import com.drew654.mocklocations.domain.model.LocationAccuracyLevel
@@ -18,6 +20,7 @@ import com.drew654.mocklocations.presentation.toTrimmedString
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -69,7 +72,7 @@ class SettingsScreenTest {
 
         composeTestRule.onNodeWithText("Build route on roads").performClick()
 
-        assert(capturedValue == true)
+        assertEquals(true, capturedValue)
     }
 
     @Test
@@ -84,7 +87,7 @@ class SettingsScreenTest {
 
         composeTestRule.onNodeWithText("Use crosshairs").performClick()
 
-        assert(capturedValue == true)
+        assertEquals(true, capturedValue)
     }
 
     @Test
@@ -99,7 +102,7 @@ class SettingsScreenTest {
 
         composeTestRule.onNodeWithText("Clear route on stop").performClick()
 
-        assert(capturedValue == true)
+        assertEquals(true, capturedValue)
     }
 
     @Test
@@ -114,7 +117,7 @@ class SettingsScreenTest {
 
         composeTestRule.onNodeWithText("Camera follows mocked location").performClick()
 
-        assert(capturedValue == true)
+        assertEquals(true, capturedValue)
     }
 
     @Test
@@ -129,7 +132,7 @@ class SettingsScreenTest {
 
         composeTestRule.onNodeWithText("Wait at the end of a route").performClick()
 
-        assert(capturedValue == true)
+        assertEquals(true, capturedValue)
     }
 
     @Test
@@ -138,11 +141,11 @@ class SettingsScreenTest {
         composeTestRule.setContent {
             SettingsContent(
                 state = SettingsState(),
-                setIsShowingMapStyleDialog = { clicked = it }
+                setIsShowingMapStyleDialog = { clicked = true }
             )
         }
 
-        composeTestRule.onNodeWithText("Map style").performClick()
+        composeTestRule.onNodeWithText("Map style").performScrollTo().performClick()
 
         assertTrue(clicked)
     }
@@ -154,7 +157,7 @@ class SettingsScreenTest {
         }
 
         listOf("Default (System)", "Standard", "Night", "Satellite", "Hybrid", "Terrain", "Aubergine", "Dark", "Retro", "Silver").forEach {
-            composeTestRule.onNodeWithText(it).assertExists()
+            composeTestRule.onNodeWithText(it).performScrollTo().assertIsDisplayed()
         }
     }
 
@@ -170,7 +173,7 @@ class SettingsScreenTest {
 
         composeTestRule.onNodeWithText("Satellite").performClick()
 
-        assert(selectedStyle == MapStyle.Satellite)
+        assertEquals(MapStyle.Satellite, selectedStyle)
     }
 
     @Test
@@ -179,11 +182,11 @@ class SettingsScreenTest {
         composeTestRule.setContent {
             SettingsContent(
                 state = SettingsState(),
-                setIsShowingLocationAccuracyLevelDialog = { clicked = it }
+                setIsShowingLocationAccuracyLevelDialog = { clicked = true }
             )
         }
 
-        composeTestRule.onNodeWithText("Location accuracy level").performClick()
+        composeTestRule.onNodeWithText("Location accuracy level").performScrollTo().performClick()
 
         assertTrue(clicked)
     }
@@ -195,7 +198,7 @@ class SettingsScreenTest {
         }
 
         listOf("Perfect (0 m)", "High (5 m)", "Medium (10 m)", "Low (20 m)").forEach {
-            composeTestRule.onNodeWithText(it).assertExists()
+            composeTestRule.onNodeWithText(it).assertIsDisplayed()
         }
     }
 
@@ -211,7 +214,7 @@ class SettingsScreenTest {
 
         composeTestRule.onNodeWithText("High (5 m)").performClick()
 
-        assert(selectedLevel == LocationAccuracyLevel.High)
+        assertEquals(LocationAccuracyLevel.High, selectedLevel)
     }
 
     @Test
@@ -220,11 +223,11 @@ class SettingsScreenTest {
         composeTestRule.setContent {
             SettingsContent(
                 state = SettingsState(),
-                setIsShowingLocationUpdateDelayDialog = { clicked = it }
+                setIsShowingLocationUpdateDelayDialog = { clicked = true }
             )
         }
 
-        composeTestRule.onNodeWithText("Location update delay").performClick()
+        composeTestRule.onNodeWithText("Location update delay").performScrollTo().performClick()
 
         assertTrue(clicked)
     }
@@ -235,9 +238,9 @@ class SettingsScreenTest {
             SettingsContent(state = SettingsState(isShowingLocationUpdateDelayDialog = true))
         }
 
-        composeTestRule.onNodeWithText("Location Update Delay").assertExists()
+        composeTestRule.onNodeWithText("Location Update Delay").assertIsDisplayed()
 
-        composeTestRule.onNodeWithText("Delay between location updates in seconds").assertExists()
+        composeTestRule.onNodeWithText("Delay between location updates in seconds").assertIsDisplayed()
     }
 
     @Test
@@ -256,7 +259,7 @@ class SettingsScreenTest {
         composeTestRule.onNodeWithText("1").performTextReplacement("2.5")
         composeTestRule.onNodeWithText("Save").performClick()
 
-        assert(selectedDelay == 2.5f)
+        assertEquals(2.5f, selectedDelay)
     }
 
     @Test
@@ -293,7 +296,7 @@ class SettingsScreenTest {
             )
         }
 
-        composeTestRule.onNodeWithText("Configure expanded controls").performClick()
+        composeTestRule.onNodeWithText("Configure expanded controls").performScrollTo().performClick()
 
         assertTrue(clicked)
     }
@@ -308,7 +311,7 @@ class SettingsScreenTest {
             )
         }
 
-        composeTestRule.onNodeWithText("Export settings").performClick()
+        composeTestRule.onNodeWithText("Export settings").performScrollTo().performClick()
 
         assertTrue(clicked)
     }
@@ -323,7 +326,7 @@ class SettingsScreenTest {
             )
         }
 
-        composeTestRule.onNodeWithText("Import settings").performClick()
+        composeTestRule.onNodeWithText("Import settings").performScrollTo().performClick()
 
         assertTrue(clicked)
     }
@@ -338,7 +341,7 @@ class SettingsScreenTest {
             )
         }
 
-        composeTestRule.onNodeWithText("Reset to default").performClick()
+        composeTestRule.onNodeWithText("Reset to default").performScrollTo().performClick()
 
         assertTrue(clicked)
     }
@@ -349,7 +352,7 @@ class SettingsScreenTest {
             SettingsContent(state = SettingsState(isShowingResetSettingsDialog = true))
         }
 
-        composeTestRule.onNodeWithText("Reset settings to default?").assertExists()
+        composeTestRule.onNodeWithText("Reset settings to default?").assertIsDisplayed()
     }
 
     @Test
@@ -462,13 +465,13 @@ class SettingsScreenTest {
             SettingsScreen(viewModel = viewModel, navController = navController)
         }
 
-        composeTestRule.onNodeWithText("Map style").performClick()
+        composeTestRule.onNodeWithText("Map style").performScrollTo().performClick()
 
         composeTestRule.onNodeWithText("Satellite").performClick()
 
         verify { viewModel.setMapStyle(MapStyle.Satellite) }
-        assertTrue(settingsState.value.mapStyle == MapStyle.Satellite)
-        composeTestRule.onNodeWithText("Satellite").assertExists()
+        assertEquals(MapStyle.Satellite, settingsState.value.mapStyle)
+        composeTestRule.onNodeWithText("Satellite").assertIsDisplayed()
     }
 
     @Test
@@ -478,13 +481,13 @@ class SettingsScreenTest {
             SettingsScreen(viewModel = viewModel, navController = navController)
         }
 
-        composeTestRule.onNodeWithText("Location accuracy level").performClick()
+        composeTestRule.onNodeWithText("Location accuracy level").performScrollTo().performClick()
 
         composeTestRule.onNodeWithText("High (5 m)").performClick()
 
         verify { viewModel.setLocationAccuracyLevel(LocationAccuracyLevel.High) }
-        assertTrue(settingsState.value.locationAccuracyLevel == LocationAccuracyLevel.High)
-        composeTestRule.onNodeWithText("High").assertExists()
+        assertEquals(LocationAccuracyLevel.High, settingsState.value.locationAccuracyLevel)
+        composeTestRule.onNodeWithText("High").performScrollTo().assertIsDisplayed()
     }
 
     @Test
@@ -494,13 +497,13 @@ class SettingsScreenTest {
             SettingsScreen(viewModel = viewModel, navController = navController)
         }
 
-        composeTestRule.onNodeWithText("Location update delay").performClick()
+        composeTestRule.onNodeWithText("Location update delay").performScrollTo().performClick()
 
         composeTestRule.onNodeWithText("1").performTextReplacement("3.5")
         composeTestRule.onNodeWithText("Save").performClick()
 
         verify { viewModel.setLocationUpdateDelay(3.5f) }
-        assertTrue(settingsState.value.locationUpdateDelay == 3.5f)
+        assertEquals(3.5f, settingsState.value.locationUpdateDelay)
     }
 
     @Test
@@ -510,7 +513,7 @@ class SettingsScreenTest {
             SettingsScreen(viewModel = viewModel, navController = navController)
         }
 
-        composeTestRule.onNodeWithText("Location update delay").performClick()
+        composeTestRule.onNodeWithText("Location update delay").performScrollTo().performClick()
 
         listOf("0", "1000", "", "e", "1e", "1 .", "1 ,", "6 7", "1.2.3", "1,2,3", "1,2.3", "1.2,3").forEach {
             composeTestRule.onNode(hasSetTextAction()).performTextReplacement(it)
@@ -546,7 +549,7 @@ class SettingsScreenTest {
 
             verify { viewModel.setLocationUpdateDelay(expectedFloat) }
 
-            composeTestRule.onNodeWithText(expectedText).assertExists()
+            composeTestRule.onNodeWithText(expectedText).assertIsDisplayed()
         }
     }
 
@@ -557,7 +560,7 @@ class SettingsScreenTest {
             SettingsScreen(viewModel = viewModel, navController = navController)
         }
 
-        composeTestRule.onNodeWithText("Configure expanded controls").performClick()
+        composeTestRule.onNodeWithText("Configure expanded controls").performScrollTo().performClick()
 
         verify { navController.navigate(Screen.ExpandedControlsConfiguration.route) }
     }
@@ -569,7 +572,7 @@ class SettingsScreenTest {
             SettingsScreen(viewModel = viewModel, navController = navController)
         }
 
-        composeTestRule.onNodeWithText("Export settings").performClick()
+        composeTestRule.onNodeWithText("Export settings").performScrollTo().performClick()
 
         verify { navController.navigate(Screen.ExportSettings.route) }
     }
@@ -581,7 +584,7 @@ class SettingsScreenTest {
             SettingsScreen(viewModel = viewModel, navController = navController)
         }
 
-        composeTestRule.onNodeWithText("Reset to default").performClick()
+        composeTestRule.onNodeWithText("Reset to default").performScrollTo().performClick()
         composeTestRule.onNodeWithText("Reset Settings").performClick()
 
         verify { viewModel.resetSettingsToDefault() }

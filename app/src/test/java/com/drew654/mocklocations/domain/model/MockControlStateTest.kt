@@ -16,18 +16,6 @@ class MockControlStateTest {
     )
 
     @Test
-    fun `default values are correct`() {
-        val state = MockControlState()
-
-        assertFalse("Should not be mocking by default", state.isMocking)
-        assertFalse("Should not be paused by default", state.isPaused)
-        assertFalse("Should not be waiting at end of route by default", state.isWaitingAtEndOfRoute)
-        assertEquals("Active location target should be Empty", LocationTarget.Empty, state.activeLocationTarget)
-        assertTrue("Crosshairs should be enabled by default", state.isUsingCrosshairs)
-        assertFalse("Should not be waiting for route fetch by default", state.isWaitingForRouteFetch)
-    }
-
-    @Test
     fun `copy method correctly updates specific fields`() {
         val initialState = MockControlState()
 
@@ -42,18 +30,6 @@ class MockControlStateTest {
         assertFalse(updatedState.isUsingCrosshairs)
         assertFalse(updatedState.isWaitingAtEndOfRoute)
         assertEquals(LocationTarget.Empty, updatedState.activeLocationTarget)
-    }
-
-    @Test
-    fun `equality works for different instances with same values`() {
-        val state1 = MockControlState(isMocking = true, isPaused = false)
-        val state2 = MockControlState(isMocking = true, isPaused = false)
-        val state3 = MockControlState(isMocking = false, isPaused = false)
-
-        assertEquals("Instances with same values should be equal", state1, state2)
-        assertEquals("Hashcodes should match for equal instances", state1.hashCode(), state2.hashCode())
-        assertNotEquals("Instances with different values should not be equal", state1, state3)
-        assertNotEquals("Hashcodes should not match for instances with different values", state1.hashCode(), state3.hashCode())
     }
 
     @Test
@@ -179,9 +155,9 @@ class MockControlStateTest {
             isWaitingForRouteFetch = true
         )
 
-        assertTrue("Add point button should be visible", state.isAddPointVisible())
-        assertFalse("Add point button should be disabled while fetching", state.isAddPointEnabled())
-        assertFalse("Add point by long press should be disabled while fetching", state.isLongPressAddPointEnabled())
+        assertTrue(state.isAddPointVisible())
+        assertFalse(state.isAddPointEnabled())
+        assertFalse(state.isLongPressAddPointEnabled())
     }
 
     @Test

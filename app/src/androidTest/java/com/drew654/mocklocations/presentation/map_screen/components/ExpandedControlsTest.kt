@@ -1,6 +1,7 @@
 package com.drew654.mocklocations.presentation.map_screen.components
 
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onChildren
 import androidx.compose.ui.test.onNodeWithText
@@ -21,8 +22,8 @@ class ExpandedControlsTest {
             )
         }
 
-        composeTestRule.onNodeWithText("30").assertExists()
-        composeTestRule.onNodeWithText(" mph").assertExists()
+        composeTestRule.onNodeWithText("30").assertIsDisplayed()
+        composeTestRule.onNodeWithText(" mph").assertIsDisplayed()
     }
 
     @Test

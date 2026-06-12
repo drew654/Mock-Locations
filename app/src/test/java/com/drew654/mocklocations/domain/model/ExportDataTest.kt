@@ -9,7 +9,7 @@ class ExportDataTest {
     fun `data class properties are correctly initialized`() {
         val meta = ExportMeta(
             appVersionName = "0.5.0-alpha.1",
-            appVersionCode = 16,
+            appVersionCode = 18,
             exportedAt = "2026-05-06T13:22:01.836019Z"
         )
         val settings = ExportSettings(

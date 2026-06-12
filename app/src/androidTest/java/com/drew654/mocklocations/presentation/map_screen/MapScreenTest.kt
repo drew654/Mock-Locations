@@ -8,6 +8,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performImeAction
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import com.drew654.mocklocations.domain.model.CompassState
@@ -409,7 +410,7 @@ class MapScreenTest {
             )
         }
 
-        composeTestRule.onNodeWithContentDescription("Close search").performClick()
+        composeTestRule.onNodeWithContentDescription("Close search", useUnmergedTree = true).performScrollTo().performClick()
 
         assertEquals(false, capturedValue)
     }
@@ -501,9 +502,7 @@ class MapScreenTest {
         composeTestRule.setContent {
             MapContent(
                 state = MapState(
-                    mockControlState = MockControlState(
-
-                    ),
+                    mockControlState = MockControlState(),
                     savedRoutes = listOf(route1, route2),
                     isShowingSavedRoutesDialog = true
                 ),

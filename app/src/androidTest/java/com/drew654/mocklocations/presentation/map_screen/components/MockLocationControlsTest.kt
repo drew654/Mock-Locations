@@ -246,4 +246,21 @@ class MockLocationControlsTest {
 
         assertEquals(true, capturedValue)
     }
+
+    @Test
+    fun clickCloseSearch_triggersCallback() {
+        var capturedValue: Boolean? = null
+        composeTestRule.setContent {
+            MockLocationControls(
+                mockControlState = MockControlState(),
+                controlsAreExpanded = false,
+                isShowingSearch = true,
+                setShowSearch = { capturedValue = it }
+            )
+        }
+
+        composeTestRule.onNodeWithContentDescription("Close search").performClick()
+
+        assertEquals(false, capturedValue)
+    }
 }

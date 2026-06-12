@@ -1,5 +1,6 @@
 package com.drew654.mocklocations.presentation.expanded_controls_configuration
 
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -164,7 +165,7 @@ class ExpandedControlsConfigurationScreenTest {
         composeTestRule.onNodeWithText("m/s").performClick()
 
         assertEquals(SpeedUnitValue(30.0, SpeedUnit.MetersPerSecond), expandedControlsConfigurationState.value.speedUnitValue)
-        composeTestRule.onNodeWithText("m/s").assertExists()
+        composeTestRule.onNodeWithText("m/s").assertIsDisplayed()
     }
 
     @Test
@@ -177,7 +178,7 @@ class ExpandedControlsConfigurationScreenTest {
         composeTestRule.onNodeWithText("0").performTextReplacement("50")
 
         assertEquals("50", expandedControlsConfigurationState.value.speedSliderLowerEnd)
-        composeTestRule.onNodeWithText("50").assertExists()
+        composeTestRule.onNodeWithText("50").assertIsDisplayed()
     }
 
     @Test
@@ -190,7 +191,7 @@ class ExpandedControlsConfigurationScreenTest {
         composeTestRule.onNodeWithText("100").performTextReplacement("200")
 
         assertEquals("200", expandedControlsConfigurationState.value.speedSliderUpperEnd)
-        composeTestRule.onNodeWithText("200").assertExists()
+        composeTestRule.onNodeWithText("200").assertIsDisplayed()
     }
 
     @Test

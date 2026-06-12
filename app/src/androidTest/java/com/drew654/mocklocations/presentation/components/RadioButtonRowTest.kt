@@ -6,7 +6,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import org.junit.Assert.*
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
@@ -26,7 +27,7 @@ class RadioButtonRowTest {
             )
         }
 
-        composeTestRule.onNodeWithText("Radio button").assertExists().performClick()
+        composeTestRule.onNodeWithText("Radio button").performClick()
 
         assertTrue(selected)
 
