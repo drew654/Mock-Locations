@@ -25,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -43,7 +44,7 @@ fun ExportSettingsScreen(
     viewModel: ExportSettingsViewModel = hiltViewModel(),
     navController: NavController
 ) {
-    val state = viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsState()
     val exportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/json")
     ) { uri ->
@@ -64,7 +65,7 @@ fun ExportSettingsScreen(
             ).format(System.currentTimeMillis())
             exportLauncher.launch("mock_locations_$timestamp.json")
         },
-        state = state.value,
+        state = state,
         setIsExportSettings = { newValue ->
             viewModel.setIsExportSettings(newValue)
         },
