@@ -50,7 +50,7 @@ class MainActivity : ComponentActivity() {
                             MapScreen(viewModel = viewModel, navController = navController)
                         }
                         composable(Screen.Settings.route) {
-                            SettingsScreen(viewModel = viewModel, navController = navController)
+                            SettingsScreen(navController = navController)
                         }
                         composable(Screen.ExpandedControlsConfiguration.route) {
                             ExpandedControlsConfigurationScreen(

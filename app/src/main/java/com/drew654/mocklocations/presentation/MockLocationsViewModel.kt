@@ -11,17 +11,13 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.drew654.mocklocations.R
 import com.drew654.mocklocations.domain.SettingsManager
-import com.drew654.mocklocations.domain.model.ExpandedControlsConfigurationState
 import com.drew654.mocklocations.domain.model.ExpandedControlsState
-import com.drew654.mocklocations.domain.model.LocationAccuracyLevel
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.MapState
-import com.drew654.mocklocations.domain.model.MapStyle
 import com.drew654.mocklocations.domain.model.MockControlState
 import com.drew654.mocklocations.domain.model.Permission
 import com.drew654.mocklocations.domain.model.RouteSegment
 import com.drew654.mocklocations.domain.model.SavedCameraPosition
-import com.drew654.mocklocations.domain.model.SettingsState
 import com.drew654.mocklocations.domain.model.SpeedUnitValue
 import com.drew654.mocklocations.domain.model.isGranted
 import com.drew654.mocklocations.repository.RouteRepository
@@ -37,7 +33,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
@@ -66,10 +61,6 @@ class MockLocationsViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = MapState()
     )
-    private val _expandedControlsConfigurationState = MutableStateFlow(ExpandedControlsConfigurationState())
-    val expandedControlsConfigurationState: StateFlow<ExpandedControlsConfigurationState> = _expandedControlsConfigurationState.asStateFlow()
-    private val _settingsState = MutableStateFlow(SettingsState())
-    val settingsState: StateFlow<SettingsState> = _settingsState.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -128,23 +119,6 @@ class MockLocationsViewModel @Inject constructor(
                 }
             }
         }, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
-    }
-
-    fun resetSettingsToDefault() {
-        viewModelScope.launch {
-            settingsManager.resetToDefault()
-            val savedSpeedUnitValue = settingsManager.speedUnitValueFlow.first()
-            val savedSpeedSliderLowerEnd = settingsManager.speedSliderLowerEndFlow.first()
-            val savedSpeedSliderUpperEnd = settingsManager.speedSliderUpperEndFlow.first()
-            updateExpandedControlsState {
-                it.copy(
-                    speedUnitValue = savedSpeedUnitValue,
-                    speedSliderLowerEnd = savedSpeedSliderLowerEnd,
-                    speedSliderUpperEnd = savedSpeedSliderUpperEnd
-                )
-            }
-            refreshSettingsState()
-        }
     }
 
     fun updateCameraPosition(position: CameraPosition) {
@@ -340,12 +314,6 @@ class MockLocationsViewModel @Inject constructor(
         }
     }
 
-    fun setClearRouteOnStop(enabled: Boolean) {
-        viewModelScope.launch {
-            settingsManager.setClearRouteOnStop(enabled)
-        }
-    }
-
     fun saveCurrentRoute(name: String) {
         val current = mapState.value.mockControlState.activeLocationTarget
         if (current.routeSegments.isNotEmpty()) {
@@ -360,38 +328,6 @@ class MockLocationsViewModel @Inject constructor(
                 }
             }
         }
-    }
-
-    fun refreshSettingsState() {
-        viewModelScope.launch {
-            val isBuildRouteOnRoads = settingsManager.buildRouteOnRoadsFlow.first()
-            val isUsingCrosshairs = settingsManager.mockControlStateFlow.first().isUsingCrosshairs
-            val clearPointsOnStop = settingsManager.clearRouteOnStopFlow.first()
-            val isCameraFollowingMockedLocation = settingsManager.isCameraFollowingMockedLocation.first()
-            val isGoingToWaitAtRouteFinish = settingsManager.isGoingToWaitAtRouteFinishFlow.first()
-            val mapStyle = settingsManager.mapStyleFlow.first()
-            val locationAccuracyLevel = settingsManager.locationAccuracyLevelFlow.first()
-            val locationUpdateDelay = settingsManager.locationUpdateDelayFlow.first()
-
-            _settingsState.value = SettingsState(
-                isBuildRouteOnRoads = isBuildRouteOnRoads,
-                isUsingCrosshairs = isUsingCrosshairs,
-                clearPointsOnStop = clearPointsOnStop,
-                isCameraFollowingMockedLocation = isCameraFollowingMockedLocation,
-                isGoingToWaitAtRouteFinish = isGoingToWaitAtRouteFinish,
-                mapStyle = mapStyle,
-                locationAccuracyLevel = locationAccuracyLevel,
-                locationUpdateDelay = locationUpdateDelay,
-                isShowingMapStyleDialog = false,
-                isShowingLocationAccuracyLevelDialog = false,
-                isShowingLocationUpdateDelayDialog = false,
-                isShowingResetSettingsDialog = false
-            )
-        }
-    }
-
-    fun updateSettingsState(transform: (SettingsState) -> SettingsState) {
-        _settingsState.value = transform(_settingsState.value)
     }
 
     fun loadSavedRoute(route: LocationTarget.SavedRoute) {
@@ -418,51 +354,9 @@ class MockLocationsViewModel @Inject constructor(
         }
     }
 
-    fun setIsUsingCrosshairs(enabled: Boolean) {
-        viewModelScope.launch {
-            updateMockControlState { it.copy(isUsingCrosshairs = enabled) }
-        }
-    }
-
-    fun setBuildRouteOnRoads(enabled: Boolean) {
-        viewModelScope.launch {
-            settingsManager.setBuildRouteOnRoads(enabled)
-        }
-    }
-
-    fun setMapStyle(mapStyle: MapStyle?) {
-        viewModelScope.launch {
-            settingsManager.setMapStyle(mapStyle)
-        }
-    }
-
-    fun setLocationAccuracyLevel(locationAccuracyLevel: LocationAccuracyLevel) {
-        viewModelScope.launch {
-            settingsManager.setLocationAccuracyLevel(locationAccuracyLevel)
-        }
-    }
-
-    fun setIsCameraFollowingMockedLocation(value: Boolean) {
-        viewModelScope.launch {
-            settingsManager.setIsCameraFollowingMockedLocation(value)
-        }
-    }
-
     fun setIsCameraCurrentlyFollowingMockedLocation(value: Boolean) {
         viewModelScope.launch {
             settingsManager.setIsCameraCurrentlyFollowingMockedLocation(value)
-        }
-    }
-
-    fun setIsGoingToWaitAtRouteFinish(value: Boolean) {
-        viewModelScope.launch {
-            settingsManager.setIsGoingToWaitAtRouteFinish(value)
-        }
-    }
-
-    fun setLocationUpdateDelay(value: Float) {
-        viewModelScope.launch {
-            settingsManager.setLocationUpdateDelay(value)
         }
     }
 }

@@ -296,7 +296,7 @@ class SettingsManager @Inject constructor(@param:ApplicationContext private val 
         }
     }
 
-    private suspend fun setIsUsingCrosshairs(enabled: Boolean) {
+    suspend fun setIsUsingCrosshairs(enabled: Boolean) {
         context.dataStore.edit { preferences ->
             val current = preferences[MOCK_CONTROL_STATE_JSON]
                 ?.let { gson.fromJson(it, MockControlState::class.java) }
