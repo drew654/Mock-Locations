@@ -10,7 +10,6 @@ import androidx.navigation.NavController
 import com.drew654.mocklocations.domain.model.ExpandedControlsConfigurationState
 import com.drew654.mocklocations.domain.model.SpeedUnit
 import com.drew654.mocklocations.domain.model.SpeedUnitValue
-import com.drew654.mocklocations.presentation.MockLocationsViewModel
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify

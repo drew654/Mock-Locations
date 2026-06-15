@@ -10,7 +10,6 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.navigation.NavController
 import com.drew654.mocklocations.domain.model.ExportSettingsState
-import com.drew654.mocklocations.presentation.MockLocationsViewModel
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify

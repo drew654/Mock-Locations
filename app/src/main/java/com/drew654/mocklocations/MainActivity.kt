@@ -11,11 +11,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.drew654.mocklocations.presentation.MockLocationsViewModel
 import com.drew654.mocklocations.presentation.Screen
 import com.drew654.mocklocations.presentation.expanded_controls_configuration.ExpandedControlsConfigurationScreen
 import com.drew654.mocklocations.presentation.export_settings.ExportSettingsScreen
@@ -32,7 +30,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            val viewModel: MockLocationsViewModel = hiltViewModel()
             val navController = rememberNavController()
 
             MockLocationsTheme {
@@ -47,25 +44,19 @@ class MainActivity : ComponentActivity() {
                         popExitTransition = { ExitTransition.None }
                     ) {
                         composable(Screen.Map.route) {
-                            MapScreen(viewModel = viewModel, navController = navController)
+                            MapScreen(navController = navController)
                         }
                         composable(Screen.Settings.route) {
                             SettingsScreen(navController = navController)
                         }
                         composable(Screen.ExpandedControlsConfiguration.route) {
-                            ExpandedControlsConfigurationScreen(
-                                navController = navController
-                            )
+                            ExpandedControlsConfigurationScreen(navController = navController)
                         }
                         composable(Screen.ExportSettings.route) {
-                            ExportSettingsScreen(
-                                navController = navController
-                            )
+                            ExportSettingsScreen(navController = navController)
                         }
                         composable(Screen.ImportSettings.route) {
-                            ImportSettingsScreen(
-                                navController = navController
-                            )
+                            ImportSettingsScreen(navController = navController)
                         }
                     }
                 }

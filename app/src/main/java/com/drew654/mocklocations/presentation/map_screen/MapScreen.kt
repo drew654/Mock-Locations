@@ -17,14 +17,12 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -36,7 +34,6 @@ import com.drew654.mocklocations.domain.model.Permission
 import com.drew654.mocklocations.domain.model.SpeedUnitValue
 import com.drew654.mocklocations.domain.model.isGranted
 import com.drew654.mocklocations.domain.model.isLongPressAddPointEnabled
-import com.drew654.mocklocations.presentation.MockLocationsViewModel
 import com.drew654.mocklocations.presentation.NoRippleInteractionSource
 import com.drew654.mocklocations.presentation.Screen
 import com.drew654.mocklocations.presentation.map_screen.components.ExpandedControls
@@ -65,7 +62,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun MapScreen(
-    viewModel: MockLocationsViewModel,
+    viewModel: MapViewModel = hiltViewModel(),
     navController: NavController
 ) {
     val context = LocalContext.current
@@ -74,53 +71,52 @@ fun MapScreen(
     val isSystemInDarkTheme = isSystemInDarkTheme()
     val scope = rememberCoroutineScope()
     val cameraPositionState = rememberCameraPositionState()
-    val state by viewModel.mapState.collectAsState()
+    val state by viewModel.state.collectAsState()
+
+    LaunchedEffect(isSystemInDarkTheme) {
+        viewModel.setIsSystemInDarkTheme(isSystemInDarkTheme)
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.setHasLocationPermission(Permission.FineLocation.isGranted(context))
+    }
     val permissionsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { result ->
         val locationGranted = result[Permission.FineLocation.permission] ?: false
         val hasLocationPermission = locationGranted || Permission.FineLocation.isGranted(context)
-        viewModel.updateMapState { it.copy(hasLocationPermission = hasLocationPermission) }
+        viewModel.setHasLocationPermission(hasLocationPermission)
         if (!hasLocationPermission) {
-            viewModel.updateMapState { it.copy(permissionToBeRequested = Permission.FineLocation) }
-        }
-    }
-
-    var isInitialized by rememberSaveable { mutableStateOf(false) }
-    LaunchedEffect(Unit) {
-        if (!isInitialized) {
-            viewModel.refreshMapState(context = context, isSystemInDarkTheme = isSystemInDarkTheme)
-            isInitialized = true
+            viewModel.setPermissionToBeRequested(Permission.FineLocation)
         }
     }
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_PAUSE) {
-                viewModel.updateCameraPosition(
+                viewModel.setCameraPosition(
                     cameraPositionState.position
                 )
             }
             if (event == Lifecycle.Event.ON_RESUME || event == Lifecycle.Event.ON_START) {
-                viewModel.refreshMapState(context = context, isSystemInDarkTheme)
                 if (
                     state.permissionToBeRequested == Permission.MockLocations
                     && Permission.MockLocations.isGranted(context)
                 ) {
-                    viewModel.updateMapState { it.copy(permissionToBeRequested = null) }
+                    viewModel.setPermissionToBeRequested(null)
                 }
                 if (
                     state.permissionToBeRequested == Permission.DeveloperOptions
                     && Permission.DeveloperOptions.isGranted(context)
                 ) {
-                    viewModel.updateMapState { it.copy(permissionToBeRequested = null) }
+                    viewModel.setPermissionToBeRequested(null)
                 }
                 if (
                     state.permissionToBeRequested == Permission.FineLocation
                     && Permission.FineLocation.isGranted(context)
                 ) {
-                    viewModel.updateMapState { it.copy(permissionToBeRequested = null) }
-                    viewModel.updateMapState { it.copy(hasLocationPermission = true) }
+                    viewModel.setPermissionToBeRequested(null)
+                    viewModel.setHasLocationPermission(true)
                 }
             }
         }
@@ -138,7 +134,7 @@ fun MapScreen(
                     state.savedCameraPosition!!.zoom
                 )
             )
-            viewModel.updateMapState { it.copy(hasRestoredCamera = true) }
+            viewModel.setHasRestoredCamera(true)
         }
     }
 
@@ -147,12 +143,11 @@ fun MapScreen(
             cameraPositionState.isMoving to cameraPositionState.cameraMoveStartedReason
         }.collect { (isMoving, reason) ->
             if (isMoving && reason == CameraMoveStartedReason.GESTURE) {
-                viewModel.updateMapState { it.copy(isCameraCurrentlyFollowingMockedLocation = false) }
                 viewModel.setIsCameraCurrentlyFollowingMockedLocation(false)
             }
 
             if (!isMoving) {
-                viewModel.updateCameraPosition(cameraPositionState.position)
+                viewModel.setCameraPosition(cameraPositionState.position)
             }
         }
     }
@@ -248,24 +243,22 @@ fun MapScreen(
             }
 
             if (!Permission.DeveloperOptions.isGranted(context)) {
-                viewModel.updateMapState { it.copy(permissionToBeRequested = Permission.DeveloperOptions) }
+                viewModel.setPermissionToBeRequested(Permission.DeveloperOptions)
                 return@MapContent
             }
 
             if (!Permission.MockLocations.isGranted(context)) {
-                viewModel.updateMapState { it.copy(permissionToBeRequested = Permission.MockLocations) }
+                viewModel.setPermissionToBeRequested(Permission.MockLocations)
                 return@MapContent
             }
 
             if (state.isCameraFollowingMockedLocation && state.mockControlState.activeLocationTarget.isRoute()) {
-                viewModel.updateMapState { it.copy(isCameraCurrentlyFollowingMockedLocation = true) }
                 viewModel.setIsCameraCurrentlyFollowingMockedLocation(true)
                 cameraPositionState.move(CameraUpdateFactory.zoomTo(15f))
             }
             scope.launch {
                 viewModel.startMockLocation(
-                    context = context,
-                    pushPoint = if (state.mockControlState.isUsingCrosshairs && state.mockControlState.activeLocationTarget is LocationTarget.Empty) cameraPositionState.position.target else null
+                    cameraPositionTarget = cameraPositionState.position.target
                 )
             }
         },
@@ -279,9 +272,9 @@ fun MapScreen(
             viewModel.togglePause()
         },
         onSaveLocationTarget = {
-            viewModel.updateMapState { it.copy(isShowingSavedRoutesDialog = true) }
+            viewModel.setIsShowingSavedRoutesDialog(true)
             if (state.mockControlState.isMocking) {
-                viewModel.updateMapState { it.copy(isNamingRoute = true) }
+                viewModel.setIsNamingRoute(true)
             }
         },
         onAddCrosshairsPoint = {
@@ -296,7 +289,6 @@ fun MapScreen(
             }
 
             if (state.isCameraFollowingMockedLocation) {
-                viewModel.updateMapState { it.copy(isCameraCurrentlyFollowingMockedLocation = true) }
                 viewModel.setIsCameraCurrentlyFollowingMockedLocation(true)
                 cameraPositionState.move(CameraUpdateFactory.zoomTo(15f))
             }
@@ -322,20 +314,19 @@ fun MapScreen(
             }
         },
         onShowSearch = { newValue ->
-            viewModel.setShouldFocusSearchBar(newValue)
-            viewModel.updateMapState { it.copy(isShowingSearch = newValue) }
+            viewModel.setIsShowingSearch(newValue)
         },
         onSpeedChanged = { newSpeed ->
-            viewModel.setSpeedValue(newSpeed)
+            viewModel.setSpeedValueUi(newSpeed)
         },
         onSpeedChangeFinished = { speedUnitValue ->
-            viewModel.saveSpeedUnitValue(speedUnitValue)
+            viewModel.setSpeedUnitValue(speedUnitValue)
         },
         onSetIsNamingRoute = { newValue ->
-            viewModel.updateMapState { it.copy(isNamingRoute = newValue) }
+            viewModel.setIsNamingRoute(newValue)
         },
         onDismissSavedRouteDialog = {
-            viewModel.updateMapState { it.copy(isShowingSavedRoutesDialog = false) }
+            viewModel.setIsShowingSavedRoutesDialog(false)
         },
         onRouteSaved = { name ->
             viewModel.saveCurrentRoute(name)
@@ -350,7 +341,7 @@ fun MapScreen(
             viewModel.deleteSavedRoute(savedRoute)
         },
         onDismissPermissionsDialog = {
-            viewModel.updateMapState { it.copy(permissionToBeRequested = null) }
+            viewModel.setPermissionToBeRequested(null)
         },
         onClickCompass = {
             scope.launch {
