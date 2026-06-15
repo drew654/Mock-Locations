@@ -1,12 +1,8 @@
 package com.drew654.mocklocations.presentation.map_screen
 
 import android.app.Application
-import android.content.BroadcastReceiver
-import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.widget.Toast
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.drew654.mocklocations.R
@@ -24,7 +20,6 @@ import com.drew654.mocklocations.domain.model.SpeedUnitValue
 import com.drew654.mocklocations.repository.RouteRepository
 import com.drew654.mocklocations.service.MockLocationService
 import com.drew654.mocklocations.service.MockLocationService.Companion.ACTION_RESTORE_STRAIGHT_LINE_MOCKING
-import com.drew654.mocklocations.service.MockLocationService.Companion.ACTION_ROUTE_FINISHED
 import com.drew654.mocklocations.service.MockLocationService.Companion.ACTION_START_MOCKING
 import com.drew654.mocklocations.service.MockLocationService.Companion.ACTION_STOP_MOCKING
 import com.google.android.gms.maps.model.CameraPosition
@@ -40,7 +35,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.flow.updateAndGet
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -139,33 +133,13 @@ class MapViewModel @Inject constructor(
                 }
             }
         }
-
-        val filter = IntentFilter(ACTION_ROUTE_FINISHED)
-        ContextCompat.registerReceiver(application, object : BroadcastReceiver() {
-            override fun onReceive(p0: Context?, p1: Intent?) {
-                viewModelScope.launch {
-                    val clearRouteOnStop = settingsManager.clearRouteOnStopFlow.first()
-                    updateAndSaveMockControlState {
-                        it.copy(
-                            isMocking = false,
-                            isPaused = false,
-                            isWaitingAtEndOfRoute = false,
-                            isWaitingForRouteFetch = false,
-                            activeLocationTarget = if (clearRouteOnStop) LocationTarget.Empty else (it.activeLocationTarget)
-                        )
-                    }
-                }
-            }
-        }, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
     }
 
     private suspend fun updateAndSaveMockControlState(transform: (MockControlState) -> MockControlState) {
-        val updatedState = _state.updateAndGet { state ->
-            val currentState = state.mockControlState
-            val newState = transform(currentState)
-            state.copy(mockControlState = newState)
-        }
-        settingsManager.setMockControlState(updatedState.mockControlState)
+        val currentState = settingsManager.mockControlStateFlow.first()
+        val newState = transform(currentState)
+        settingsManager.setMockControlState(newState)
+        _state.update { it.copy(mockControlState = newState) }
     }
 
     fun clearLocationTarget() {
@@ -245,7 +219,7 @@ class MapViewModel @Inject constructor(
         _state.update { it.copy(hasRestoredCamera = newValue) }
     }
 
-    fun setIsCameraCurrentlyFollowingMockedLocation(newValue: Boolean) {
+    fun setAndSaveIsCameraCurrentlyFollowingMockedLocation(newValue: Boolean) {
         viewModelScope.launch {
             _state.update { it.copy(isCameraCurrentlyFollowingMockedLocation = newValue) }
             settingsManager.setIsCameraCurrentlyFollowingMockedLocation(newValue)
@@ -258,8 +232,9 @@ class MapViewModel @Inject constructor(
 
     suspend fun pushRouteSegment(point: LatLng) {
         val isBuildRouteOnRoads = settingsManager.buildRouteOnRoadsFlow.first()
+        val currentMockControlState = settingsManager.mockControlStateFlow.first()
         if (isBuildRouteOnRoads) {
-            if (_state.value.mockControlState.activeLocationTarget is LocationTarget.Empty) {
+            if (currentMockControlState.activeLocationTarget is LocationTarget.Empty) {
                 updateAndSaveMockControlState {
                     it.copy(
                         activeLocationTarget = LocationTarget.create(
@@ -271,7 +246,7 @@ class MapViewModel @Inject constructor(
                 }
             } else {
                 fetchAndAppendRoute(
-                    start = _state.value.mockControlState.activeLocationTarget.getLastPoint()!!,
+                    start = currentMockControlState.activeLocationTarget.getLastPoint()!!,
                     end = point
                 )
             }
@@ -362,11 +337,11 @@ class MapViewModel @Inject constructor(
     }
 
     fun saveCurrentRoute(name: String) {
-        val current = _state.value.mockControlState.activeLocationTarget
-        if (current.isRoute()) {
-            val routeToSave =
-                LocationTarget.SavedRoute(name = name, routeSegments = current.routeSegments)
-            viewModelScope.launch {
+        viewModelScope.launch {
+            val current = settingsManager.mockControlStateFlow.first().activeLocationTarget
+            if (current.isRoute()) {
+                val routeToSave =
+                    LocationTarget.SavedRoute(name = name, routeSegments = current.routeSegments)
                 settingsManager.saveRoute(route = routeToSave)
                 val newRoutes = settingsManager.savedRoutesFlow.first()
                 _state.update { it.copy(savedRoutes = newRoutes) }

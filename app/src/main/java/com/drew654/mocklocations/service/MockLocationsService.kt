@@ -73,9 +73,7 @@ class MockLocationService : Service() {
     companion object {
         const val ACTION_START_MOCKING = "ACTION_START_MOCKING"
         const val ACTION_STOP_MOCKING = "ACTION_STOP_MOCKING"
-        const val ACTION_STOP_MOCKING_NOTIFICATION = "ACTION_STOP_MOCKING_NOTIFICATION"
-        const val ACTION_PAUSE_MOCKING_NOTIFICATION = "ACTION_PAUSE_MOCKING_NOTIFICATION"
-        const val ACTION_ROUTE_FINISHED = "ACTION_ROUTE_FINISHED"
+        const val ACTION_PAUSE_MOCKING = "ACTION_PAUSE_MOCKING_NOTIFICATION"
         const val ACTION_RESTORE_STRAIGHT_LINE_MOCKING = "ACTION_RESTORE_STRAIGHT_LINE_MOCKING"
     }
 
@@ -154,22 +152,7 @@ class MockLocationService : Service() {
                 }
             }
 
-            ACTION_STOP_MOCKING_NOTIFICATION -> {
-                serviceScope.launch {
-                    settingsManager.setMockControlState(
-                        settingsManager.mockControlStateFlow.first().copy(
-                            isMocking = false,
-                            isPaused = false,
-                            isWaitingAtEndOfRoute = false,
-                            activeLocationTarget = if (isClearRouteOnStopState.value) LocationTarget.Empty else settingsManager.mockControlStateFlow.first().activeLocationTarget
-                        )
-                    )
-
-                    stopMocking()
-                }
-            }
-
-            ACTION_PAUSE_MOCKING_NOTIFICATION -> {
+            ACTION_PAUSE_MOCKING -> {
                 serviceScope.launch {
                     val current = settingsManager.mockControlStateFlow.first().isPaused
                     settingsManager.setMockControlState(settingsManager.mockControlStateFlow.first().copy(isPaused = !current))
@@ -498,15 +481,17 @@ class MockLocationService : Service() {
         settingsManager.setCurrentMockedLocation(null)
         lastBroadcastLocation = null
 
-        if (isClearRouteOnStopState.value) {
-            sendBroadcast(Intent(ACTION_ROUTE_FINISHED).setPackage(packageName))
-        } else {
-            settingsManager.setMockControlState(settingsManager.mockControlStateFlow.first().copy(
+        val clearRouteOnStop = isClearRouteOnStopState.value
+        val currentState = settingsManager.mockControlStateFlow.first()
+        settingsManager.setMockControlState(
+            currentState.copy(
                 isMocking = false,
                 isPaused = false,
-                isWaitingAtEndOfRoute = false
-            ))
-        }
+                isWaitingAtEndOfRoute = false,
+                isWaitingForRouteFetch = false,
+                activeLocationTarget = if (clearRouteOnStop) LocationTarget.Empty else currentState.activeLocationTarget
+            )
+        )
 
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()

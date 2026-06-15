@@ -44,8 +44,8 @@ class MockNotificationHelper @Inject constructor(@ApplicationContext private val
     }
 
     fun buildNotification(mockControlState: MockControlState): Notification {
-        val stopMockingIntent = createServicePendingIntent(MockLocationService.ACTION_STOP_MOCKING_NOTIFICATION)
-        val pauseMockingIntent = createServicePendingIntent(MockLocationService.ACTION_PAUSE_MOCKING_NOTIFICATION)
+        val stopMockingIntent = createServicePendingIntent(MockLocationService.ACTION_STOP_MOCKING)
+        val pauseMockingIntent = createServicePendingIntent(MockLocationService.ACTION_PAUSE_MOCKING)
 
         return NotificationCompat.Builder(context, CHANNEL_ID)
             .setContentTitle("Location Mocking Active")

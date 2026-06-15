@@ -143,7 +143,7 @@ fun MapScreen(
             cameraPositionState.isMoving to cameraPositionState.cameraMoveStartedReason
         }.collect { (isMoving, reason) ->
             if (isMoving && reason == CameraMoveStartedReason.GESTURE) {
-                viewModel.setIsCameraCurrentlyFollowingMockedLocation(false)
+                viewModel.setAndSaveIsCameraCurrentlyFollowingMockedLocation(false)
             }
 
             if (!isMoving) {
@@ -253,7 +253,7 @@ fun MapScreen(
             }
 
             if (state.isCameraFollowingMockedLocation && state.mockControlState.activeLocationTarget.isRoute()) {
-                viewModel.setIsCameraCurrentlyFollowingMockedLocation(true)
+                viewModel.setAndSaveIsCameraCurrentlyFollowingMockedLocation(true)
                 cameraPositionState.move(CameraUpdateFactory.zoomTo(15f))
             }
             scope.launch {
@@ -289,7 +289,7 @@ fun MapScreen(
             }
 
             if (state.isCameraFollowingMockedLocation) {
-                viewModel.setIsCameraCurrentlyFollowingMockedLocation(true)
+                viewModel.setAndSaveIsCameraCurrentlyFollowingMockedLocation(true)
                 cameraPositionState.move(CameraUpdateFactory.zoomTo(15f))
             }
             scope.launch {
