@@ -33,7 +33,6 @@ class MapStateTest {
         val hasRestoredCamera = true
         val isCameraFollowingMockedLocation = false
         val isCameraCurrentlyFollowingMockedLocation = false
-        val importUri = null
         val shouldFocusSearchBar = true
         val expandedControlsState = ExpandedControlsState(
             isExpanded = true,
@@ -87,7 +86,6 @@ class MapStateTest {
             hasRestoredCamera = hasRestoredCamera,
             isCameraFollowingMockedLocation = isCameraFollowingMockedLocation,
             isCameraCurrentlyFollowingMockedLocation = isCameraCurrentlyFollowingMockedLocation,
-            importUri = importUri,
             shouldFocusSearchBar = shouldFocusSearchBar,
             expandedControlsState = expandedControlsState,
             isShowingSearch = isShowingSearch,
@@ -108,7 +106,6 @@ class MapStateTest {
         assertEquals(hasRestoredCamera, mapState.hasRestoredCamera)
         assertEquals(isCameraFollowingMockedLocation, mapState.isCameraFollowingMockedLocation)
         assertEquals(isCameraCurrentlyFollowingMockedLocation, mapState.isCameraCurrentlyFollowingMockedLocation)
-        assertEquals(importUri, mapState.importUri)
         assertEquals(shouldFocusSearchBar, mapState.shouldFocusSearchBar)
         assertEquals(expandedControlsState, mapState.expandedControlsState)
         assertEquals(isShowingSearch, mapState.isShowingSearch)
