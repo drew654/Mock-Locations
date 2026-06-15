@@ -320,7 +320,7 @@ fun MapScreen(
             viewModel.setSpeedValueUi(newSpeed)
         },
         onSpeedChangeFinished = { speedUnitValue ->
-            viewModel.setSpeedUnitValue(speedUnitValue)
+            viewModel.saveSpeedUnitValue(speedUnitValue)
         },
         onSetIsNamingRoute = { newValue ->
             viewModel.setIsNamingRoute(newValue)

@@ -121,7 +121,7 @@ class MapViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            updateMockControlState { it.copy(isWaitingForRouteFetch = false) }
+            updateAndSaveMockControlState { it.copy(isWaitingForRouteFetch = false) }
         }
 
         viewModelScope.launch {
@@ -145,7 +145,7 @@ class MapViewModel @Inject constructor(
             override fun onReceive(p0: Context?, p1: Intent?) {
                 viewModelScope.launch {
                     val clearRouteOnStop = settingsManager.clearRouteOnStopFlow.first()
-                    updateMockControlState {
+                    updateAndSaveMockControlState {
                         it.copy(
                             isMocking = false,
                             isPaused = false,
@@ -159,7 +159,7 @@ class MapViewModel @Inject constructor(
         }, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
     }
 
-    private suspend fun updateMockControlState(transform: (MockControlState) -> MockControlState) {
+    private suspend fun updateAndSaveMockControlState(transform: (MockControlState) -> MockControlState) {
         val updatedState = _state.updateAndGet { state ->
             val currentState = state.mockControlState
             val newState = transform(currentState)
@@ -170,13 +170,13 @@ class MapViewModel @Inject constructor(
 
     fun clearLocationTarget() {
         viewModelScope.launch {
-            updateMockControlState { it.copy(activeLocationTarget = LocationTarget.Empty) }
+            updateAndSaveMockControlState { it.copy(activeLocationTarget = LocationTarget.Empty) }
         }
     }
 
     fun popRouteSegment() {
         viewModelScope.launch {
-            updateMockControlState { state ->
+            updateAndSaveMockControlState { state ->
                 state.copy(
                     activeLocationTarget = LocationTarget.create(state.activeLocationTarget.routeSegments.dropLast(1))
                 )
@@ -186,7 +186,7 @@ class MapViewModel @Inject constructor(
 
     fun togglePause() {
         viewModelScope.launch {
-            updateMockControlState { state ->
+            updateAndSaveMockControlState { state ->
                 state.copy(
                     isPaused = !state.isPaused
                 )
@@ -195,13 +195,8 @@ class MapViewModel @Inject constructor(
     }
 
     fun updateExpandedControlsState(transform: (ExpandedControlsState) -> ExpandedControlsState) {
-        viewModelScope.launch {
-            val updatedState = _state.updateAndGet { state ->
-                val currentState = state.expandedControlsState
-                val newState = transform(currentState)
-                state.copy(expandedControlsState = newState)
-            }
-            settingsManager.setSpeedUnitValue(updatedState.expandedControlsState.speedUnitValue)
+        _state.update { state ->
+            state.copy(expandedControlsState = transform(state.expandedControlsState))
         }
     }
 
@@ -219,8 +214,10 @@ class MapViewModel @Inject constructor(
         }
     }
 
-    fun setSpeedUnitValue(newValue: SpeedUnitValue) {
-        updateExpandedControlsState { it.copy(speedUnitValue = newValue) }
+    fun saveSpeedUnitValue(newValue: SpeedUnitValue) {
+        viewModelScope.launch {
+            settingsManager.setSpeedUnitValue(newValue)
+        }
     }
 
     fun setHasLocationPermission(newValue: Boolean) {
@@ -263,7 +260,7 @@ class MapViewModel @Inject constructor(
         val isBuildRouteOnRoads = settingsManager.buildRouteOnRoadsFlow.first()
         if (isBuildRouteOnRoads) {
             if (_state.value.mockControlState.activeLocationTarget is LocationTarget.Empty) {
-                updateMockControlState {
+                updateAndSaveMockControlState {
                     it.copy(
                         activeLocationTarget = LocationTarget.create(
                             listOf(
@@ -279,7 +276,7 @@ class MapViewModel @Inject constructor(
                 )
             }
         } else {
-            updateMockControlState {
+            updateAndSaveMockControlState {
                 it.copy(
                     activeLocationTarget = LocationTarget.create(
                         it.activeLocationTarget.routeSegments + RouteSegment(
@@ -292,10 +289,10 @@ class MapViewModel @Inject constructor(
     }
 
     private suspend fun fetchAndAppendRoute(start: LatLng, end: LatLng) {
-        updateMockControlState { it.copy(isWaitingForRouteFetch = true) }
+        updateAndSaveMockControlState { it.copy(isWaitingForRouteFetch = true) }
         val points = routeRepository.getRoutePoints(start, end)
         if (points.isNotEmpty()) {
-            updateMockControlState {
+            updateAndSaveMockControlState {
                 it.copy(
                     activeLocationTarget = LocationTarget.create(
                         it.activeLocationTarget.routeSegments + RouteSegment(points)
@@ -305,13 +302,13 @@ class MapViewModel @Inject constructor(
             }
         } else {
             Toast.makeText(application, "No route found", Toast.LENGTH_SHORT).show()
-            updateMockControlState { it.copy(isWaitingForRouteFetch = false) }
+            updateAndSaveMockControlState { it.copy(isWaitingForRouteFetch = false) }
         }
     }
 
     fun startMockLocation(cameraPositionTarget: LatLng) {
         viewModelScope.launch {
-            updateMockControlState { state ->
+            updateAndSaveMockControlState { state ->
                 val target = if (state.isUsingCrosshairs && state.activeLocationTarget is LocationTarget.Empty) {
                     LocationTarget.create(state.activeLocationTarget.routeSegments + RouteSegment(listOf(cameraPositionTarget)))
                 } else {
@@ -331,7 +328,7 @@ class MapViewModel @Inject constructor(
     fun stopMockLocation() {
         viewModelScope.launch {
             val isClearRouteOnStop = settingsManager.clearRouteOnStopFlow.first()
-            updateMockControlState { state ->
+            updateAndSaveMockControlState { state ->
                 state.copy(
                     isMocking = false,
                     isPaused = false,
@@ -379,7 +376,7 @@ class MapViewModel @Inject constructor(
 
     fun loadSavedRoute(route: LocationTarget.SavedRoute) {
         viewModelScope.launch {
-            updateMockControlState { it.copy(activeLocationTarget = route) }
+            updateAndSaveMockControlState { it.copy(activeLocationTarget = route) }
         }
     }
 
