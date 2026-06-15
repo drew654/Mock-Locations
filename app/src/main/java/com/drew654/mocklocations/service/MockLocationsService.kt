@@ -26,6 +26,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
@@ -38,6 +39,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
@@ -63,7 +65,6 @@ class MockLocationService : Service() {
         listOf(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER, LocationManager.FUSED_PROVIDER)
 
     private lateinit var mockControlState: StateFlow<MockControlState>
-    private lateinit var isClearRouteOnStopState: StateFlow<Boolean>
     private lateinit var accuracyMetersState: StateFlow<Float>
     private lateinit var locationUpdateDelayState: StateFlow<Long>
     private var lastBroadcastLocation: Location? = null
@@ -85,12 +86,6 @@ class MockLocationService : Service() {
             scope = serviceScope,
             started = SharingStarted.Eagerly,
             initialValue = MockControlState()
-        )
-
-        isClearRouteOnStopState = settingsManager.clearRouteOnStopFlow.stateIn(
-            scope = serviceScope,
-            started = SharingStarted.Eagerly,
-            initialValue = false
         )
 
         accuracyMetersState = settingsManager.locationAccuracyLevelFlow
@@ -477,24 +472,26 @@ class MockLocationService : Service() {
     }
 
     private suspend fun stopMockingInternal() {
-        tearDownTestProvider()
-        settingsManager.setCurrentMockedLocation(null)
-        lastBroadcastLocation = null
+        withContext(NonCancellable) {
+            tearDownTestProvider()
+            settingsManager.setCurrentMockedLocation(null)
+            lastBroadcastLocation = null
 
-        val clearRouteOnStop = isClearRouteOnStopState.value
-        val currentState = settingsManager.mockControlStateFlow.first()
-        settingsManager.setMockControlState(
-            currentState.copy(
-                isMocking = false,
-                isPaused = false,
-                isWaitingAtEndOfRoute = false,
-                isWaitingForRouteFetch = false,
-                activeLocationTarget = if (clearRouteOnStop) LocationTarget.Empty else currentState.activeLocationTarget
+            val clearRouteOnStop = settingsManager.clearRouteOnStopFlow.first()
+            val currentState = settingsManager.mockControlStateFlow.first()
+            settingsManager.setMockControlState(
+                currentState.copy(
+                    isMocking = false,
+                    isPaused = false,
+                    isWaitingAtEndOfRoute = false,
+                    isWaitingForRouteFetch = false,
+                    activeLocationTarget = if (clearRouteOnStop) LocationTarget.Empty else currentState.activeLocationTarget
+                )
             )
-        )
 
-        stopForeground(STOP_FOREGROUND_REMOVE)
-        stopSelf()
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            stopSelf()
+        }
     }
 
     private suspend fun stopMocking() {
