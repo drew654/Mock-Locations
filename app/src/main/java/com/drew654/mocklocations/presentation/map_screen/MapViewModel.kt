@@ -40,6 +40,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.updateAndGet
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -159,12 +160,12 @@ class MapViewModel @Inject constructor(
     }
 
     private suspend fun updateMockControlState(transform: (MockControlState) -> MockControlState) {
-        _state.update { state ->
+        val updatedState = _state.updateAndGet { state ->
             val currentState = state.mockControlState
             val newState = transform(currentState)
-            settingsManager.setMockControlState(newState)
             state.copy(mockControlState = newState)
         }
+        settingsManager.setMockControlState(updatedState.mockControlState)
     }
 
     fun clearLocationTarget() {
@@ -195,12 +196,12 @@ class MapViewModel @Inject constructor(
 
     fun updateExpandedControlsState(transform: (ExpandedControlsState) -> ExpandedControlsState) {
         viewModelScope.launch {
-            _state.update { state ->
+            val updatedState = _state.updateAndGet { state ->
                 val currentState = state.expandedControlsState
                 val newState = transform(currentState)
-                settingsManager.setSpeedUnitValue(newState.speedUnitValue)
                 state.copy(expandedControlsState = newState)
             }
+            settingsManager.setSpeedUnitValue(updatedState.expandedControlsState.speedUnitValue)
         }
     }
 
@@ -311,9 +312,7 @@ class MapViewModel @Inject constructor(
     fun startMockLocation(cameraPositionTarget: LatLng) {
         viewModelScope.launch {
             updateMockControlState { state ->
-                val isUsingCrosshairs = _state.value.mockControlState.isUsingCrosshairs
-                val activeLocationTarget = _state.value.mockControlState.activeLocationTarget
-                val target = if (isUsingCrosshairs && activeLocationTarget is LocationTarget.Empty) {
+                val target = if (state.isUsingCrosshairs && state.activeLocationTarget is LocationTarget.Empty) {
                     LocationTarget.create(state.activeLocationTarget.routeSegments + RouteSegment(listOf(cameraPositionTarget)))
                 } else {
                     state.activeLocationTarget
