@@ -1,5 +1,9 @@
 package com.drew654.mocklocations.presentation.import_settings
 
+import android.app.Activity
+import android.app.Instrumentation.ActivityResult
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -11,6 +15,10 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.navigation.NavController
+import androidx.test.espresso.intent.Intents
+import androidx.test.espresso.intent.Intents.intended
+import androidx.test.espresso.intent.Intents.intending
+import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
 import com.drew654.mocklocations.domain.model.ImportRouteOption
 import com.drew654.mocklocations.domain.model.ImportSettingsState
 import io.mockk.every
@@ -27,17 +35,24 @@ class ImportSettingsScreenTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    private val viewModel = mockk<MockLocationsViewModel>(relaxed = true)
+    private val viewModel = mockk<ImportSettingsViewModel>(relaxed = true)
     private val navController = mockk<NavController>(relaxed = true)
-    private val importSettingsState = MutableStateFlow(ImportSettingsState())
+    private val state = MutableStateFlow(ImportSettingsState())
 
     private fun setupMockFlows() {
-        importSettingsState.value = ImportSettingsState()
-        every { viewModel.importSettingsState } returns importSettingsState
+        state.value = ImportSettingsState(importUri = mockk(relaxed = true))
+        every { viewModel.state } returns state
 
-        every { viewModel.updateImportSettingsState(any()) } answers {
-            val transform = firstArg<(ImportSettingsState) -> ImportSettingsState>()
-            importSettingsState.value = transform(importSettingsState.value)
+        every { viewModel.setIsImportSettings(any()) } answers {
+            state.value = state.value.copy(isImportSettings = firstArg())
+        }
+
+        every { viewModel.setIsImportRoutes(any()) } answers {
+            state.value = state.value.copy(isImportRoutes = firstArg())
+        }
+
+        every { viewModel.setImportRouteOption(any()) } answers {
+            state.value = state.value.copy(importRouteOption = firstArg())
         }
     }
 
@@ -191,16 +206,6 @@ class ImportSettingsScreenTest {
     }
 
     @Test
-    fun integration_onOpen_refreshImportSettingsState() {
-        setupMockFlows()
-        composeTestRule.setContent {
-            ImportSettingsScreen(viewModel = viewModel, navController = navController)
-        }
-
-        verify { viewModel.refreshImportSettingsState() }
-    }
-
-    @Test
     fun integration_backButton_callsNavController() {
         setupMockFlows()
         composeTestRule.setContent {
@@ -218,12 +223,13 @@ class ImportSettingsScreenTest {
         composeTestRule.setContent {
             ImportSettingsScreen(viewModel = viewModel, navController = navController)
         }
-        importSettingsState.value = ImportSettingsState(isImportSettingsEnabled = true)
+        state.value = state.value.copy(isImportSettingsEnabled = true)
 
         composeTestRule.onNodeWithText("Import settings").performClick()
 
+        verify { viewModel.setIsImportSettings(true) }
+        assertTrue(state.value.isImportSettings)
         composeTestRule.onNodeWithTag("import_settings_checkbox").assertIsOn()
-        assertTrue(importSettingsState.value.isImportSettings)
         composeTestRule.onNodeWithText("Import").assertIsEnabled()
     }
 
@@ -233,15 +239,16 @@ class ImportSettingsScreenTest {
         composeTestRule.setContent {
             ImportSettingsScreen(viewModel = viewModel, navController = navController)
         }
-        importSettingsState.value = ImportSettingsState(
+        state.value = state.value.copy(
             isImportRoutesEnabled = true,
             routesToImport = 5
         )
 
         composeTestRule.onNodeWithText("Import 5 routes").performClick()
 
+        verify { viewModel.setIsImportRoutes(true) }
+        assertTrue(state.value.isImportRoutes)
         composeTestRule.onNodeWithTag("import_routes_checkbox").assertIsOn()
-        assertTrue(importSettingsState.value.isImportRoutes)
         composeTestRule.onNodeWithText("Import").assertIsEnabled()
     }
 
@@ -251,7 +258,7 @@ class ImportSettingsScreenTest {
         composeTestRule.setContent {
             ImportSettingsScreen(viewModel = viewModel, navController = navController)
         }
-        importSettingsState.value = ImportSettingsState(
+        state.value = state.value.copy(
             isImportRoutesEnabled = true,
             isImportRoutes = true,
             importRouteOption = ImportRouteOption.MERGE,
@@ -260,8 +267,9 @@ class ImportSettingsScreenTest {
 
         composeTestRule.onNodeWithText("Replace current routes").performClick()
 
+        verify { viewModel.setImportRouteOption(ImportRouteOption.REPLACE) }
+        assertEquals(state.value.importRouteOption, ImportRouteOption.REPLACE)
         composeTestRule.onNodeWithTag("replace_routes_radio_button").assertIsSelected()
-        assertEquals(importSettingsState.value.importRouteOption, ImportRouteOption.REPLACE)
         composeTestRule.onNodeWithText("Import").assertIsEnabled()
     }
 
@@ -271,7 +279,7 @@ class ImportSettingsScreenTest {
         composeTestRule.setContent {
             ImportSettingsScreen(viewModel = viewModel, navController = navController)
         }
-        importSettingsState.value = ImportSettingsState(
+        state.value = state.value.copy(
             isImportRoutesEnabled = true,
             isImportRoutes = true,
             importRouteOption = ImportRouteOption.REPLACE,
@@ -280,8 +288,53 @@ class ImportSettingsScreenTest {
 
         composeTestRule.onNodeWithText("Merge with current routes").performClick()
 
+        verify { viewModel.setImportRouteOption(ImportRouteOption.MERGE) }
+        assertEquals(state.value.importRouteOption, ImportRouteOption.MERGE)
         composeTestRule.onNodeWithTag("merge_routes_radio_button").assertIsSelected()
-        assertEquals(importSettingsState.value.importRouteOption, ImportRouteOption.MERGE)
         composeTestRule.onNodeWithText("Import").assertIsEnabled()
+    }
+
+    @Test
+    fun integration_launchesPicker_andSetsUriOnSuccess() {
+        val testState = MutableStateFlow(ImportSettingsState(importUri = null))
+        every { viewModel.state } returns testState
+        val mockUri = mockk<Uri>()
+
+        Intents.init()
+        try {
+            val resultIntent = Intent().apply { data = mockUri }
+            intending(hasAction(Intent.ACTION_OPEN_DOCUMENT))
+                .respondWith(ActivityResult(Activity.RESULT_OK, resultIntent))
+
+            composeTestRule.setContent {
+                ImportSettingsScreen(viewModel = viewModel, navController = navController)
+            }
+
+            intended(hasAction(Intent.ACTION_OPEN_DOCUMENT))
+            verify { viewModel.setImportUri(mockUri) }
+        } finally {
+            Intents.release()
+        }
+    }
+
+    @Test
+    fun integration_launchesPicker_andPopsBackStackOnCancel() {
+        val testState = MutableStateFlow(ImportSettingsState(importUri = null))
+        every { viewModel.state } returns testState
+
+        Intents.init()
+        try {
+            intending(hasAction(Intent.ACTION_OPEN_DOCUMENT))
+                .respondWith(ActivityResult(Activity.RESULT_CANCELED, null))
+
+            composeTestRule.setContent {
+                ImportSettingsScreen(viewModel = viewModel, navController = navController)
+            }
+
+            intended(hasAction(Intent.ACTION_OPEN_DOCUMENT))
+            verify { navController.popBackStack() }
+        } finally {
+            Intents.release()
+        }
     }
 }
