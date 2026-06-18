@@ -11,6 +11,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -48,7 +49,10 @@ class ExpandedControlsConfigurationViewModelTest {
     @Test
     fun `setIsShowingDialog updates state`() {
         viewModel.setIsShowingDialog(true)
-        assertEquals(true, viewModel.state.value.isShowingDialog)
+        assertTrue(viewModel.state.value.isShowingDialog)
+
+        viewModel.setIsShowingDialog(false)
+        assertFalse(viewModel.state.value.isShowingDialog)
     }
 
     @Test
