@@ -75,7 +75,7 @@ class MockLocationService : Service() {
         const val ACTION_START_MOCKING = "ACTION_START_MOCKING"
         const val ACTION_STOP_MOCKING = "ACTION_STOP_MOCKING"
         const val ACTION_PAUSE_MOCKING = "ACTION_PAUSE_MOCKING_NOTIFICATION"
-        const val ACTION_RESTORE_STRAIGHT_LINE_MOCKING = "ACTION_RESTORE_STRAIGHT_LINE_MOCKING"
+        const val ACTION_RESTORE_ROUTE_MOCKING = "ACTION_RESTORE_ROUTE_MOCKING"
     }
 
     override fun onCreate() {
@@ -154,7 +154,7 @@ class MockLocationService : Service() {
                 }
             }
 
-            ACTION_RESTORE_STRAIGHT_LINE_MOCKING -> {
+            ACTION_RESTORE_ROUTE_MOCKING -> {
                 serviceScope.launch {
                     val locationTarget = settingsManager.mockControlStateFlow.first().activeLocationTarget
                     val restoreMockingPoint = withTimeoutOrNull(3000) {

@@ -19,7 +19,7 @@ import com.drew654.mocklocations.domain.model.SavedCameraPosition
 import com.drew654.mocklocations.domain.model.SpeedUnitValue
 import com.drew654.mocklocations.repository.RouteRepository
 import com.drew654.mocklocations.service.MockLocationService
-import com.drew654.mocklocations.service.MockLocationService.Companion.ACTION_RESTORE_STRAIGHT_LINE_MOCKING
+import com.drew654.mocklocations.service.MockLocationService.Companion.ACTION_RESTORE_ROUTE_MOCKING
 import com.drew654.mocklocations.service.MockLocationService.Companion.ACTION_START_MOCKING
 import com.drew654.mocklocations.service.MockLocationService.Companion.ACTION_STOP_MOCKING
 import com.google.android.gms.maps.model.CameraPosition
@@ -124,7 +124,7 @@ class MapViewModel @Inject constructor(
             if (wasMocking) {
                 Intent(application, MockLocationService::class.java).apply {
                     action = if (activeLocationTarget.isRoute()) {
-                        ACTION_RESTORE_STRAIGHT_LINE_MOCKING
+                        ACTION_RESTORE_ROUTE_MOCKING
                     } else {
                         ACTION_START_MOCKING
                     }
