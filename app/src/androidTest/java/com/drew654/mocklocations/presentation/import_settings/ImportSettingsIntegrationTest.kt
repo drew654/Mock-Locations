@@ -11,6 +11,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -60,7 +61,7 @@ class ImportSettingsIntegrationTest {
     }
 
     @Test
-    fun importRealJson_updatesUiSummary() {
+    fun importSettings_updatesUiSummary() {
         val assetManager = InstrumentationRegistry.getInstrumentation().context.assets
         val json = assetManager.open("18_mock_locations_2026_06_22_10_38_12.json").bufferedReader().use { it.readText() }
 
@@ -84,7 +85,7 @@ class ImportSettingsIntegrationTest {
     }
 
     @Test
-    fun importData_navigatesBackToSettings_andShowsUpdatedContent() {
+    fun importSettings_navigatesBackToSettings_andShowsUpdatedContent() {
         val assetManager = InstrumentationRegistry.getInstrumentation().context.assets
         val json = assetManager.open("18_mock_locations_2026_06_22_10_38_12.json").bufferedReader().use { it.readText() }
         val tempFile = File(context.cacheDir, "temp_import.json")
@@ -105,7 +106,7 @@ class ImportSettingsIntegrationTest {
             }
         }
 
-        composeTestRule.onNodeWithText("Import settings").performClick()
+        composeTestRule.onNodeWithText("Import settings").performScrollTo().performClick()
         
         composeTestRule.onNodeWithText("Import Settings").assertIsDisplayed()
 
@@ -127,9 +128,9 @@ class ImportSettingsIntegrationTest {
                 composeTestRule.onNodeWithTag("clear_route_on_stop_switch").assertIsOn()
                 composeTestRule.onNodeWithTag("camera_follows_mocked_location_switch").assertIsOn()
                 composeTestRule.onNodeWithTag("wait_at_the_end_of_a_route_switch").assertIsOn()
-                composeTestRule.onNodeWithText("Terrain").assertIsDisplayed()
-                composeTestRule.onNodeWithText("Low").assertIsDisplayed()
-                composeTestRule.onNodeWithText("3.2 s").assertIsDisplayed()
+                composeTestRule.onNodeWithText("Terrain").performScrollTo().assertIsDisplayed()
+                composeTestRule.onNodeWithText("Low").performScrollTo().assertIsDisplayed()
+                composeTestRule.onNodeWithText("3.2 s").performScrollTo().assertIsDisplayed()
                 true
             } catch (_: AssertionError) {
                 false
@@ -138,7 +139,7 @@ class ImportSettingsIntegrationTest {
     }
 
     @Test
-    fun importData_updatesExpandedControlsConfigurationUi() {
+    fun importSettings_updatesExpandedControlsConfigurationUi() {
         val assetManager = InstrumentationRegistry.getInstrumentation().context.assets
         val json = assetManager.open("18_mock_locations_2026_06_22_10_38_12.json").bufferedReader().use { it.readText() }
         val tempFile = File(context.cacheDir, "temp_import.json")
@@ -162,7 +163,7 @@ class ImportSettingsIntegrationTest {
             }
         }
 
-        composeTestRule.onNodeWithText("Import settings").performClick()
+        composeTestRule.onNodeWithText("Import settings").performScrollTo().performClick()
 
         composeTestRule.onNodeWithText("Import Settings").assertIsDisplayed()
 
