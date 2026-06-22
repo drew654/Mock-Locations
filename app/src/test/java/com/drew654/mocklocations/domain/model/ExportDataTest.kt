@@ -13,6 +13,7 @@ class ExportDataTest {
             exportedAt = "2026-05-06T13:22:01.836019Z"
         )
         val settings = ExportSettings(
+            buildRouteOnRoads = true,
             useCrosshairs = true,
             clearRouteOnStop = false,
             cameraFollowsMockedLocation = true,
