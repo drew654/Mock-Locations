@@ -8,7 +8,9 @@ import com.drew654.mocklocations.domain.model.SpeedUnitValue
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -20,29 +22,33 @@ class ExpandedControlsConfigurationViewModel @Inject constructor(
     val state = _state.asStateFlow()
 
     init {
-        viewModelScope.launch {
-            _state.value = ExpandedControlsConfigurationState(
-                speedUnitValue = settingsManager.speedUnitValueFlow.first(),
-                speedSliderLowerEnd = settingsManager.speedSliderLowerEndFlow.first().toString(),
-                speedSliderUpperEnd = settingsManager.speedSliderUpperEndFlow.first().toString()
-            )
-        }
+        settingsManager.speedUnitValueFlow.onEach { value ->
+            _state.update { it.copy(speedUnitValue = value) }
+        }.launchIn(viewModelScope)
+
+        settingsManager.speedSliderLowerEndFlow.onEach { value ->
+            _state.update { it.copy(speedSliderLowerEnd = value.toString()) }
+        }.launchIn(viewModelScope)
+
+        settingsManager.speedSliderUpperEndFlow.onEach { value ->
+            _state.update { it.copy(speedSliderUpperEnd = value.toString()) }
+        }.launchIn(viewModelScope)
     }
 
     fun setIsShowingDialog(newValue: Boolean) {
-        _state.value = _state.value.copy(isShowingDialog = newValue)
+        _state.update { it.copy(isShowingDialog = newValue) }
     }
 
     fun setSpeedSliderLowerEnd(newValue: String) {
-        _state.value = _state.value.copy(speedSliderLowerEnd = newValue)
+        _state.update { it.copy(speedSliderLowerEnd = newValue) }
     }
 
     fun setSpeedSliderUpperEnd(newValue: String) {
-        _state.value = _state.value.copy(speedSliderUpperEnd = newValue)
+        _state.update { it.copy(speedSliderUpperEnd = newValue) }
     }
 
     fun setSpeedUnitValue(newValue: SpeedUnitValue) {
-        _state.value = _state.value.copy(speedUnitValue = newValue)
+        _state.update { it.copy(speedUnitValue = newValue) }
     }
 
     fun save(onSuccess: () -> Unit) {
