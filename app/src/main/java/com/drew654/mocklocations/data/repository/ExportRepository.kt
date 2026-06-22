@@ -36,6 +36,7 @@ class ExportRepository(
 
         val settings = if (exportSettings) {
             ExportSettings(
+                buildRouteOnRoads = settingsManager.buildRouteOnRoadsFlow.first(),
                 useCrosshairs = settingsManager.mockControlStateFlow.first().isUsingCrosshairs,
                 clearRouteOnStop = settingsManager.clearRouteOnStopFlow.first(),
                 cameraFollowsMockedLocation = settingsManager.isCameraFollowingMockedLocation.first(),
@@ -104,6 +105,7 @@ class ExportRepository(
 
     private suspend fun importSettings(settings: ExportSettings?) {
         if (settings == null) return
+        settingsManager.setBuildRouteOnRoads(settings.buildRouteOnRoads)
         settingsManager.setMockControlState(settingsManager.mockControlStateFlow.first().copy(isUsingCrosshairs = settings.useCrosshairs))
         settingsManager.setClearRouteOnStop(settings.clearRouteOnStop)
         settingsManager.setIsCameraFollowingMockedLocation(settings.cameraFollowsMockedLocation)

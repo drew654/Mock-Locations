@@ -1,6 +1,7 @@
 package com.drew654.mocklocations.domain.model
 
 data class ExportSettings(
+    val buildRouteOnRoads: Boolean,
     val useCrosshairs: Boolean,
     val clearRouteOnStop: Boolean,
     val cameraFollowsMockedLocation: Boolean,
