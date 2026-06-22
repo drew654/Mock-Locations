@@ -9,7 +9,8 @@ import com.drew654.mocklocations.domain.model.SettingsState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -22,27 +23,37 @@ class SettingsViewModel @Inject constructor(
     val state = _state.asStateFlow()
 
     init {
-        viewModelScope.launch {
-            val isBuildRouteOnRoads = settingsManager.buildRouteOnRoadsFlow.first()
-            val isUsingCrosshairs = settingsManager.mockControlStateFlow.first().isUsingCrosshairs
-            val clearPointsOnStop = settingsManager.clearRouteOnStopFlow.first()
-            val isCameraFollowingMockedLocation = settingsManager.isCameraFollowingMockedLocation.first()
-            val isGoingToWaitAtRouteFinish = settingsManager.isGoingToWaitAtRouteFinishFlow.first()
-            val mapStyle = settingsManager.mapStyleFlow.first()
-            val locationAccuracyLevel = settingsManager.locationAccuracyLevelFlow.first()
-            val locationUpdateDelay = settingsManager.locationUpdateDelayFlow.first()
+        settingsManager.buildRouteOnRoadsFlow.onEach { value ->
+            _state.update { it.copy(isBuildRouteOnRoads = value) }
+        }.launchIn(viewModelScope)
 
-            _state.value = SettingsState(
-                isBuildRouteOnRoads = isBuildRouteOnRoads,
-                isUsingCrosshairs = isUsingCrosshairs,
-                clearPointsOnStop = clearPointsOnStop,
-                isCameraFollowingMockedLocation = isCameraFollowingMockedLocation,
-                isGoingToWaitAtRouteFinish = isGoingToWaitAtRouteFinish,
-                mapStyle = mapStyle,
-                locationAccuracyLevel = locationAccuracyLevel,
-                locationUpdateDelay = locationUpdateDelay
-            )
-        }
+        settingsManager.mockControlStateFlow.onEach { value ->
+            _state.update { it.copy(isUsingCrosshairs = value.isUsingCrosshairs) }
+        }.launchIn(viewModelScope)
+
+        settingsManager.clearRouteOnStopFlow.onEach { value ->
+            _state.update { it.copy(clearPointsOnStop = value) }
+        }.launchIn(viewModelScope)
+
+        settingsManager.isCameraFollowingMockedLocation.onEach { value ->
+            _state.update { it.copy(isCameraFollowingMockedLocation = value) }
+        }.launchIn(viewModelScope)
+
+        settingsManager.isGoingToWaitAtRouteFinishFlow.onEach { value ->
+            _state.update { it.copy(isGoingToWaitAtRouteFinish = value) }
+        }.launchIn(viewModelScope)
+
+        settingsManager.mapStyleFlow.onEach { value ->
+            _state.update { it.copy(mapStyle = value) }
+        }.launchIn(viewModelScope)
+
+        settingsManager.locationAccuracyLevelFlow.onEach { value ->
+            _state.update { it.copy(locationAccuracyLevel = value) }
+        }.launchIn(viewModelScope)
+
+        settingsManager.locationUpdateDelayFlow.onEach { value ->
+            _state.update { it.copy(locationUpdateDelay = value) }
+        }.launchIn(viewModelScope)
     }
 
     fun setIsBuildRouteOnRoads(newValue: Boolean) {
