@@ -10,7 +10,6 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.navigation.NavController
 import com.drew654.mocklocations.domain.model.ExportSettingsState
-import com.drew654.mocklocations.presentation.MockLocationsViewModel
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -23,17 +22,20 @@ class ExportSettingsScreenTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    private val viewModel = mockk<MockLocationsViewModel>(relaxed = true)
+    private val viewModel = mockk<ExportSettingsViewModel>(relaxed = true)
     private val navController = mockk<NavController>(relaxed = true)
-    private val exportSettingsState = MutableStateFlow(ExportSettingsState())
+    private val state = MutableStateFlow(ExportSettingsState())
 
     private fun setupMockFlows() {
-        exportSettingsState.value = ExportSettingsState()
-        every { viewModel.exportSettingsState } returns exportSettingsState
+        state.value = ExportSettingsState()
+        every { viewModel.state } returns state
 
-        every { viewModel.updateExportSettingsState(any()) } answers {
-            val transform = firstArg<(ExportSettingsState) -> ExportSettingsState>()
-            exportSettingsState.value = transform(exportSettingsState.value)
+        every { viewModel.setIsExportSettings(any()) } answers {
+            state.value = state.value.copy(isExportSettings = firstArg())
+        }
+
+        every { viewModel.setIsExportRoutes(any()) } answers {
+            state.value = state.value.copy(isExportRoutes = firstArg())
         }
     }
 
@@ -138,16 +140,6 @@ class ExportSettingsScreenTest {
     }
 
     @Test
-    fun integration_onOpen_refreshExportSettingsState() {
-        setupMockFlows()
-        composeTestRule.setContent {
-            ExportSettingsScreen(viewModel = viewModel, navController = navController)
-        }
-
-        verify { viewModel.refreshExportSettingsState() }
-    }
-
-    @Test
     fun integration_backButton_callsNavController() {
         setupMockFlows()
         composeTestRule.setContent {
@@ -168,8 +160,9 @@ class ExportSettingsScreenTest {
 
         composeTestRule.onNodeWithText("Export settings").performClick()
 
+        verify { viewModel.setIsExportSettings(true) }
+        assertTrue(state.value.isExportSettings)
         composeTestRule.onNodeWithTag("export_settings_checkbox").assertIsOn()
-        assertTrue(exportSettingsState.value.isExportSettings)
         composeTestRule.onNodeWithText("Export").assertIsEnabled()
     }
 
@@ -179,15 +172,22 @@ class ExportSettingsScreenTest {
         composeTestRule.setContent {
             ExportSettingsScreen(viewModel = viewModel, navController = navController)
         }
-        exportSettingsState.value = ExportSettingsState(
+        state.value = ExportSettingsState(
             routesToExport = 5
         )
 
         composeTestRule.onNodeWithText("Export settings").performClick()
+
+        verify { viewModel.setIsExportSettings(true) }
+        assertTrue(state.value.isExportSettings)
+        composeTestRule.onNodeWithTag("export_settings_checkbox").assertIsOn()
+        composeTestRule.onNodeWithText("Export").assertIsEnabled()
+
         composeTestRule.onNodeWithText("Export 5 routes").performClick()
 
-        assertTrue(exportSettingsState.value.isExportSettings)
-        assertTrue(exportSettingsState.value.isExportRoutes)
+        verify { viewModel.setIsExportRoutes(true) }
+        assertTrue(state.value.isExportRoutes)
+        composeTestRule.onNodeWithTag("export_routes_checkbox").assertIsOn()
         composeTestRule.onNodeWithText("Export").assertIsEnabled()
     }
 
@@ -197,14 +197,15 @@ class ExportSettingsScreenTest {
         composeTestRule.setContent {
             ExportSettingsScreen(viewModel = viewModel, navController = navController)
         }
-        exportSettingsState.value = ExportSettingsState(
+        state.value = ExportSettingsState(
             routesToExport = 5
         )
 
         composeTestRule.onNodeWithText("Export 5 routes").performClick()
 
+        verify { viewModel.setIsExportRoutes(true) }
+        assertTrue(state.value.isExportRoutes)
         composeTestRule.onNodeWithTag("export_routes_checkbox").assertIsOn()
-        assertTrue(exportSettingsState.value.isExportRoutes)
         composeTestRule.onNodeWithText("Export").assertIsEnabled()
     }
 }

@@ -1,9 +1,6 @@
 package com.drew654.mocklocations.presentation.settings_screen
 
 import android.content.Intent
-import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
@@ -23,23 +20,18 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.core.net.toUri
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.drew654.mocklocations.BuildConfig
 import com.drew654.mocklocations.R
 import com.drew654.mocklocations.domain.model.LocationAccuracyLevel
 import com.drew654.mocklocations.domain.model.MapStyle
 import com.drew654.mocklocations.domain.model.SettingsState
-import com.drew654.mocklocations.presentation.MockLocationsViewModel
 import com.drew654.mocklocations.presentation.Screen
 import com.drew654.mocklocations.presentation.settings_screen.components.LocationAccuracyLevelDialog
 import com.drew654.mocklocations.presentation.settings_screen.components.LocationUpdateDelayDialog
@@ -53,68 +45,39 @@ import com.drew654.mocklocations.presentation.ui.theme.DeviceThemePreview
 
 @Composable
 fun SettingsScreen(
-    viewModel: MockLocationsViewModel,
+    viewModel: SettingsViewModel = hiltViewModel(),
     navController: NavController
 ) {
-    val state = viewModel.settingsState.collectAsState()
-    val importLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument()
-    ) { uri ->
-        uri?.let {
-            viewModel.setImportUri(it)
-            val versionCode = viewModel.getVersionCodeFromUri()
-            if (versionCode > BuildConfig.VERSION_CODE) {
-                Toast.makeText(navController.context, "App version is out of date", Toast.LENGTH_SHORT).show()
-                viewModel.setImportUri(null)
-                return@let
-            }
-            navController.navigate(Screen.ImportSettings.route)
-        }
-    }
-
-    var isInitialized by rememberSaveable { mutableStateOf(false) }
-    LaunchedEffect(Unit) {
-        if (!isInitialized) {
-            viewModel.refreshSettingsState()
-            isInitialized = true
-        }
-    }
+    val state by viewModel.state.collectAsState()
 
     SettingsContent(
-        state = state.value,
+        state = state,
         onBack = {
-            viewModel.setShouldFocusSearchBar(false)
             navController.popBackStack()
         },
         setBuildRouteOnRoad = { newValue ->
-            viewModel.updateSettingsState { it.copy(isBuildRouteOnRoads = newValue) }
-            viewModel.setBuildRouteOnRoads(newValue)
+            viewModel.setIsBuildRouteOnRoads(newValue)
         },
         setIsUsingCrosshairs = { newValue ->
-            viewModel.updateSettingsState { it.copy(isUsingCrosshairs = newValue) }
             viewModel.setIsUsingCrosshairs(newValue)
         },
         setClearRouteOnStop = { newValue ->
-            viewModel.updateSettingsState { it.copy(clearPointsOnStop = newValue) }
             viewModel.setClearRouteOnStop(newValue)
         },
         setIsCameraFollowingMockedLocation = { newValue ->
-            viewModel.updateSettingsState { it.copy(isCameraFollowingMockedLocation = newValue) }
             viewModel.setIsCameraFollowingMockedLocation(newValue)
-            viewModel.setIsCameraCurrentlyFollowingMockedLocation(newValue)
         },
         setIsGoingToWaitAtRouteFinish = { newValue ->
-            viewModel.updateSettingsState { it.copy(isGoingToWaitAtRouteFinish = newValue) }
             viewModel.setIsGoingToWaitAtRouteFinish(newValue)
         },
         setIsShowingMapStyleDialog = { newValue ->
-            viewModel.updateSettingsState { it.copy(isShowingMapStyleDialog = newValue) }
+            viewModel.setIsShowingMapStyleDialog(newValue)
         },
         setIsShowingLocationAccuracyLevelDialog = { newValue ->
-            viewModel.updateSettingsState { it.copy(isShowingLocationAccuracyLevelDialog = newValue) }
+            viewModel.setIsShowingLocationAccuracyDialog(newValue)
         },
         setIsShowingLocationUpdateDelayDialog = { newValue ->
-            viewModel.updateSettingsState { it.copy(isShowingLocationUpdateDelayDialog = newValue) }
+            viewModel.setIsShowingLocationUpdateDelayDialog(newValue)
         },
         onConfigureExpandedControlsClicked = {
             navController.navigate(Screen.ExpandedControlsConfiguration.route)
@@ -123,21 +86,18 @@ fun SettingsScreen(
             navController.navigate(Screen.ExportSettings.route)
         },
         onImportSettingsClicked = {
-            importLauncher.launch(arrayOf("application/json"))
+            navController.navigate(Screen.ImportSettings.route)
         },
         setIsShowingResetSettingsDialog = { newValue ->
-            viewModel.updateSettingsState { it.copy(isShowingResetSettingsDialog = newValue) }
+            viewModel.setIsShowingResetSettingsDialog(newValue)
         },
         onMapStyleSelected = { newValue ->
-            viewModel.updateSettingsState { it.copy(mapStyle = newValue) }
             viewModel.setMapStyle(newValue)
         },
         onLocationAccuracyLevelSelected = { newValue ->
-            viewModel.updateSettingsState { it.copy(locationAccuracyLevel = newValue) }
             viewModel.setLocationAccuracyLevel(newValue)
         },
         onLocationUpdateDelaySelected = { newValue ->
-            viewModel.updateSettingsState { it.copy(locationUpdateDelay = newValue) }
             viewModel.setLocationUpdateDelay(newValue)
         },
         onResetSettingsToDefault = {

@@ -1,4 +1,4 @@
-package com.drew654.mocklocations.data.repository
+package com.drew654.mocklocations.repository
 
 import android.util.Log
 import com.google.android.gms.maps.model.LatLng
@@ -8,7 +8,11 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
 
-class RouteRepository() {
+import javax.inject.Inject
+
+class RouteRepository @Inject constructor(
+    private val client: OkHttpClient
+) {
     suspend fun getRoutePoints(start: LatLng, end: LatLng): List<LatLng> =
         withContext(Dispatchers.IO) {
             try {
@@ -22,7 +26,7 @@ class RouteRepository() {
                     .url(url)
                     .build()
 
-                val response = OkHttpClient().newCall(request).execute()
+                val response = client.newCall(request).execute()
 
                 if (!response.isSuccessful) return@withContext emptyList()
 

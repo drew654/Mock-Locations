@@ -1,6 +1,8 @@
 package com.drew654.mocklocations.presentation.import_settings
 
 import android.content.res.Configuration
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -34,11 +36,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.drew654.mocklocations.R
 import com.drew654.mocklocations.domain.model.ImportRouteOption
 import com.drew654.mocklocations.domain.model.ImportSettingsState
-import com.drew654.mocklocations.presentation.MockLocationsViewModel
 import com.drew654.mocklocations.presentation.components.CheckboxRow
 import com.drew654.mocklocations.presentation.components.RadioButtonRow
 import com.drew654.mocklocations.presentation.ui.theme.DayNightDevicePreviews
@@ -47,37 +49,46 @@ import com.drew654.mocklocations.presentation.ui.theme.MockLocationsTheme
 
 @Composable
 fun ImportSettingsScreen(
-    viewModel: MockLocationsViewModel,
+    viewModel: ImportSettingsViewModel = hiltViewModel(),
     navController: NavController
 ) {
-    val state = viewModel.importSettingsState.collectAsState()
+    val state by viewModel.state.collectAsState()
+    val importLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) {
+            viewModel.setImportUri(uri)
+        } else if (state.importUri == null) {
+            navController.popBackStack()
+        }
+    }
 
-    var isInitialized by rememberSaveable { mutableStateOf(false) }
+    var hasAutoLaunched by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(Unit) {
-        if (!isInitialized) {
-            viewModel.refreshImportSettingsState()
-            isInitialized = true
+        if (!hasAutoLaunched && state.importUri == null) {
+            importLauncher.launch(arrayOf("application/json"))
+            hasAutoLaunched = true
         }
     }
 
     ImportSettingsContent(
-        state = state.value,
+        state = state,
         onBack = {
             navController.popBackStack()
-            viewModel.setImportUri(null)
         },
         onImport = {
-            viewModel.importDataFromUri(importSettingsState = state.value)
-            navController.popBackStack()
+            viewModel.importDataFromUri(onSuccess = {
+                navController.popBackStack()
+            })
         },
         setIsImportRoutes = { newValue ->
-            viewModel.updateImportSettingsState { it.copy(isImportRoutes = newValue) }
+            viewModel.setIsImportRoutes(newValue)
         },
         setIsImportSettings = { newValue ->
-            viewModel.updateImportSettingsState { it.copy(isImportSettings = newValue) }
+            viewModel.setIsImportSettings(newValue)
         },
         setImportRouteOption = { newValue ->
-            viewModel.updateImportSettingsState { it.copy(importRouteOption = newValue) }
+            viewModel.setImportRouteOption(newValue)
         }
     )
 }
@@ -180,7 +191,7 @@ internal fun ImportSettingsContent(
                     .padding(8.dp),
                 enabled = state.isFormValid()
             ) {
-                Text("Import")
+                Text(if (state.isImporting) "Importing..." else "Import")
             }
         }
     }

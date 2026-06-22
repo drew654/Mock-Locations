@@ -25,8 +25,10 @@ import com.drew654.mocklocations.domain.model.getMapStyleByName
 import com.drew654.mocklocations.util.JsonUtils
 import com.drew654.mocklocations.util.MigrationUtils
 import com.google.gson.reflect.TypeToken
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
     name = "settings",
@@ -79,7 +81,7 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
     }
 )
 
-class SettingsManager(private val context: Context) {
+class SettingsManager @Inject constructor(@param:ApplicationContext private val context: Context) {
     companion object {
         val VERSION_CODE = intPreferencesKey("version_code")
 
@@ -294,7 +296,7 @@ class SettingsManager(private val context: Context) {
         }
     }
 
-    private suspend fun setIsUsingCrosshairs(enabled: Boolean) {
+    suspend fun setIsUsingCrosshairs(enabled: Boolean) {
         context.dataStore.edit { preferences ->
             val current = preferences[MOCK_CONTROL_STATE_JSON]
                 ?.let { gson.fromJson(it, MockControlState::class.java) }
@@ -334,6 +336,14 @@ class SettingsManager(private val context: Context) {
     suspend fun setSpeedSliderLowerEnd(value: Int) {
         context.dataStore.edit { preferences ->
             preferences[SPEED_SLIDER_LOWER_END] = value
+        }
+    }
+
+    suspend fun setSpeedSettings(speedUnitValue: SpeedUnitValue, lowerEnd: Int, upperEnd: Int) {
+        context.dataStore.edit { preferences ->
+            preferences[SPEED_UNIT_VALUE_JSON] = gson.toJson(speedUnitValue)
+            preferences[SPEED_SLIDER_LOWER_END] = lowerEnd
+            preferences[SPEED_SLIDER_UPPER_END] = upperEnd
         }
     }
 

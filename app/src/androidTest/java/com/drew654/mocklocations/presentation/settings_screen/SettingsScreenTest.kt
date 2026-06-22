@@ -3,9 +3,12 @@ package com.drew654.mocklocations.presentation.settings_screen
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertIsOff
+import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -14,7 +17,6 @@ import androidx.navigation.NavController
 import com.drew654.mocklocations.domain.model.LocationAccuracyLevel
 import com.drew654.mocklocations.domain.model.MapStyle
 import com.drew654.mocklocations.domain.model.SettingsState
-import com.drew654.mocklocations.presentation.MockLocationsViewModel
 import com.drew654.mocklocations.presentation.Screen
 import com.drew654.mocklocations.presentation.toTrimmedString
 import io.mockk.every
@@ -31,18 +33,13 @@ class SettingsScreenTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    private val viewModel = mockk<MockLocationsViewModel>(relaxed = true)
+    private val viewModel = mockk<SettingsViewModel>(relaxed = true)
     private val navController = mockk<NavController>(relaxed = true)
-    private val settingsState = MutableStateFlow(SettingsState())
+    private val state = MutableStateFlow(SettingsState())
 
     private fun setupMockFlows() {
-        settingsState.value = SettingsState()
-        every { viewModel.settingsState } returns settingsState
-
-        every { viewModel.updateSettingsState(any()) } answers {
-            val transform = firstArg<(SettingsState) -> SettingsState>()
-            settingsState.value = transform(settingsState.value)
-        }
+        state.value = SettingsState()
+        every { viewModel.state } returns state
     }
 
     @Test
@@ -371,44 +368,45 @@ class SettingsScreenTest {
     }
 
     @Test
-    fun integration_onOpen_refreshSettingsState() {
+    fun integration_backButton_callsNavController() {
         setupMockFlows()
-        composeTestRule.setContent {
-            SettingsScreen(viewModel = viewModel, navController = navController)
-        }
 
-        verify { viewModel.refreshSettingsState() }
-    }
-
-    @Test
-    fun integration_backButton_callsViewModelAndNavController() {
-        setupMockFlows()
         composeTestRule.setContent {
             SettingsScreen(viewModel = viewModel, navController = navController)
         }
 
         composeTestRule.onNodeWithContentDescription("Back").performClick()
 
-        verify { viewModel.setShouldFocusSearchBar(false) }
         verify { navController.popBackStack() }
     }
 
     @Test
     fun integration_toggleBuildRouteOnRoads_callsViewModel() {
         setupMockFlows()
+
+        every { viewModel.setIsBuildRouteOnRoads(any()) } answers {
+            state.value = state.value.copy(isBuildRouteOnRoads = firstArg())
+        }
+
         composeTestRule.setContent {
             SettingsScreen(viewModel = viewModel, navController = navController)
         }
 
         composeTestRule.onNodeWithText("Build route on roads").performClick()
 
-        verify { viewModel.setBuildRouteOnRoads(true) }
-        assertTrue(settingsState.value.isBuildRouteOnRoads)
+        verify { viewModel.setIsBuildRouteOnRoads(true) }
+        assertTrue(state.value.isBuildRouteOnRoads)
+        composeTestRule.onNodeWithTag("build_route_on_roads_switch").assertIsOn()
     }
 
     @Test
     fun integration_toggleUseCrosshairs_callsViewModel() {
         setupMockFlows()
+
+        every { viewModel.setIsUsingCrosshairs(any()) } answers {
+            state.value = state.value.copy(isUsingCrosshairs = firstArg())
+        }
+
         composeTestRule.setContent {
             SettingsScreen(viewModel = viewModel, navController = navController)
         }
@@ -416,12 +414,18 @@ class SettingsScreenTest {
         composeTestRule.onNodeWithText("Use crosshairs").performClick()
 
         verify { viewModel.setIsUsingCrosshairs(false) }
-        assertFalse(settingsState.value.isUsingCrosshairs)
+        assertFalse(state.value.isUsingCrosshairs)
+        composeTestRule.onNodeWithTag("use_crosshairs_switch").assertIsOff()
     }
 
     @Test
     fun integration_toggleClearRouteOnStop_callsViewModel() {
         setupMockFlows()
+
+        every { viewModel.setClearRouteOnStop(any()) } answers {
+            state.value = state.value.copy(clearPointsOnStop = firstArg())
+        }
+
         composeTestRule.setContent {
             SettingsScreen(viewModel = viewModel, navController = navController)
         }
@@ -429,12 +433,18 @@ class SettingsScreenTest {
         composeTestRule.onNodeWithText("Clear route on stop").performClick()
 
         verify { viewModel.setClearRouteOnStop(true) }
-        assertTrue(settingsState.value.clearPointsOnStop)
+        assertTrue(state.value.clearPointsOnStop)
+        composeTestRule.onNodeWithTag("clear_route_on_stop_switch").assertIsOn()
     }
 
     @Test
     fun integration_toggleCameraFollowsMockedLocation_callsViewModel() {
         setupMockFlows()
+
+        every { viewModel.setIsCameraFollowingMockedLocation(any()) } answers {
+            state.value = state.value.copy(isCameraFollowingMockedLocation = firstArg())
+        }
+
         composeTestRule.setContent {
             SettingsScreen(viewModel = viewModel, navController = navController)
         }
@@ -442,12 +452,18 @@ class SettingsScreenTest {
         composeTestRule.onNodeWithText("Camera follows mocked location").performClick()
 
         verify { viewModel.setIsCameraFollowingMockedLocation(false) }
-        assertFalse(settingsState.value.isCameraFollowingMockedLocation)
+        assertFalse(state.value.isCameraFollowingMockedLocation)
+        composeTestRule.onNodeWithTag("camera_follows_mocked_location_switch").assertIsOff()
     }
 
     @Test
     fun integration_toggleWaitAtTheEndOfARoute() {
         setupMockFlows()
+
+        every { viewModel.setIsGoingToWaitAtRouteFinish(any()) } answers {
+            state.value = state.value.copy(isGoingToWaitAtRouteFinish = firstArg())
+        }
+
         composeTestRule.setContent {
             SettingsScreen(viewModel = viewModel, navController = navController)
         }
@@ -455,12 +471,21 @@ class SettingsScreenTest {
         composeTestRule.onNodeWithText("Wait at the end of a route").performClick()
 
         verify { viewModel.setIsGoingToWaitAtRouteFinish(true) }
-        assertTrue(settingsState.value.isGoingToWaitAtRouteFinish)
+        assertTrue(state.value.isGoingToWaitAtRouteFinish)
+        composeTestRule.onNodeWithTag("wait_at_the_end_of_a_route_switch").assertIsOn()
     }
 
     @Test
     fun integration_selectMapStyle_updatesViewModelAndUi() {
         setupMockFlows()
+
+        every { viewModel.setIsShowingMapStyleDialog(any()) } answers {
+            state.value = state.value.copy(isShowingMapStyleDialog = firstArg())
+        }
+        every { viewModel.setMapStyle(any()) } answers {
+            state.value = state.value.copy(mapStyle = firstArg())
+        }
+
         composeTestRule.setContent {
             SettingsScreen(viewModel = viewModel, navController = navController)
         }
@@ -470,45 +495,71 @@ class SettingsScreenTest {
         composeTestRule.onNodeWithText("Satellite").performClick()
 
         verify { viewModel.setMapStyle(MapStyle.Satellite) }
-        assertEquals(MapStyle.Satellite, settingsState.value.mapStyle)
+        assertEquals(MapStyle.Satellite, state.value.mapStyle)
         composeTestRule.onNodeWithText("Satellite").assertIsDisplayed()
     }
 
     @Test
     fun integration_selectLocationAccuracyLevel_updatesViewModelAndUi() {
         setupMockFlows()
+
+        every { viewModel.setIsShowingLocationAccuracyDialog(any()) } answers {
+            state.value = state.value.copy(isShowingLocationAccuracyLevelDialog = firstArg())
+        }
+        every { viewModel.setLocationAccuracyLevel(any()) } answers {
+            state.value = state.value.copy(locationAccuracyLevel = firstArg())
+        }
+
         composeTestRule.setContent {
             SettingsScreen(viewModel = viewModel, navController = navController)
         }
 
         composeTestRule.onNodeWithText("Location accuracy level").performScrollTo().performClick()
+        verify { viewModel.setIsShowingLocationAccuracyDialog(true) }
 
         composeTestRule.onNodeWithText("High (5 m)").performClick()
 
         verify { viewModel.setLocationAccuracyLevel(LocationAccuracyLevel.High) }
-        assertEquals(LocationAccuracyLevel.High, settingsState.value.locationAccuracyLevel)
+        assertEquals(LocationAccuracyLevel.High, state.value.locationAccuracyLevel)
         composeTestRule.onNodeWithText("High").performScrollTo().assertIsDisplayed()
     }
 
     @Test
     fun integration_selectLocationUpdateDelay_callsViewModel() {
         setupMockFlows()
+
+        every { viewModel.setIsShowingLocationUpdateDelayDialog(any()) } answers {
+            state.value = state.value.copy(isShowingLocationUpdateDelayDialog = firstArg())
+        }
+        every { viewModel.setLocationUpdateDelay(any()) } answers {
+            state.value = state.value.copy(locationUpdateDelay = firstArg())
+        }
+
         composeTestRule.setContent {
             SettingsScreen(viewModel = viewModel, navController = navController)
         }
 
         composeTestRule.onNodeWithText("Location update delay").performScrollTo().performClick()
+        verify { viewModel.setIsShowingLocationUpdateDelayDialog(true) }
 
         composeTestRule.onNodeWithText("1").performTextReplacement("3.5")
         composeTestRule.onNodeWithText("Save").performClick()
 
         verify { viewModel.setLocationUpdateDelay(3.5f) }
-        assertEquals(3.5f, settingsState.value.locationUpdateDelay)
+        assertEquals(3.5f, state.value.locationUpdateDelay)
     }
 
     @Test
     fun integration_selectLocationUpdateDelay_updatesViewModelAndUi() {
         setupMockFlows()
+
+        every { viewModel.setIsShowingLocationUpdateDelayDialog(any()) } answers {
+            state.value = state.value.copy(isShowingLocationUpdateDelayDialog = firstArg())
+        }
+        every { viewModel.setLocationUpdateDelay(any()) } answers {
+            state.value = state.value.copy(locationUpdateDelay = firstArg())
+        }
+
         composeTestRule.setContent {
             SettingsScreen(viewModel = viewModel, navController = navController)
         }
@@ -548,7 +599,6 @@ class SettingsScreenTest {
             composeTestRule.onNodeWithText("Save").performClick()
 
             verify { viewModel.setLocationUpdateDelay(expectedFloat) }
-
             composeTestRule.onNodeWithText(expectedText).assertIsDisplayed()
         }
     }
@@ -556,6 +606,7 @@ class SettingsScreenTest {
     @Test
     fun integration_clickConfigureExpandedControls_navigatesToExpandedControlsScreen() {
         setupMockFlows()
+
         composeTestRule.setContent {
             SettingsScreen(viewModel = viewModel, navController = navController)
         }
@@ -568,6 +619,7 @@ class SettingsScreenTest {
     @Test
     fun integration_clickExportSettings_navigatesToExportScreen() {
         setupMockFlows()
+
         composeTestRule.setContent {
             SettingsScreen(viewModel = viewModel, navController = navController)
         }
@@ -578,8 +630,26 @@ class SettingsScreenTest {
     }
 
     @Test
+    fun integration_clickImportSettings_navigatesToImportScreen() {
+        setupMockFlows()
+
+        composeTestRule.setContent {
+            SettingsScreen(viewModel = viewModel, navController = navController)
+        }
+
+        composeTestRule.onNodeWithText("Import settings").performScrollTo().performClick()
+
+        verify { navController.navigate(Screen.ImportSettings.route) }
+    }
+
+    @Test
     fun integration_resetToDefault_callsViewModel() {
         setupMockFlows()
+
+        every { viewModel.setIsShowingResetSettingsDialog(any()) } answers {
+            state.value = state.value.copy(isShowingResetSettingsDialog = firstArg())
+        }
+
         composeTestRule.setContent {
             SettingsScreen(viewModel = viewModel, navController = navController)
         }
@@ -588,6 +658,6 @@ class SettingsScreenTest {
         composeTestRule.onNodeWithText("Reset Settings").performClick()
 
         verify { viewModel.resetSettingsToDefault() }
-        assert(viewModel.settingsState.value == SettingsState())
+        assertEquals(SettingsState(), viewModel.state.value)
     }
 }

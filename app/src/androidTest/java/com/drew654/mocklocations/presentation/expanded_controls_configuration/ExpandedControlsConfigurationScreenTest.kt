@@ -1,7 +1,9 @@
 package com.drew654.mocklocations.presentation.expanded_controls_configuration
 
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -10,12 +12,13 @@ import androidx.navigation.NavController
 import com.drew654.mocklocations.domain.model.ExpandedControlsConfigurationState
 import com.drew654.mocklocations.domain.model.SpeedUnit
 import com.drew654.mocklocations.domain.model.SpeedUnitValue
-import com.drew654.mocklocations.presentation.MockLocationsViewModel
 import io.mockk.every
+import io.mockk.invoke
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -24,18 +27,13 @@ class ExpandedControlsConfigurationScreenTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    private val viewModel = mockk<MockLocationsViewModel>(relaxed = true)
+    private val viewModel = mockk<ExpandedControlsConfigurationViewModel>(relaxed = true)
     private val navController = mockk<NavController>(relaxed = true)
-    private val expandedControlsConfigurationState = MutableStateFlow(ExpandedControlsConfigurationState())
+    private val state = MutableStateFlow(ExpandedControlsConfigurationState())
 
     private fun setupMockFlows() {
-        expandedControlsConfigurationState.value = ExpandedControlsConfigurationState()
-        every { viewModel.expandedControlsConfigurationState } returns expandedControlsConfigurationState
-
-        every { viewModel.updateExpandedControlsConfigurationState(any()) } answers {
-            val transform = firstArg<(ExpandedControlsConfigurationState) -> ExpandedControlsConfigurationState>()
-            expandedControlsConfigurationState.value = transform(expandedControlsConfigurationState.value)
-        }
+        state.value = ExpandedControlsConfigurationState()
+        every { viewModel.state } returns state
     }
 
     @Test
@@ -117,7 +115,7 @@ class ExpandedControlsConfigurationScreenTest {
     }
 
     @Test
-    fun saveButton_triggersCallback() {
+    fun clickSaveButton_triggersCallback() {
         var clicked = false
         composeTestRule.setContent {
             ExpandedControlsConfigurationContent(
@@ -132,18 +130,43 @@ class ExpandedControlsConfigurationScreenTest {
     }
 
     @Test
-    fun integration_onOpen_refreshExpandedControlsConfigurationState() {
-        setupMockFlows()
+    fun clickSaveButton_doesNotTriggerCallback_whenFormIsInvalid() {
+        var clicked = false
         composeTestRule.setContent {
-            ExpandedControlsConfigurationScreen(viewModel = viewModel, navController = navController)
+            ExpandedControlsConfigurationContent(
+                state = ExpandedControlsConfigurationState(
+                    speedSliderLowerEnd = "100",
+                    speedSliderUpperEnd = "50"
+                ),
+                onSave = { clicked = true }
+            )
         }
 
-        verify { viewModel.refreshExpandedControlsConfigurationState() }
+        composeTestRule.onNodeWithText("Save").performClick()
+
+        assertFalse(clicked)
+    }
+
+    @Test
+    fun dialog_isShown_whenStateIsTrue() {
+        composeTestRule.setContent {
+            ExpandedControlsConfigurationContent(
+                state = ExpandedControlsConfigurationState(
+                    isShowingDialog = true
+                )
+            )
+        }
+
+        listOf("km/h", "m/s", "mph").forEach { unit ->
+            val expectedCount = if (unit == state.value.speedUnitValue.speedUnit.name) 2 else 1
+            composeTestRule.onAllNodesWithText(unit).assertCountEquals(expectedCount)
+        }
     }
 
     @Test
     fun integration_backButton_callsNavController() {
         setupMockFlows()
+
         composeTestRule.setContent {
             ExpandedControlsConfigurationScreen(viewModel = viewModel, navController = navController)
         }
@@ -156,54 +179,84 @@ class ExpandedControlsConfigurationScreenTest {
     @Test
     fun integration_selectSpeedUnit_updatesViewModelAndUi() {
         setupMockFlows()
+
+        every { viewModel.setIsShowingDialog(any()) } answers {
+            state.value = state.value.copy(isShowingDialog = firstArg())
+        }
+        every { viewModel.setSpeedUnitValue(any()) } answers {
+            state.value = state.value.copy(speedUnitValue = firstArg())
+        }
+
         composeTestRule.setContent {
             ExpandedControlsConfigurationScreen(viewModel = viewModel, navController = navController)
         }
 
         composeTestRule.onNodeWithText("Speed unit").performClick()
 
+        verify { viewModel.setIsShowingDialog(true) }
+
         composeTestRule.onNodeWithText("m/s").performClick()
 
-        assertEquals(SpeedUnitValue(30.0, SpeedUnit.MetersPerSecond), expandedControlsConfigurationState.value.speedUnitValue)
+        verify { viewModel.setSpeedUnitValue(SpeedUnitValue(30.0, SpeedUnit.MetersPerSecond)) }
+        assertEquals(SpeedUnitValue(30.0, SpeedUnit.MetersPerSecond), state.value.speedUnitValue)
         composeTestRule.onNodeWithText("m/s").assertIsDisplayed()
     }
 
     @Test
     fun integration_setSpeedSliderLowerEnd_updatesViewModelAndUi() {
         setupMockFlows()
+
+        every { viewModel.setSpeedSliderLowerEnd(any()) } answers {
+            state.value = state.value.copy(speedSliderLowerEnd = firstArg())
+        }
+
         composeTestRule.setContent {
             ExpandedControlsConfigurationScreen(viewModel = viewModel, navController = navController)
         }
 
         composeTestRule.onNodeWithText("0").performTextReplacement("50")
 
-        assertEquals("50", expandedControlsConfigurationState.value.speedSliderLowerEnd)
+        verify { viewModel.setSpeedSliderLowerEnd("50") }
+
+        assertEquals("50", state.value.speedSliderLowerEnd)
         composeTestRule.onNodeWithText("50").assertIsDisplayed()
     }
 
     @Test
     fun integration_setSpeedSliderUpperEnd_updatesViewModelAndUi() {
         setupMockFlows()
+
+        every { viewModel.setSpeedSliderUpperEnd(any()) } answers {
+            state.value = state.value.copy(speedSliderUpperEnd = firstArg())
+        }
+
         composeTestRule.setContent {
             ExpandedControlsConfigurationScreen(viewModel = viewModel, navController = navController)
         }
 
         composeTestRule.onNodeWithText("100").performTextReplacement("200")
 
-        assertEquals("200", expandedControlsConfigurationState.value.speedSliderUpperEnd)
+        verify { viewModel.setSpeedSliderUpperEnd("200") }
+
+        assertEquals("200", state.value.speedSliderUpperEnd)
         composeTestRule.onNodeWithText("200").assertIsDisplayed()
     }
 
     @Test
     fun integration_clickSave_callsViewModelAndNavController() {
         setupMockFlows()
+
+        every { viewModel.save(captureLambda()) } answers {
+            lambda<() -> Unit>().invoke()
+        }
+
         composeTestRule.setContent {
             ExpandedControlsConfigurationScreen(viewModel = viewModel, navController = navController)
         }
 
         composeTestRule.onNodeWithText("Save").performClick()
 
-        verify { viewModel.saveExpandedControlsConfigurationState() }
+        verify { viewModel.save(any()) }
         verify { navController.popBackStack() }
     }
 }

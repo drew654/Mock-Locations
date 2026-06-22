@@ -24,19 +24,15 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.drew654.mocklocations.R
 import com.drew654.mocklocations.domain.model.ExportSettingsState
-import com.drew654.mocklocations.presentation.MockLocationsViewModel
 import com.drew654.mocklocations.presentation.components.CheckboxRow
 import com.drew654.mocklocations.presentation.ui.theme.DayNightDevicePreviews
 import com.drew654.mocklocations.presentation.ui.theme.DeviceThemePreview
@@ -45,25 +41,17 @@ import java.util.Locale
 
 @Composable
 fun ExportSettingsScreen(
-    viewModel: MockLocationsViewModel,
+    viewModel: ExportSettingsViewModel = hiltViewModel(),
     navController: NavController
 ) {
-    val state = viewModel.exportSettingsState.collectAsState()
+    val state by viewModel.state.collectAsState()
     val exportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/json")
     ) { uri ->
         uri?.let {
-            viewModel.exportDataToUri(it, state.value.isExportSettings, state.value.isExportRoutes)
+            viewModel.exportDataToUri(it)
         }
         navController.popBackStack()
-    }
-
-    var isInitialized by rememberSaveable { mutableStateOf(false) }
-    LaunchedEffect(Unit) {
-        if (!isInitialized) {
-            viewModel.refreshExportSettingsState()
-            isInitialized = true
-        }
     }
 
     ExportSettingsContent(
@@ -77,12 +65,12 @@ fun ExportSettingsScreen(
             ).format(System.currentTimeMillis())
             exportLauncher.launch("mock_locations_$timestamp.json")
         },
-        state = state.value,
+        state = state,
         setIsExportSettings = { newValue ->
-            viewModel.updateExportSettingsState { it.copy(isExportSettings = newValue) }
+            viewModel.setIsExportSettings(newValue)
         },
         setIsExportRoutes = { newValue ->
-            viewModel.updateExportSettingsState { it.copy(isExportRoutes = newValue) }
+            viewModel.setIsExportRoutes(newValue)
         }
     )
 }
