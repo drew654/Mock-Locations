@@ -102,6 +102,9 @@ fun SettingsScreen(
         },
         onResetSettingsToDefault = {
             viewModel.resetSettingsToDefault()
+        },
+        onManageRoutesClicked = {
+            navController.navigate(Screen.ManageRoutes.route)
         }
     )
 }
@@ -126,7 +129,8 @@ internal fun SettingsContent(
     onMapStyleSelected: (MapStyle?) -> Unit = { },
     onLocationAccuracyLevelSelected: (LocationAccuracyLevel) -> Unit = { },
     onLocationUpdateDelaySelected: (Float) -> Unit = { },
-    onResetSettingsToDefault: () -> Unit = { }
+    onResetSettingsToDefault: () -> Unit = { },
+    onManageRoutesClicked: () -> Unit = { }
 ) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
@@ -231,6 +235,12 @@ internal fun SettingsContent(
                 label = "Configure expanded controls",
                 onClick = {
                     onConfigureExpandedControlsClicked()
+                }
+            )
+            TextRow(
+                label = "Manage routes",
+                onClick = {
+                    onManageRoutesClicked()
                 }
             )
             TextRow(

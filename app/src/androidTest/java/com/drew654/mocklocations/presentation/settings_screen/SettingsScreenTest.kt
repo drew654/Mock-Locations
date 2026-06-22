@@ -299,6 +299,21 @@ class SettingsScreenTest {
     }
 
     @Test
+    fun clickManageRoutes_triggersCallback() {
+        var clicked = false
+        composeTestRule.setContent {
+            SettingsContent(
+                state = SettingsState(),
+                onManageRoutesClicked = { clicked = true }
+            )
+        }
+
+        composeTestRule.onNodeWithText("Manage routes").performScrollTo().performClick()
+
+        assertTrue(clicked)
+    }
+
+    @Test
     fun clickExportSettings_triggersCallback() {
         var clicked = false
         composeTestRule.setContent {
@@ -614,6 +629,19 @@ class SettingsScreenTest {
         composeTestRule.onNodeWithText("Configure expanded controls").performScrollTo().performClick()
 
         verify { navController.navigate(Screen.ExpandedControlsConfiguration.route) }
+    }
+
+    @Test
+    fun integration_clickManageRoutes_navigatesToManageRoutesScreen() {
+        setupMockFlows()
+
+        composeTestRule.setContent {
+            SettingsScreen(viewModel = viewModel, navController = navController)
+        }
+
+        composeTestRule.onNodeWithText("Manage routes").performScrollTo().performClick()
+
+        verify { navController.navigate(Screen.ManageRoutes.route) }
     }
 
     @Test
