@@ -23,12 +23,39 @@ class ManageRoutesViewModelTest {
 
     private val sampleRoutes = listOf(
         LocationTarget.SavedRoute(
-            "Route 1",
-            listOf(RouteSegment(listOf(LatLng(0.0, 0.0), LatLng(1.0, 1.0))))
+            name = "Route 1",
+            routeSegments = listOf(
+                RouteSegment(listOf(LatLng(0.0, 0.0))),
+                RouteSegment(listOf(LatLng(1.0, 1.0)))
+            )
         ),
         LocationTarget.SavedRoute(
-            "Route 2",
-            listOf(RouteSegment(listOf(LatLng(2.0, 2.0), LatLng(3.0, 3.0))))
+            name = "Route 2",
+            routeSegments = listOf(
+                RouteSegment(listOf(LatLng(2.0, 2.0))),
+                RouteSegment(listOf(LatLng(3.0, 3.0)))
+            )
+        ),
+        LocationTarget.SavedRoute(
+            name = "Route 3",
+            routeSegments = listOf(
+                RouteSegment(listOf(LatLng(4.0, 4.0))),
+                RouteSegment(listOf(LatLng(5.0, 5.0)))
+            )
+        ),
+        LocationTarget.SavedRoute(
+            name = "Route 4",
+            routeSegments = listOf(
+                RouteSegment(listOf(LatLng(6.0, 6.0))),
+                RouteSegment(listOf(LatLng(7.0, 7.0)))
+            )
+        ),
+        LocationTarget.SavedRoute(
+            name = "Route 5",
+            routeSegments = listOf(
+                RouteSegment(listOf(LatLng(8.0, 8.0))),
+                RouteSegment(listOf(LatLng(9.0, 9.0)))
+            )
         )
     )
 
@@ -45,18 +72,18 @@ class ManageRoutesViewModelTest {
     @Test
     fun `init loads routes from settingsManager`() = runTest {
         every { settingsManager.savedRoutesFlow } returns flowOf(sampleRoutes)
-        
+
         viewModel = ManageRoutesViewModel(settingsManager)
-        
+
         assertEquals(sampleRoutes, viewModel.state.value.routes)
     }
 
     @Test
     fun `init with empty routes loads empty list`() = runTest {
         every { settingsManager.savedRoutesFlow } returns flowOf(emptyList())
-        
+
         viewModel = ManageRoutesViewModel(settingsManager)
-        
+
         assertTrue(viewModel.state.value.routes.isEmpty())
     }
 
@@ -80,5 +107,80 @@ class ManageRoutesViewModelTest {
 
         viewModel.deselectRoute()
         assertNull(viewModel.state.value.selectedIndex)
+    }
+
+    @Test
+    fun `moveRouteUp moves selected route up`() = runTest {
+        every { settingsManager.savedRoutesFlow } returns flowOf(sampleRoutes)
+        viewModel = ManageRoutesViewModel(settingsManager)
+
+        viewModel.setSelectedIndex(3)
+        viewModel.moveRouteUp()
+
+        assertEquals(2, viewModel.state.value.selectedIndex)
+        assertEquals(sampleRoutes[0], viewModel.state.value.routes[0])
+        assertEquals(sampleRoutes[1], viewModel.state.value.routes[1])
+        assertEquals(sampleRoutes[2], viewModel.state.value.routes[3])
+        assertEquals(sampleRoutes[3], viewModel.state.value.routes[2])
+        assertEquals(sampleRoutes[4], viewModel.state.value.routes[4])
+    }
+
+    @Test
+    fun `moveRouteUp with null selectedIndex does nothing`() = runTest {
+        every { settingsManager.savedRoutesFlow } returns flowOf(sampleRoutes)
+        viewModel = ManageRoutesViewModel(settingsManager)
+
+        viewModel.moveRouteUp()
+
+        assertNull(viewModel.state.value.selectedIndex)
+        assertEquals(sampleRoutes, viewModel.state.value.routes)
+    }
+
+    @Test
+    fun `moveRouteUp with first index does nothing`() = runTest {
+        every { settingsManager.savedRoutesFlow } returns flowOf(sampleRoutes)
+        viewModel = ManageRoutesViewModel(settingsManager)
+
+        viewModel.moveRouteUp()
+
+        assertEquals(sampleRoutes, viewModel.state.value.routes)
+    }
+
+    @Test
+    fun `moveRouteDown moves selected route down`() = runTest {
+        every { settingsManager.savedRoutesFlow } returns flowOf(sampleRoutes)
+        viewModel = ManageRoutesViewModel(settingsManager)
+
+        viewModel.setSelectedIndex(2)
+        viewModel.moveRouteDown()
+
+        assertEquals(3, viewModel.state.value.selectedIndex)
+        assertEquals(sampleRoutes[0], viewModel.state.value.routes[0])
+        assertEquals(sampleRoutes[1], viewModel.state.value.routes[1])
+        assertEquals(sampleRoutes[3], viewModel.state.value.routes[2])
+        assertEquals(sampleRoutes[2], viewModel.state.value.routes[3])
+        assertEquals(sampleRoutes[4], viewModel.state.value.routes[4])
+    }
+
+    @Test
+    fun `moveRouteDown with null selectedIndex does nothing`() = runTest {
+        every { settingsManager.savedRoutesFlow } returns flowOf(sampleRoutes)
+        viewModel = ManageRoutesViewModel(settingsManager)
+
+        viewModel.moveRouteDown()
+
+        assertNull(viewModel.state.value.selectedIndex)
+        assertEquals(sampleRoutes, viewModel.state.value.routes)
+    }
+
+    @Test
+    fun `moveRouteDown with last index does nothing`() = runTest {
+        every { settingsManager.savedRoutesFlow } returns flowOf(sampleRoutes)
+        viewModel = ManageRoutesViewModel(settingsManager)
+
+        viewModel.setSelectedIndex(4)
+        viewModel.moveRouteDown()
+
+        assertEquals(sampleRoutes, viewModel.state.value.routes)
     }
 }

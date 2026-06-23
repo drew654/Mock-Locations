@@ -141,6 +141,42 @@ class ManageRoutesScreenTest {
     }
 
     @Test
+    fun clickUp_triggersCallback() {
+        var clicked = false
+        composeTestRule.setContent {
+            ManageRoutesContent(
+                state = ManageRoutesState(
+                    routes = listOf(route1, route2),
+                    selectedIndex = 1
+                ),
+                onRouteMovedUp = { clicked = true }
+            )
+        }
+
+        composeTestRule.onNodeWithContentDescription("Move up").performClick()
+
+        assertTrue(clicked)
+    }
+
+    @Test
+    fun clickDown_triggersCallback() {
+        var clicked = false
+        composeTestRule.setContent {
+            ManageRoutesContent(
+                state = ManageRoutesState(
+                    routes = listOf(route1, route2),
+                    selectedIndex = 0
+                ),
+                onRouteMovedDown = { clicked = true }
+            )
+        }
+
+        composeTestRule.onNodeWithContentDescription("Move down").performClick()
+
+        assertTrue(clicked)
+    }
+
+    @Test
     fun integration_clickBack_callsNavController() {
         setupMockFlows()
 
@@ -181,5 +217,36 @@ class ManageRoutesScreenTest {
         composeTestRule.onNodeWithText("Route 2").performClick()
 
         verify { viewModel.deselectRoute() }
+    }
+
+    @Test
+    fun integration_clickUp_callsViewModel() {
+        setupMockFlows()
+
+        state.update { it.copy(routes = listOf(route1, route2), selectedIndex = 1) }
+
+        composeTestRule.setContent {
+            ManageRoutesScreen(viewModel = viewModel, navController = navController)
+        }
+
+        composeTestRule.onNodeWithContentDescription("Move up").performClick()
+
+        verify { viewModel.moveRouteUp() }
+    }
+
+    @Test
+    fun integration_clickDown_callsViewModel() {
+        setupMockFlows()
+
+        state.update { it.copy(routes = listOf(route1, route2), selectedIndex = 0) }
+
+        composeTestRule.setContent {
+            ManageRoutesScreen(viewModel = viewModel, navController = navController)
+        }
+
+        composeTestRule.onNodeWithContentDescription("Move down").performClick()
+
+        verify { viewModel.moveRouteDown() }
+
     }
 }

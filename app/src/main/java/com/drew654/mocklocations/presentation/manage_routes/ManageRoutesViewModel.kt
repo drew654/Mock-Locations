@@ -38,4 +38,34 @@ class ManageRoutesViewModel @Inject constructor(
     fun deselectRoute() {
         _state.update { it.copy(selectedIndex = null) }
     }
+
+    fun moveRouteUp() {
+        val selectedIndex = state.value.selectedIndex ?: return
+
+        if (selectedIndex > 0) {
+            val routes = state.value.routes.toMutableList()
+            val temp = routes[selectedIndex - 1]
+            routes[selectedIndex - 1] = routes[selectedIndex]
+            routes[selectedIndex] = temp
+            _state.update { it.copy(routes = routes, selectedIndex = selectedIndex - 1) }
+            viewModelScope.launch {
+                settingsManager.replaceRoutes(routes)
+            }
+        }
+    }
+
+    fun moveRouteDown() {
+        val selectedIndex = state.value.selectedIndex ?: return
+
+        if (selectedIndex < state.value.routes.size - 1) {
+            val routes = state.value.routes.toMutableList()
+            val temp = routes[selectedIndex + 1]
+            routes[selectedIndex + 1] = routes[selectedIndex]
+            routes[selectedIndex] = temp
+            _state.update { it.copy(routes = routes, selectedIndex = selectedIndex + 1) }
+            viewModelScope.launch {
+                settingsManager.replaceRoutes(routes)
+            }
+        }
+    }
 }

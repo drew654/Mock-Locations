@@ -52,6 +52,12 @@ fun ManageRoutesScreen(
         },
         onRouteDeselected = {
             viewModel.deselectRoute()
+        },
+        onRouteMovedUp = {
+            viewModel.moveRouteUp()
+        },
+        onRouteMovedDown = {
+            viewModel.moveRouteDown()
         }
     )
 }
@@ -62,7 +68,9 @@ internal fun ManageRoutesContent(
     state: ManageRoutesState,
     onBackButtonClicked: () -> Unit = { },
     onRouteSelected: (Int) -> Unit = { },
-    onRouteDeselected: () -> Unit = { }
+    onRouteDeselected: () -> Unit = { },
+    onRouteMovedUp: () -> Unit = { },
+    onRouteMovedDown: () -> Unit = { }
 ) {
     Scaffold(
         modifier = Modifier
@@ -105,6 +113,12 @@ internal fun ManageRoutesContent(
                         speedUnit = state.speedUnit,
                         onClick = {
                             onRouteDeselected()
+                        },
+                        onUpClicked = {
+                            onRouteMovedUp()
+                        },
+                        onDownClicked = {
+                            onRouteMovedDown()
                         }
                     )
                 } else {
