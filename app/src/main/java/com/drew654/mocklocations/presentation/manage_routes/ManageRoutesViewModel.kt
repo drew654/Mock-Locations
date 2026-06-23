@@ -30,4 +30,12 @@ class ManageRoutesViewModel @Inject constructor(
             }
         }
     }
+
+    fun setSelectedIndex(newValue: Int) {
+        _state.update { it.copy(selectedIndex = newValue) }
+    }
+
+    fun deselectRoute() {
+        _state.update { it.copy(selectedIndex = null) }
+    }
 }
