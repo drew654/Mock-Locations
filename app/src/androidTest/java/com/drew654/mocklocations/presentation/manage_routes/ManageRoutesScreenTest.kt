@@ -177,6 +177,24 @@ class ManageRoutesScreenTest {
     }
 
     @Test
+    fun clickCopy_triggersCallback() {
+        var clicked = false
+        composeTestRule.setContent {
+            ManageRoutesContent(
+                state = ManageRoutesState(
+                    routes = listOf(route1, route2),
+                    selectedIndex = 1
+                ),
+                onCopyRoute = { clicked = true }
+            )
+        }
+
+        composeTestRule.onNodeWithContentDescription("Copy").performClick()
+
+        assertTrue(clicked)
+    }
+
+    @Test
     fun integration_clickBack_callsNavController() {
         setupMockFlows()
 
@@ -247,6 +265,20 @@ class ManageRoutesScreenTest {
         composeTestRule.onNodeWithContentDescription("Move down").performClick()
 
         verify { viewModel.moveRouteDown() }
+    }
 
+    @Test
+    fun integration_clickCopy_callsViewModel() {
+        setupMockFlows()
+
+        state.update { it.copy(routes = listOf(route1, route2), selectedIndex = 1) }
+
+        composeTestRule.setContent {
+            ManageRoutesScreen(viewModel = viewModel, navController = navController)
+        }
+
+        composeTestRule.onNodeWithContentDescription("Copy").performClick()
+
+        verify { viewModel.copyRoute() }
     }
 }

@@ -141,6 +141,7 @@ class ManageRoutesViewModelTest {
         every { settingsManager.savedRoutesFlow } returns flowOf(sampleRoutes)
         viewModel = ManageRoutesViewModel(settingsManager)
 
+        viewModel.setSelectedIndex(0)
         viewModel.moveRouteUp()
 
         assertEquals(sampleRoutes, viewModel.state.value.routes)
@@ -182,5 +183,75 @@ class ManageRoutesViewModelTest {
         viewModel.moveRouteDown()
 
         assertEquals(sampleRoutes, viewModel.state.value.routes)
+    }
+
+    @Test
+    fun `copyRoute copies selected route`() = runTest {
+        every { settingsManager.savedRoutesFlow } returns flowOf(sampleRoutes)
+        viewModel = ManageRoutesViewModel(settingsManager)
+
+        viewModel.setSelectedIndex(2)
+        viewModel.copyRoute()
+
+        assertEquals(sampleRoutes[0], viewModel.state.value.routes[0])
+        assertEquals(sampleRoutes[1], viewModel.state.value.routes[1])
+        assertEquals(sampleRoutes[2], viewModel.state.value.routes[2])
+        assertEquals(sampleRoutes[2].copy(name = "Copy of Route 3"), viewModel.state.value.routes[3])
+        assertEquals(sampleRoutes[3], viewModel.state.value.routes[4])
+        assertEquals(sampleRoutes[4], viewModel.state.value.routes[5])
+    }
+
+    @Test
+    fun `copyRoute with null selectedIndex does nothing`() = runTest {
+        every { settingsManager.savedRoutesFlow } returns flowOf(sampleRoutes)
+        viewModel = ManageRoutesViewModel(settingsManager)
+
+        viewModel.copyRoute()
+
+        assertEquals(sampleRoutes, viewModel.state.value.routes)
+    }
+
+    @Test
+    fun `copyRoute increments name if name already exists`() = runTest {
+        every { settingsManager.savedRoutesFlow } returns flowOf(sampleRoutes)
+        viewModel = ManageRoutesViewModel(settingsManager)
+
+        viewModel.setSelectedIndex(2)
+        viewModel.copyRoute()
+
+        assertEquals(sampleRoutes[0], viewModel.state.value.routes[0])
+        assertEquals(sampleRoutes[1], viewModel.state.value.routes[1])
+        assertEquals(sampleRoutes[2], viewModel.state.value.routes[2])
+
+        val copyName = "Copy of Route 3"
+        assertEquals(sampleRoutes[2].copy(name = copyName), viewModel.state.value.routes[3])
+        assertEquals(sampleRoutes[3], viewModel.state.value.routes[4])
+
+        viewModel.copyRoute()
+
+        assertEquals(sampleRoutes[0], viewModel.state.value.routes[0])
+        assertEquals(sampleRoutes[1], viewModel.state.value.routes[1])
+        assertEquals(sampleRoutes[2], viewModel.state.value.routes[2])
+
+        val copyName2 = "Copy of Route 3 (1)"
+        assertEquals(sampleRoutes[2].copy(name = copyName2), viewModel.state.value.routes[3])
+
+        assertEquals(sampleRoutes[2].copy(name = copyName), viewModel.state.value.routes[4])
+        assertEquals(sampleRoutes[3], viewModel.state.value.routes[5])
+        assertEquals(sampleRoutes[4], viewModel.state.value.routes[6])
+
+        viewModel.copyRoute()
+
+        assertEquals(sampleRoutes[0], viewModel.state.value.routes[0])
+        assertEquals(sampleRoutes[1], viewModel.state.value.routes[1])
+        assertEquals(sampleRoutes[2], viewModel.state.value.routes[2])
+
+        val copyName3 = "Copy of Route 3 (2)"
+        assertEquals(sampleRoutes[2].copy(name = copyName3), viewModel.state.value.routes[3])
+
+        assertEquals(sampleRoutes[2].copy(name = copyName2), viewModel.state.value.routes[4])
+        assertEquals(sampleRoutes[2].copy(name = copyName), viewModel.state.value.routes[5])
+        assertEquals(sampleRoutes[3], viewModel.state.value.routes[6])
+        assertEquals(sampleRoutes[4], viewModel.state.value.routes[7])
     }
 }

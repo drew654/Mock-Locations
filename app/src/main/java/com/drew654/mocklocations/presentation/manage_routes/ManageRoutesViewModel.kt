@@ -68,4 +68,21 @@ class ManageRoutesViewModel @Inject constructor(
             }
         }
     }
+
+    fun copyRoute() {
+        val selectedIndex = state.value.selectedIndex ?: return
+
+        val routes = state.value.routes.toMutableList()
+        var newName = "Copy of ${routes[selectedIndex].name}"
+        var index = 1
+        while (routes.any { it.name == newName }) {
+            newName = "Copy of ${routes[selectedIndex].name} ($index)"
+            index++
+        }
+        routes.add(selectedIndex + 1, routes[selectedIndex].copy(name = newName))
+        _state.update { it.copy(routes = routes, selectedIndex = selectedIndex) }
+        viewModelScope.launch {
+            settingsManager.replaceRoutes(routes)
+        }
+    }
 }

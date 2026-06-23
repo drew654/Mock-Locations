@@ -58,6 +58,9 @@ fun ManageRoutesScreen(
         },
         onRouteMovedDown = {
             viewModel.moveRouteDown()
+        },
+        onCopyRoute = {
+            viewModel.copyRoute()
         }
     )
 }
@@ -70,7 +73,8 @@ internal fun ManageRoutesContent(
     onRouteSelected: (Int) -> Unit = { },
     onRouteDeselected: () -> Unit = { },
     onRouteMovedUp: () -> Unit = { },
-    onRouteMovedDown: () -> Unit = { }
+    onRouteMovedDown: () -> Unit = { },
+    onCopyRoute: () -> Unit = { }
 ) {
     Scaffold(
         modifier = Modifier
@@ -119,6 +123,9 @@ internal fun ManageRoutesContent(
                         },
                         onDownClicked = {
                             onRouteMovedDown()
+                        },
+                        onCopyClicked = {
+                            onCopyRoute()
                         }
                     )
                 } else {
