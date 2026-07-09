@@ -31,23 +31,24 @@ class ManageRoutesViewModel @Inject constructor(
         }
     }
 
-    fun setSelectedIndex(newValue: Int) {
-        _state.update { it.copy(selectedIndex = newValue) }
+    fun setSelectedRoute(name: String) {
+        _state.update { it.copy(selectedRouteName = name) }
     }
 
     fun deselectRoute() {
-        _state.update { it.copy(selectedIndex = null) }
+        _state.update { it.copy(selectedRouteName = null) }
     }
 
     fun moveRouteUp() {
-        val selectedIndex = state.value.selectedIndex ?: return
+        val selectedName = state.value.selectedRouteName ?: return
+        val routes = state.value.routes.toMutableList()
+        val index = routes.indexOfFirst { it.name == selectedName }
 
-        if (selectedIndex > 0) {
-            val routes = state.value.routes.toMutableList()
-            val temp = routes[selectedIndex - 1]
-            routes[selectedIndex - 1] = routes[selectedIndex]
-            routes[selectedIndex] = temp
-            _state.update { it.copy(routes = routes, selectedIndex = selectedIndex - 1) }
+        if (index != -1 && index > 0) {
+            val temp = routes[index - 1]
+            routes[index - 1] = routes[index]
+            routes[index] = temp
+            _state.update { it.copy(routes = routes) }
             viewModelScope.launch {
                 settingsManager.replaceRoutes(routes)
             }
@@ -55,14 +56,15 @@ class ManageRoutesViewModel @Inject constructor(
     }
 
     fun moveRouteDown() {
-        val selectedIndex = state.value.selectedIndex ?: return
+        val selectedName = state.value.selectedRouteName ?: return
+        val routes = state.value.routes.toMutableList()
+        val index = routes.indexOfFirst { it.name == selectedName }
 
-        if (selectedIndex < state.value.routes.size - 1) {
-            val routes = state.value.routes.toMutableList()
-            val temp = routes[selectedIndex + 1]
-            routes[selectedIndex + 1] = routes[selectedIndex]
-            routes[selectedIndex] = temp
-            _state.update { it.copy(routes = routes, selectedIndex = selectedIndex + 1) }
+        if (index != -1 && index < routes.size - 1) {
+            val temp = routes[index + 1]
+            routes[index + 1] = routes[index]
+            routes[index] = temp
+            _state.update { it.copy(routes = routes) }
             viewModelScope.launch {
                 settingsManager.replaceRoutes(routes)
             }
@@ -70,17 +72,19 @@ class ManageRoutesViewModel @Inject constructor(
     }
 
     fun copyRoute() {
-        val selectedIndex = state.value.selectedIndex ?: return
-
+        val selectedName = state.value.selectedRouteName ?: return
         val routes = state.value.routes.toMutableList()
-        var newName = "Copy of ${routes[selectedIndex].name}"
-        var index = 1
+        val index = routes.indexOfFirst { it.name == selectedName }
+        if (index == -1) return
+
+        var newName = "Copy of ${routes[index].name}"
+        var copyIndex = 1
         while (routes.any { it.name == newName }) {
-            newName = "Copy of ${routes[selectedIndex].name} ($index)"
-            index++
+            newName = "Copy of ${routes[index].name} ($copyIndex)"
+            copyIndex++
         }
-        routes.add(selectedIndex + 1, routes[selectedIndex].copy(name = newName))
-        _state.update { it.copy(routes = routes, selectedIndex = selectedIndex) }
+        routes.add(index + 1, routes[index].copy(name = newName))
+        _state.update { it.copy(routes = routes) }
         viewModelScope.launch {
             settingsManager.replaceRoutes(routes)
         }

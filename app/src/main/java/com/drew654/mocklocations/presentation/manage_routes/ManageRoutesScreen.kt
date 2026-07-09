@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -30,7 +30,6 @@ import com.drew654.mocklocations.R
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.ManageRoutesState
 import com.drew654.mocklocations.domain.model.RouteSegment
-import com.drew654.mocklocations.presentation.manage_routes.components.ExpandedRouteListItem
 import com.drew654.mocklocations.presentation.manage_routes.components.RouteListItem
 import com.drew654.mocklocations.presentation.ui.theme.DayNightDevicePreviews
 import com.drew654.mocklocations.presentation.ui.theme.DeviceThemePreview
@@ -47,8 +46,8 @@ fun ManageRoutesScreen(
         onBackButtonClicked = {
             navController.popBackStack()
         },
-        onRouteSelected = { index ->
-            viewModel.setSelectedIndex(index)
+        onRouteSelected = { name ->
+            viewModel.setSelectedRoute(name)
         },
         onRouteDeselected = {
             viewModel.deselectRoute()
@@ -70,7 +69,7 @@ fun ManageRoutesScreen(
 internal fun ManageRoutesContent(
     state: ManageRoutesState,
     onBackButtonClicked: () -> Unit = { },
-    onRouteSelected: (Int) -> Unit = { },
+    onRouteSelected: (String) -> Unit = { },
     onRouteDeselected: () -> Unit = { },
     onRouteMovedUp: () -> Unit = { },
     onRouteMovedDown: () -> Unit = { },
@@ -110,33 +109,32 @@ internal fun ManageRoutesContent(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            itemsIndexed(state.routes) { index, route ->
-                if (index == state.selectedIndex) {
-                    ExpandedRouteListItem(
-                        route = route,
-                        speedUnit = state.speedUnit,
-                        onClick = {
+            items(
+                items = state.routes,
+                key = { it.name }
+            ) { route ->
+                RouteListItem(
+                    modifier = Modifier.animateItem(),
+                    route = route,
+                    speedUnit = state.speedUnit,
+                    isExpanded = route.name == state.selectedRouteName,
+                    onClick = {
+                        if (route.name == state.selectedRouteName) {
                             onRouteDeselected()
-                        },
-                        onUpClicked = {
-                            onRouteMovedUp()
-                        },
-                        onDownClicked = {
-                            onRouteMovedDown()
-                        },
-                        onCopyClicked = {
-                            onCopyRoute()
+                        } else {
+                            onRouteSelected(route.name)
                         }
-                    )
-                } else {
-                    RouteListItem(
-                        route = route,
-                        speedUnit = state.speedUnit,
-                        onClick = {
-                            onRouteSelected(index)
-                        }
-                    )
-                }
+                    },
+                    onUpClicked = {
+                        onRouteMovedUp()
+                    },
+                    onDownClicked = {
+                        onRouteMovedDown()
+                    },
+                    onCopyClicked = {
+                        onCopyRoute()
+                    }
+                )
             }
         }
     }

@@ -93,7 +93,7 @@ class ManageRoutesScreenTest {
             ManageRoutesContent(
                 state = ManageRoutesState(
                     routes = listOf(route1, route2),
-                    selectedIndex = 1
+                    selectedRouteName = "Route 2"
                 )
             )
         }
@@ -105,21 +105,21 @@ class ManageRoutesScreenTest {
 
     @Test
     fun clickRoute_triggersCallback() {
-        var capturedRouteIndex: Int? = null
+        var capturedRouteName: String? = null
         composeTestRule.setContent {
             ManageRoutesContent(
                 state = ManageRoutesState(
                     routes = listOf(route1, route2)
                 ),
-                onRouteSelected = { index ->
-                    capturedRouteIndex = index
+                onRouteSelected = { name ->
+                    capturedRouteName = name
                 }
             )
         }
 
         composeTestRule.onNodeWithText("Route 2").performClick()
 
-        assertEquals(1, capturedRouteIndex)
+        assertEquals("Route 2", capturedRouteName)
     }
 
     @Test
@@ -129,7 +129,7 @@ class ManageRoutesScreenTest {
             ManageRoutesContent(
                 state = ManageRoutesState(
                     routes = listOf(route1, route2),
-                    selectedIndex = 0
+                    selectedRouteName = "Route 1"
                 ),
                 onRouteDeselected = { clicked = true }
             )
@@ -147,7 +147,7 @@ class ManageRoutesScreenTest {
             ManageRoutesContent(
                 state = ManageRoutesState(
                     routes = listOf(route1, route2),
-                    selectedIndex = 1
+                    selectedRouteName = "Route 2"
                 ),
                 onRouteMovedUp = { clicked = true }
             )
@@ -165,7 +165,7 @@ class ManageRoutesScreenTest {
             ManageRoutesContent(
                 state = ManageRoutesState(
                     routes = listOf(route1, route2),
-                    selectedIndex = 0
+                    selectedRouteName = "Route 1"
                 ),
                 onRouteMovedDown = { clicked = true }
             )
@@ -183,7 +183,7 @@ class ManageRoutesScreenTest {
             ManageRoutesContent(
                 state = ManageRoutesState(
                     routes = listOf(route1, route2),
-                    selectedIndex = 1
+                    selectedRouteName = "Route 2"
                 ),
                 onCopyRoute = { clicked = true }
             )
@@ -219,14 +219,14 @@ class ManageRoutesScreenTest {
 
         composeTestRule.onNodeWithText("Route 1").performClick()
 
-        verify { viewModel.setSelectedIndex(0) }
+        verify { viewModel.setSelectedRoute("Route 1") }
     }
 
     @Test
     fun integration_clickSelectedRoute_callsViewModel() {
         setupMockFlows()
 
-        state.update { it.copy(routes = listOf(route1, route2), selectedIndex = 1) }
+        state.update { it.copy(routes = listOf(route1, route2), selectedRouteName = "Route 2") }
 
         composeTestRule.setContent {
             ManageRoutesScreen(viewModel = viewModel, navController = navController)
@@ -241,7 +241,7 @@ class ManageRoutesScreenTest {
     fun integration_clickUp_callsViewModel() {
         setupMockFlows()
 
-        state.update { it.copy(routes = listOf(route1, route2), selectedIndex = 1) }
+        state.update { it.copy(routes = listOf(route1, route2), selectedRouteName = "Route 2") }
 
         composeTestRule.setContent {
             ManageRoutesScreen(viewModel = viewModel, navController = navController)
@@ -256,7 +256,7 @@ class ManageRoutesScreenTest {
     fun integration_clickDown_callsViewModel() {
         setupMockFlows()
 
-        state.update { it.copy(routes = listOf(route1, route2), selectedIndex = 0) }
+        state.update { it.copy(routes = listOf(route1, route2), selectedRouteName = "Route 1") }
 
         composeTestRule.setContent {
             ManageRoutesScreen(viewModel = viewModel, navController = navController)
@@ -271,7 +271,7 @@ class ManageRoutesScreenTest {
     fun integration_clickCopy_callsViewModel() {
         setupMockFlows()
 
-        state.update { it.copy(routes = listOf(route1, route2), selectedIndex = 1) }
+        state.update { it.copy(routes = listOf(route1, route2), selectedRouteName = "Route 2") }
 
         composeTestRule.setContent {
             ManageRoutesScreen(viewModel = viewModel, navController = navController)

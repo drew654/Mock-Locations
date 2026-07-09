@@ -88,13 +88,13 @@ class ManageRoutesViewModelTest {
     }
 
     @Test
-    fun `setSelectedIndex updates state`() = runTest {
+    fun `setSelectedRoute updates state`() = runTest {
         every { settingsManager.savedRoutesFlow } returns flowOf(sampleRoutes)
         viewModel = ManageRoutesViewModel(settingsManager)
 
-        val index = 1
-        viewModel.setSelectedIndex(index)
-        assertEquals(index, viewModel.state.value.selectedIndex)
+        val index = "Route 1"
+        viewModel.setSelectedRoute(index)
+        assertEquals(index, viewModel.state.value.selectedRouteName)
     }
 
     @Test
@@ -102,11 +102,11 @@ class ManageRoutesViewModelTest {
         every { settingsManager.savedRoutesFlow } returns flowOf(sampleRoutes)
         viewModel = ManageRoutesViewModel(settingsManager)
 
-        viewModel.setSelectedIndex(1)
-        assertEquals(1, viewModel.state.value.selectedIndex)
+        viewModel.setSelectedRoute("Route 1")
+        assertEquals("Route 1", viewModel.state.value.selectedRouteName)
 
         viewModel.deselectRoute()
-        assertNull(viewModel.state.value.selectedIndex)
+        assertNull(viewModel.state.value.selectedRouteName)
     }
 
     @Test
@@ -114,10 +114,10 @@ class ManageRoutesViewModelTest {
         every { settingsManager.savedRoutesFlow } returns flowOf(sampleRoutes)
         viewModel = ManageRoutesViewModel(settingsManager)
 
-        viewModel.setSelectedIndex(3)
+        viewModel.setSelectedRoute("Route 4")
         viewModel.moveRouteUp()
 
-        assertEquals(2, viewModel.state.value.selectedIndex)
+        assertEquals("Route 4", viewModel.state.value.selectedRouteName)
         assertEquals(sampleRoutes[0], viewModel.state.value.routes[0])
         assertEquals(sampleRoutes[1], viewModel.state.value.routes[1])
         assertEquals(sampleRoutes[2], viewModel.state.value.routes[3])
@@ -132,7 +132,7 @@ class ManageRoutesViewModelTest {
 
         viewModel.moveRouteUp()
 
-        assertNull(viewModel.state.value.selectedIndex)
+        assertNull(viewModel.state.value.selectedRouteName)
         assertEquals(sampleRoutes, viewModel.state.value.routes)
     }
 
@@ -141,7 +141,7 @@ class ManageRoutesViewModelTest {
         every { settingsManager.savedRoutesFlow } returns flowOf(sampleRoutes)
         viewModel = ManageRoutesViewModel(settingsManager)
 
-        viewModel.setSelectedIndex(0)
+        viewModel.setSelectedRoute("Route 1")
         viewModel.moveRouteUp()
 
         assertEquals(sampleRoutes, viewModel.state.value.routes)
@@ -152,10 +152,10 @@ class ManageRoutesViewModelTest {
         every { settingsManager.savedRoutesFlow } returns flowOf(sampleRoutes)
         viewModel = ManageRoutesViewModel(settingsManager)
 
-        viewModel.setSelectedIndex(2)
+        viewModel.setSelectedRoute("Route 3")
         viewModel.moveRouteDown()
 
-        assertEquals(3, viewModel.state.value.selectedIndex)
+        assertEquals("Route 3", viewModel.state.value.selectedRouteName)
         assertEquals(sampleRoutes[0], viewModel.state.value.routes[0])
         assertEquals(sampleRoutes[1], viewModel.state.value.routes[1])
         assertEquals(sampleRoutes[3], viewModel.state.value.routes[2])
@@ -170,7 +170,7 @@ class ManageRoutesViewModelTest {
 
         viewModel.moveRouteDown()
 
-        assertNull(viewModel.state.value.selectedIndex)
+        assertNull(viewModel.state.value.selectedRouteName)
         assertEquals(sampleRoutes, viewModel.state.value.routes)
     }
 
@@ -179,7 +179,7 @@ class ManageRoutesViewModelTest {
         every { settingsManager.savedRoutesFlow } returns flowOf(sampleRoutes)
         viewModel = ManageRoutesViewModel(settingsManager)
 
-        viewModel.setSelectedIndex(4)
+        viewModel.setSelectedRoute("Route 5")
         viewModel.moveRouteDown()
 
         assertEquals(sampleRoutes, viewModel.state.value.routes)
@@ -190,7 +190,7 @@ class ManageRoutesViewModelTest {
         every { settingsManager.savedRoutesFlow } returns flowOf(sampleRoutes)
         viewModel = ManageRoutesViewModel(settingsManager)
 
-        viewModel.setSelectedIndex(2)
+        viewModel.setSelectedRoute("Route 3")
         viewModel.copyRoute()
 
         assertEquals(sampleRoutes[0], viewModel.state.value.routes[0])
@@ -216,7 +216,7 @@ class ManageRoutesViewModelTest {
         every { settingsManager.savedRoutesFlow } returns flowOf(sampleRoutes)
         viewModel = ManageRoutesViewModel(settingsManager)
 
-        viewModel.setSelectedIndex(2)
+        viewModel.setSelectedRoute("Route 3")
         viewModel.copyRoute()
 
         assertEquals(sampleRoutes[0], viewModel.state.value.routes[0])

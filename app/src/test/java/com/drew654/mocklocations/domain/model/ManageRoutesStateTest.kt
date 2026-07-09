@@ -11,7 +11,7 @@ class ManageRoutesStateTest {
         
         assertTrue(state.routes.isEmpty())
         assertEquals(SpeedUnit.MilesPerHour, state.speedUnit)
-        assertNull(state.selectedIndex)
+        assertNull(state.selectedRouteName)
     }
 
     @Test
@@ -23,16 +23,16 @@ class ManageRoutesStateTest {
             )
         )
         val speedUnit = SpeedUnit.KilometersPerHour
-        val selectedIndex = 5
+        val selectedRouteName = "Route 1"
         
         val state = ManageRoutesState(
             routes = routes,
             speedUnit = speedUnit,
-            selectedIndex = selectedIndex
+            selectedRouteName = selectedRouteName
         )
         
         assertEquals(routes, state.routes)
         assertEquals(speedUnit, state.speedUnit)
-        assertEquals(selectedIndex, state.selectedIndex)
+        assertEquals(selectedRouteName, state.selectedRouteName)
     }
 }
