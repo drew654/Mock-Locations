@@ -2,7 +2,6 @@ import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("org.jetbrains.kotlinx.kover")
     alias(libs.plugins.ksp)
@@ -29,7 +28,6 @@ android {
         targetSdk = 36
         versionCode = 18
         versionName = "0.5.0-alpha.1"
-        setProperty("archivesBaseName", "mock-locations")
 
         val localProperties = Properties()
         val localPropertiesFile = rootProject.file("local.properties")
@@ -56,13 +54,14 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
     buildFeatures {
         compose = true
         buildConfig = true
     }
+}
+
+base {
+    archivesName.set("mock-locations")
 }
 
 dependencies {
