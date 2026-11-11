@@ -195,6 +195,24 @@ class ManageRoutesScreenTest {
     }
 
     @Test
+    fun clickDelete_triggersCallback() {
+        var clicked = false
+        composeTestRule.setContent {
+            ManageRoutesContent(
+                state = ManageRoutesState(
+                    routes = listOf(route1, route2),
+                    selectedRouteName = "Route 2"
+                ),
+                onDeleteRoute = { clicked = true }
+            )
+        }
+
+        composeTestRule.onNodeWithContentDescription("Delete").performClick()
+
+        assertTrue(clicked)
+    }
+
+    @Test
     fun integration_clickBack_callsNavController() {
         setupMockFlows()
 
@@ -280,5 +298,20 @@ class ManageRoutesScreenTest {
         composeTestRule.onNodeWithContentDescription("Copy").performClick()
 
         verify { viewModel.copyRoute() }
+    }
+
+    @Test
+    fun integration_clickDelete_callsViewModel() {
+        setupMockFlows()
+
+        state.update { it.copy(routes = listOf(route1, route2), selectedRouteName = "Route 2") }
+
+        composeTestRule.setContent {
+            ManageRoutesScreen(viewModel = viewModel, navController = navController)
+        }
+
+        composeTestRule.onNodeWithContentDescription("Delete").performClick()
+
+        verify { viewModel.deleteRoute() }
     }
 }

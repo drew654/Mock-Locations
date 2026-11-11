@@ -89,4 +89,15 @@ class ManageRoutesViewModel @Inject constructor(
             settingsManager.replaceRoutes(routes)
         }
     }
+
+    fun deleteRoute() {
+        val selectedName = state.value.selectedRouteName ?: return
+        val routes = state.value.routes.toMutableList()
+        val routeToDelete = routes.find { it.name == selectedName } ?: return
+        val updatedRoutes = routes.minus(routeToDelete)
+        _state.update { it.copy(routes = updatedRoutes) }
+        viewModelScope.launch {
+            settingsManager.replaceRoutes(updatedRoutes)
+        }
+    }
 }
