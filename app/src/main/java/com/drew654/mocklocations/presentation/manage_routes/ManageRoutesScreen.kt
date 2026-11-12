@@ -30,6 +30,7 @@ import com.drew654.mocklocations.R
 import com.drew654.mocklocations.domain.model.LocationTarget
 import com.drew654.mocklocations.domain.model.ManageRoutesState
 import com.drew654.mocklocations.domain.model.RouteSegment
+import com.drew654.mocklocations.presentation.manage_routes.components.RenameRouteDialog
 import com.drew654.mocklocations.presentation.manage_routes.components.RouteListItem
 import com.drew654.mocklocations.presentation.ui.theme.DayNightDevicePreviews
 import com.drew654.mocklocations.presentation.ui.theme.DeviceThemePreview
@@ -58,6 +59,18 @@ fun ManageRoutesScreen(
         onRouteMovedDown = {
             viewModel.moveRouteDown()
         },
+        onEditClicked = { name ->
+            viewModel.onEditClicked(name)
+        },
+        onRouteNameChanged = { name ->
+            viewModel.onRouteNameChanged(name)
+        },
+        onRouteRenameDismissed = {
+            viewModel.onRouteRenameDismissed()
+        },
+        onRouteRenameConfirmed = {
+            viewModel.onRouteRenameConfirmed()
+        },
         onCopyRoute = {
             viewModel.copyRoute()
         },
@@ -76,6 +89,10 @@ internal fun ManageRoutesContent(
     onRouteDeselected: () -> Unit = { },
     onRouteMovedUp: () -> Unit = { },
     onRouteMovedDown: () -> Unit = { },
+    onEditClicked: (String) -> Unit = { },
+    onRouteNameChanged: (String) -> Unit = { },
+    onRouteRenameDismissed: () -> Unit = { },
+    onRouteRenameConfirmed: () -> Unit = { },
     onCopyRoute: () -> Unit = { },
     onDeleteRoute: () -> Unit = { }
 ) {
@@ -135,6 +152,9 @@ internal fun ManageRoutesContent(
                     onDownClicked = {
                         onRouteMovedDown()
                     },
+                    onEditClicked = {
+                        onEditClicked(route.name)
+                    },
                     onCopyClicked = {
                         onCopyRoute()
                     },
@@ -144,6 +164,22 @@ internal fun ManageRoutesContent(
                 )
             }
         }
+    }
+
+    if (state.editRouteName != null) {
+        RenameRouteDialog(
+            routeName = state.editRouteName,
+            isSaveRouteEnabled = state.routes.map { it.name }.contains(state.editRouteName).not(),
+            onRouteNameChange = { name ->
+                onRouteNameChanged(name)
+            },
+            onDismiss = {
+                onRouteRenameDismissed()
+            },
+            onConfirm = {
+                onRouteRenameConfirmed()
+            }
+        )
     }
 }
 

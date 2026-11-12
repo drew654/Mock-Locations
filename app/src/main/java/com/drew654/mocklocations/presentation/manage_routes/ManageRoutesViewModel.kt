@@ -71,6 +71,33 @@ class ManageRoutesViewModel @Inject constructor(
         }
     }
 
+    fun onEditClicked(name: String) {
+        _state.update { it.copy(editRouteName = name) }
+    }
+
+    fun onRouteNameChanged(name: String) {
+        _state.update { it.copy(editRouteName = name) }
+    }
+
+    fun onRouteRenameDismissed() {
+        _state.update { it.copy(editRouteName = null) }
+    }
+
+    fun onRouteRenameConfirmed() {
+        val selectedRoute =
+            state.value.routes.find { it.name == state.value.selectedRouteName } ?: return
+
+        val updatedRoute = selectedRoute.copy(name = state.value.editRouteName ?: "")
+
+        val routes = state.value.routes.toMutableList()
+        val updatedRoutes = routes.minus(selectedRoute).plus(updatedRoute)
+
+        _state.update { it.copy(routes = updatedRoutes, editRouteName = null) }
+        viewModelScope.launch {
+            settingsManager.replaceRoutes(updatedRoutes)
+        }
+    }
+
     fun copyRoute() {
         val selectedName = state.value.selectedRouteName ?: return
         val routes = state.value.routes.toMutableList()
