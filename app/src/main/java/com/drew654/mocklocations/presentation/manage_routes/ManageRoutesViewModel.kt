@@ -87,12 +87,24 @@ class ManageRoutesViewModel @Inject constructor(
         val selectedRoute =
             state.value.routes.find { it.name == state.value.selectedRouteName } ?: return
 
-        val updatedRoute = selectedRoute.copy(name = state.value.editRouteName ?: "")
+        val updatedRoute = selectedRoute.copy(
+            name = state.value.editRouteName ?: ""
+        )
 
         val routes = state.value.routes.toMutableList()
-        val updatedRoutes = routes.minus(selectedRoute).plus(updatedRoute)
+        val index = routes.indexOf(selectedRoute)
 
-        _state.update { it.copy(routes = updatedRoutes, editRouteName = null) }
+        routes[index] = updatedRoute
+
+        val updatedRoutes = routes.toList()
+
+        _state.update {
+            it.copy(
+                routes = updatedRoutes,
+                editRouteName = null
+            )
+        }
+
         viewModelScope.launch {
             settingsManager.replaceRoutes(updatedRoutes)
         }
